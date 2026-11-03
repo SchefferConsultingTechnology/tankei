@@ -6,12 +6,14 @@ import {
   type NearbyStation,
 } from '@tankei/shared';
 import { createZodDto, ZodResponse } from 'nestjs-zod';
+import { Public } from '../auth/decorators';
 import { StationsService } from './stations.service';
 
 class NearbyQueryDto extends createZodDto(nearbyQuerySchema) {}
 class NearbyStationDto extends createZodDto(nearbyStationSchema) {}
 
 @ApiTags('Postos')
+@Public()
 @Controller('stations')
 export class StationsController {
   constructor(private readonly stations: StationsService) {}

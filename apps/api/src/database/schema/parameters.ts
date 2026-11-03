@@ -6,6 +6,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { users } from './users';
 
 /**
  * Parâmetros das regras de negócio (ADR 0006). Só inserção: cada alteração é
@@ -19,9 +20,8 @@ export const parameters = pgTable(
     key: text().notNull(),
     value: jsonb().notNull(),
     reason: text().notNull(),
-    // Nulo para valores definidos pelo sistema (migration). Vira chave
-    // estrangeira quando existir a tabela de usuários.
-    changedByUserId: uuid(),
+    // Nulo para valores definidos pelo sistema (migration).
+    changedByUserId: uuid().references(() => users.id),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('parameters_key_created_idx').on(t.key, t.createdAt.desc())],

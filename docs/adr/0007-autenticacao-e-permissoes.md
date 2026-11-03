@@ -42,3 +42,10 @@ No piloto, o **administrador** vincula o gestor ao posto manualmente, depois do 
 - É preciso registrar o app no Google Cloud e no Apple Developer para obter os identificadores de cliente.
 - A autorização verifica o perfil e, para gestores, o vínculo com o posto em cada operação.
 - Ações administrativas e de gestores entram no registro de auditoria.
+- O token de acesso não é consultado no banco a cada requisição. Por isso, uma mudança de perfil ou a exclusão da conta só vale por completo quando o token de acesso expira (15 minutos por padrão). As sessões são encerradas na hora.
+
+## Implementação
+
+- Os tokens do Google e da Apple são validados com as chaves públicas (JWKS) do provedor, em cache, sem biblioteca de terceiros além do `jsonwebtoken`.
+- Rotas exigem login por padrão (guard global). Rotas abertas são marcadas com `@Public()`.
+- O primeiro administrador é definido por script: `pnpm --filter @tankei/api user:admin EMAIL`.

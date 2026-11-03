@@ -1,7 +1,16 @@
 import { pgEnum } from 'drizzle-orm/pg-core';
-import { FUEL_TYPES, PRICE_SOURCES } from '@tankei/shared';
+import {
+  AUTH_PROVIDERS,
+  FUEL_TYPES,
+  PRICE_SOURCES,
+  USER_ROLES,
+} from '@tankei/shared';
 
 export const fuelTypeEnum = pgEnum('fuel_type', FUEL_TYPES);
+
+export const userRoleEnum = pgEnum('user_role', USER_ROLES);
+
+export const authProviderEnum = pgEnum('auth_provider', AUTH_PROVIDERS);
 
 export const priceSourceEnum = pgEnum('price_source', PRICE_SOURCES);
 

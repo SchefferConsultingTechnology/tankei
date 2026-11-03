@@ -41,6 +41,7 @@ pnpm --filter @tankei/shared build
 pnpm db:migrate                  # aplica as migrations do Drizzle
 pnpm --filter @tankei/api import:anp   # importa os postos de Curitibanos (API da ANP)
 pnpm --filter @tankei/api import:anp-referencias   # médias semanais de preço da ANP
+pnpm --filter @tankei/api user:admin EMAIL         # torna administrador quem já fez login
 pnpm dev                         # sobe api, portal, admin e mobile
 ```
 

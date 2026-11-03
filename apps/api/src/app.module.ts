@@ -6,10 +6,12 @@ import { ZodSerializerInterceptor } from 'nestjs-zod';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ZodValidationPipe } from './app.setup';
+import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
 import { ParametersModule } from './parameters/parameters.module';
 import { PricesModule } from './prices/prices.module';
 import { StationsModule } from './stations/stations.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { StationsModule } from './stations/stations.module';
     ParametersModule,
     StationsModule,
     PricesModule,
+    UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [

@@ -14,6 +14,7 @@ export function configureApp(app: INestApplication): void {
     .setTitle('Tankei API')
     .setDescription('Preços e qualidade de postos de combustível.')
     .setVersion('v1')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('v1/docs', app, cleanupOpenApiDoc(document));

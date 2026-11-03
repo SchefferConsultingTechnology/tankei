@@ -43,6 +43,13 @@
       "when": 1793701581661,
       "tag": "0005_parameters_seed_and_append_only",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793704910065,
+      "tag": "0006_users_and_sessions",
+      "breakpoints": true
     }
   ]
 }
