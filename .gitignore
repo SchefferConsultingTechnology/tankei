@@ -11,3 +11,6 @@ coverage/
 
 # Claude Code (configuração pessoal)
 .claude/
+
+# Cline (configuração pessoal)
+.clinerules
