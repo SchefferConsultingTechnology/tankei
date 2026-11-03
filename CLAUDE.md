@@ -28,4 +28,5 @@ pnpm db:migrate                  # aplica as migrations (apps/api/drizzle)
 pnpm db:generate                 # gera migration após mudar apps/api/src/database/schema
 pnpm build | pnpm typecheck | pnpm lint | pnpm test
 pnpm --filter @tankei/api dev
+pnpm --filter @tankei/api test:e2e     # precisa do banco (db:up + db:migrate)
 ```

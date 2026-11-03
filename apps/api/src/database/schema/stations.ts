@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   char,
@@ -42,7 +43,11 @@ export const stations = pgTable(
       .$onUpdate(() => new Date()),
   },
   (t) => [
-    index('stations_location_idx').using('gist', t.location),
+    // A busca por proximidade calcula distâncias em metros com geography.
+    index('stations_location_geography_idx').using(
+      'gist',
+      sql`(${t.location}::geography)`,
+    ),
     index('stations_state_city_idx').on(t.state, t.city),
   ],
 );
