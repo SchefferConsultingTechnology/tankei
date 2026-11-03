@@ -64,6 +64,20 @@
       "when": 1793708620717,
       "tag": "0008_promotion_max_days_parameter",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793714609106,
+      "tag": "0009_reviews_and_iqp_scores",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793714610119,
+      "tag": "0010_reviews_append_only_and_parameter",
+      "breakpoints": true
     }
   ]
 }

@@ -60,6 +60,11 @@ export const PARAMETER_DEFINITIONS = {
     description:
       'Duração máxima (dias) de um preço promocional informado pelo posto.',
   },
+  'review.min_interval_days': {
+    schema: positiveInt,
+    description:
+      'Intervalo mínimo (dias) entre avaliações da mesma conta para o mesmo posto.',
+  },
 } satisfies Record<string, { schema: z.ZodType; description: string }>;
 
 export type ParameterKey = keyof typeof PARAMETER_DEFINITIONS;

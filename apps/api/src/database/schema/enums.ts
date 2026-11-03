@@ -2,9 +2,15 @@ import { pgEnum } from 'drizzle-orm/pg-core';
 import {
   AUTH_PROVIDERS,
   FUEL_TYPES,
+  IQP_CONFIDENCE_LEVELS,
   PRICE_SOURCES,
   USER_ROLES,
 } from '@tankei/shared';
+
+export const iqpConfidenceEnum = pgEnum(
+  'iqp_confidence',
+  IQP_CONFIDENCE_LEVELS,
+);
 
 export const fuelTypeEnum = pgEnum('fuel_type', FUEL_TYPES);
 

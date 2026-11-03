@@ -56,6 +56,7 @@ Os números das regras de preço ficam em **parâmetros no banco**, não no cód
 | Preço deixa de ser exibido após | 30 dias |
 | Intervalo mínimo entre informes da mesma conta, mesmo posto e combustível | 2 h |
 | Máximo de informes por conta por dia | 30 |
+| Intervalo mínimo entre avaliações da mesma conta para o mesmo posto (ADR 0004) | 30 dias |
 
 Informes feitos pelo próprio posto, pelo portal, não têm limite de quantidade.
 

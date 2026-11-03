@@ -4,3 +4,4 @@ export * from './prices';
 export * from './price-references';
 export * from './parameters';
 export * from './users';
+export * from './reviews';

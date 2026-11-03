@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { FUEL_TYPES } from './fuel';
+import { iqpSummarySchema } from './iqp';
 import { currentPriceSchema } from './price';
 import { nullable, numericString } from './validation';
 
@@ -66,6 +67,7 @@ export const nearbyStationSchema = z.object({
   prices: z
     .array(currentPriceSchema)
     .describe('Preço vigente de cada combustível que tem preço exibível.'),
+  iqp: iqpSummarySchema,
 });
 
 export type NearbyStation = z.infer<typeof nearbyStationSchema>;

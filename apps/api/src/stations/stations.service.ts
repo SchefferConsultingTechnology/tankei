@@ -8,6 +8,7 @@ import {
 import { and, eq, isNotNull, sql } from 'drizzle-orm';
 import { DRIZZLE, type Database } from '../database/database.module';
 import { stationFuels, stations } from '../database/schema';
+import { IqpService } from '../iqp/iqp.service';
 import { PriceReportsService } from '../prices/price-reports.service';
 
 @Injectable()
@@ -15,6 +16,7 @@ export class StationsService {
   constructor(
     @Inject(DRIZZLE) private readonly db: Database,
     private readonly priceReports: PriceReportsService,
+    private readonly iqp: IqpService,
   ) {}
 
   /**
@@ -62,9 +64,11 @@ export class StationsService {
       .orderBy(distance)
       .limit(NEARBY_MAX_RESULTS);
 
-    const prices = await this.priceReports.currentPrices(
-      rows.map((row) => row.id),
-    );
+    const ids = rows.map((row) => row.id);
+    const [prices, iqpScores] = await Promise.all([
+      this.priceReports.currentPrices(ids),
+      this.iqp.latest(ids),
+    ]);
 
     return rows.map((row) => ({
       id: row.id,
@@ -79,6 +83,7 @@ export class StationsService {
       distanceMeters: Math.round(row.distance),
       fuels: row.fuels,
       prices: prices.get(row.id) ?? [],
+      iqp: this.iqp.summary(iqpScores.get(row.id)),
     }));
   }
 }

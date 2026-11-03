@@ -61,8 +61,8 @@ O plano de produto, as fases e a arquitetura estão em [docs/referencias/convers
 Situação atual:
 
 - **Piloto:** Curitibanos (SC), com os 10 postos importados da ANP.
-- **API:** busca de postos por proximidade, login com Google e Apple, informes de preço validados pela referência semanal da ANP e preço vigente com selos.
-- **Próximo:** avaliações e cálculo do IQP (ADR 0004).
+- **API:** busca de postos por proximidade, login com Google e Apple, informes de preço validados pela referência semanal da ANP, preço vigente com selos, avaliações e IQP (metodologia 1.0.0). A base da API do MVP está completa.
+- **Próximo:** app mobile (antes, configurar a CI; ver Pendências).
 
 ## Pendências
 

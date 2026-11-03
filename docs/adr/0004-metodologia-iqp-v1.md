@@ -60,3 +60,20 @@ Exibida separada da nota, com base na soma dos pesos das avaliações depois do 
 - O app de avaliação mostra os critérios agrupados por dimensão, com a opção "não disponível" em cada um, e a pergunta de sim/não sobre o preço.
 - A média da cidade é recalculada periodicamente e entra no cálculo de cada posto. Uma mudança nela altera a nota de postos com poucas avaliações.
 - Os pesos e números (5 avaliações iniciais, 180 dias, 3 pessoas, 30 dias, faixas de confiança) são hipóteses para o piloto e devem ser revistos com os dados reais. Qualquer mudança gera uma nova versão da metodologia.
+
+## Decisões de implementação (2026-11-03)
+
+Definidas ao implementar a versão 1.0.0 da metodologia:
+
+- **Cidade ainda sem avaliações:** a nota inicial de cada critério é puxada para 50 pontos (equivalente a 3 estrelas), ponto neutro, até existirem avaliações na cidade.
+- **Critério sem nenhuma resposta** (todos marcaram "não disponível" ou deixaram em branco) sai da conta, como um item não disponível. Se uma dimensão inteira ficar sem dados, seu peso é redistribuído entre as demais.
+- **Pessoas diferentes:** contam as pessoas cuja avaliação mais recente do posto tem ao menos uma resposta. Só a avaliação mais recente de cada pessoa entra no cálculo.
+- **Recálculo:** a cada avaliação nova do posto e diariamente para todos os postos avaliados, porque o decaimento e a média da cidade mudam a nota mesmo sem avaliações novas. Cada cálculo é guardado (só inserção) com a versão da metodologia e a nota de cada dimensão.
+- **Exibição:** nota arredondada para inteiro. Abaixo do mínimo de pessoas, nota e confiança não são exibidas ("Dados insuficientes").
+
+## Regras da avaliação (fora da metodologia)
+
+- Avaliar exige login. É preciso responder ao menos um critério.
+- **Gestor não avalia o próprio posto**, por conflito de interesse. Pode avaliar outros postos.
+- **Sem comentário em texto** na primeira versão: texto livre exige moderação e traz risco de ofensas e dados pessoais (ADR 0009). As notas por critério já dão o diagnóstico ao dono do posto.
+- O intervalo mínimo entre avaliações da mesma pessoa para o mesmo posto é o parâmetro `review.min_interval_days` (ADR 0006), inicialmente 30 dias. É regra contra abuso, não parte do cálculo.
