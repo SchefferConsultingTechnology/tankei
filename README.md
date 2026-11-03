@@ -56,4 +56,17 @@ Um app só: `pnpm --filter @tankei/api dev`.
 
 ## Plano
 
-O plano de produto, as fases e a arquitetura estão em [docs/referencias/conversa-chatgpt-plano-inicial.md](docs/referencias/conversa-chatgpt-plano-inicial.md). A próxima etapa é a **Fase 1: definição do produto e validação**: cidade-piloto, fontes de preço, primeira versão do IQP e protótipos.
+O plano de produto, as fases e a arquitetura estão em [docs/referencias/conversa-chatgpt-plano-inicial.md](docs/referencias/conversa-chatgpt-plano-inicial.md). As decisões tomadas estão em [docs/adr/](docs/adr/).
+
+Situação atual:
+
+- **Piloto:** Curitibanos (SC), com os 10 postos importados da ANP.
+- **API:** busca de postos por proximidade, login com Google e Apple, informes de preço validados pela referência semanal da ANP e preço vigente com selos.
+- **Próximo:** avaliações e cálculo do IQP (ADR 0004).
+
+## Pendências
+
+- **CI no GitHub Actions:** configurar antes do primeiro merge do `development` para o `main` ou antes de começar o app mobile, o que vier primeiro. Os testes e2e já criam o próprio banco (`<banco>_test`), então basta um serviço PostGIS no workflow; nenhum segredo é necessário.
+- **Coordenadas de 3 postos:** os dois da Gerhardt & Pelegrini e o ALB não têm localização na ANP e não aparecem na busca.
+- **Login com contas reais:** criar as credenciais OAuth no Google Cloud e preencher `GOOGLE_CLIENT_IDS` (a Apple só quando o app for para o iOS).
+- **Auditoria das ações administrativas** (ADR 0007): a remoção do vínculo de gestor ainda não deixa registro.
