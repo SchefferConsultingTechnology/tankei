@@ -2,18 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import {
   NEARBY_MAX_RESULTS,
   type FuelType,
+  type NearbyQuery,
   type NearbyStation,
 } from '@tankei/shared';
 import { and, eq, isNotNull, sql } from 'drizzle-orm';
 import { DRIZZLE, type Database } from '../database/database.module';
 import { stationFuels, stations } from '../database/schema';
-
-export interface NearbyQuery {
-  lat: number;
-  lng: number;
-  radiusMeters: number;
-  fuel?: FuelType;
-}
 
 @Injectable()
 export class StationsService {
@@ -52,7 +46,7 @@ export class StationsService {
           eq(stations.active, true),
           isNotNull(stations.location),
           // ST_DWithin usa o índice stations_location_geography_idx.
-          sql`ST_DWithin(${location}, ${origin}, ${query.radiusMeters})`,
+          sql`ST_DWithin(${location}, ${origin}, ${query.radius})`,
         ),
       )
       .groupBy(stations.id)

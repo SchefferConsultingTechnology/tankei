@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
+import { configureApp } from './../src/app.setup';
 import type { HealthStatus } from './../src/app.service';
 
 describe('AppController (e2e)', () => {
@@ -14,12 +15,13 @@ describe('AppController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    configureApp(app);
     await app.init();
   });
 
-  it('/health (GET)', () => {
+  it('/v1/health (GET)', () => {
     return request(app.getHttpServer())
-      .get('/health')
+      .get('/v1/health')
       .expect(200)
       .expect((res) =>
         expect(res.body as HealthStatus).toMatchObject({ status: 'ok' }),

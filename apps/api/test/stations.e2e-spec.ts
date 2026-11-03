@@ -1,10 +1,11 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import type { NearbyStation } from '@tankei/shared';
+import { FUEL_TYPES, type NearbyStation } from '@tankei/shared';
 import { inArray, like, sql } from 'drizzle-orm';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
+import { configureApp } from './../src/app.setup';
 import { DRIZZLE, type Database } from './../src/database/database.module';
 import { stationFuels, stations } from './../src/database/schema';
 
@@ -33,7 +34,7 @@ describe('StationsController (e2e)', () => {
   let db: Database;
 
   const nearby = (query: string) =>
-    request(app.getHttpServer()).get(`/stations/nearby?${query}`);
+    request(app.getHttpServer()).get(`/v1/stations/nearby?${query}`);
   const names = (body: NearbyStation[]) => body.map((s) => s.name);
 
   async function cleanup() {
@@ -48,6 +49,7 @@ describe('StationsController (e2e)', () => {
       imports: [AppModule],
     }).compile();
     app = moduleFixture.createNestApplication();
+    configureApp(app);
     await app.init();
     db = app.get(DRIZZLE);
 
@@ -113,12 +115,49 @@ describe('StationsController (e2e)', () => {
   });
 
   it.each([
-    ['latitude não numérica', 'lat=abc&lng=-40'],
-    ['latitude fora do intervalo', 'lat=-91&lng=-40'],
-    ['sem longitude', 'lat=-10'],
-    ['raio acima do máximo', 'lat=-10&lng=-40&radius=999999'],
-    ['combustível desconhecido', 'lat=-10&lng=-40&fuel=querosene'],
-  ])('rejeita %s', async (_, query) => {
-    await nearby(query).expect(400);
+    ['latitude não numérica', 'lat=abc&lng=-40', 'lat', 'Latitude inválida.'],
+    ['latitude vazia', 'lat=&lng=-40', 'lat', 'Latitude inválida.'],
+    [
+      'latitude fora do intervalo',
+      'lat=-91&lng=-40',
+      'lat',
+      'Latitude inválida.',
+    ],
+    ['sem longitude', 'lat=-10', 'lng', 'Longitude inválida.'],
+    [
+      'raio acima do máximo',
+      'lat=-10&lng=-40&radius=999999',
+      'radius',
+      'O raio deve estar entre 1 e 50000 metros.',
+    ],
+    [
+      'combustível desconhecido',
+      'lat=-10&lng=-40&fuel=querosene',
+      'fuel',
+      `Combustível inválido. Use: ${FUEL_TYPES.join(', ')}.`,
+    ],
+  ])('rejeita %s', async (_, query, path, message) => {
+    const res = await nearby(query).expect(400);
+
+    expect(res.body).toMatchObject({
+      statusCode: 400,
+      error: 'Bad Request',
+      message,
+      issues: [{ path, message }],
+    });
+  });
+
+  it('documenta o endpoint no OpenAPI', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/v1/docs-json')
+      .expect(200);
+    const doc = res.body as {
+      paths: Record<string, { get: { parameters: { name: string }[] } }>;
+    };
+
+    const params = doc.paths['/v1/stations/nearby'].get.parameters;
+    expect(params.map((p) => p.name)).toEqual(
+      expect.arrayContaining(['lat', 'lng', 'radius', 'fuel']),
+    );
   });
 });
