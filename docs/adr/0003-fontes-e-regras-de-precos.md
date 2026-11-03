@@ -56,9 +56,9 @@ Gasolina comum, gasolina aditivada, gasolina premium, etanol, diesel S10 e diese
 - O modelo de dados precisa de informes de preço (com origem, autor, data e situação), confirmações e uma visão derivada do preço vigente com seu selo.
 - O app precisa de login antes da primeira contribuição, mas não antes da consulta.
 - A adesão dos postos é decisiva: sem preços informados pelo posto, o app depende só dos motoristas desde o primeiro dia.
-- Os valores (48 h, 7 dias, 30 dias, 10%) são hipóteses para o piloto e devem ser revistos com os dados reais.
+- Os valores (48 h, 7 dias, 30 dias, 10%) são hipóteses para o piloto e devem ser revistos com os dados reais. Eles viraram parâmetros configuráveis no banco (ADR 0006).
 
-## Pendências
+## Pendências resolvidas
 
-- **Faixas plausíveis por combustível:** definir os valores iniciais antes da implementação.
-- **Limite diário de informes por conta:** definir o número.
+- **Faixas plausíveis por combustível:** substituídas pela referência semanal da ANP com limites percentuais (ADR 0006).
+- **Limite de informes por conta:** parametrizado, com valores iniciais no ADR 0006.
