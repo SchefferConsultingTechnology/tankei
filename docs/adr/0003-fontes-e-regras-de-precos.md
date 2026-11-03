@@ -49,7 +49,7 @@ Consultar preços não exige cadastro. **Informar** preço exige conta (login so
 
 ### Combustíveis no piloto
 
-Gasolina comum, gasolina aditivada, etanol, diesel S10 e diesel S500. O GNV continua no modelo, mas não é exibido em Curitibanos, onde nenhum posto o vende.
+Gasolina comum, gasolina aditivada, gasolina premium, etanol, diesel S10 e diesel S500. O GNV continua no modelo, mas não é exibido em Curitibanos, onde nenhum posto o vende.
 
 ## Consequências
 
@@ -60,6 +60,5 @@ Gasolina comum, gasolina aditivada, etanol, diesel S10 e diesel S500. O GNV cont
 
 ## Pendências
 
-- **Gasolina premium:** um posto de Curitibanos vende gasolina premium aditivada, que não está na lista de combustíveis do código. Decidir se entra no piloto.
 - **Faixas plausíveis por combustível:** definir os valores iniciais antes da implementação.
 - **Limite diário de informes por conta:** definir o número.
