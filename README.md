@@ -62,11 +62,11 @@ Situação atual:
 
 - **Piloto:** Curitibanos (SC), com os 10 postos importados da ANP.
 - **API:** busca de postos por proximidade, login com Google e Apple, informes de preço validados pela referência semanal da ANP, preço vigente com selos, avaliações e IQP (metodologia 1.0.0). A base da API do MVP está completa.
-- **Próximo:** app mobile (antes, configurar a CI; ver Pendências).
+- **Em andamento:** app mobile, com mapa react-native-maps (ADR 0010).
 
 ## Pendências
 
-- **CI no GitHub Actions:** configurar antes do primeiro merge do `development` para o `main` ou antes de começar o app mobile, o que vier primeiro. Os testes e2e já criam o próprio banco (`<banco>_test`), então basta um serviço PostGIS no workflow; nenhum segredo é necessário.
+- **CI no GitHub Actions:** adiada até existir um ambiente para a API; será decidida junto com a infraestrutura. Os testes e2e já criam o próprio banco (`<banco>_test`), então basta um serviço PostGIS no workflow; nenhum segredo é necessário.
 - **Coordenadas de 3 postos:** os dois da Gerhardt & Pelegrini e o ALB não têm localização na ANP e não aparecem na busca.
 - **Login com contas reais:** criar as credenciais OAuth no Google Cloud e preencher `GOOGLE_CLIENT_IDS` (a Apple só quando o app for para o iOS).
 - **Auditoria das ações administrativas** (ADR 0007): a remoção do vínculo de gestor ainda não deixa registro.
