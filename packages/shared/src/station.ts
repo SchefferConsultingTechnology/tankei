@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { FUEL_TYPES } from './fuel';
+import { currentPriceSchema } from './price';
 import { nullable, numericString } from './validation';
 
 /** Limites da busca por proximidade, em metros. */
@@ -62,6 +63,9 @@ export const nearbyStationSchema = z.object({
   location: z.object({ lat: z.number(), lng: z.number() }),
   distanceMeters: z.number().int(),
   fuels: z.array(z.enum(FUEL_TYPES)),
+  prices: z
+    .array(currentPriceSchema)
+    .describe('Preço vigente de cada combustível que tem preço exibível.'),
 });
 
 export type NearbyStation = z.infer<typeof nearbyStationSchema>;

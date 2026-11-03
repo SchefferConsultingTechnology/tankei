@@ -38,7 +38,7 @@ pnpm db:migrate                  # aplica as migrations (apps/api/drizzle)
 pnpm db:generate                 # gera migration após mudar apps/api/src/database/schema
 pnpm build | pnpm typecheck | pnpm lint | pnpm test
 pnpm --filter @tankei/api dev
-pnpm --filter @tankei/api test:e2e     # precisa do banco (db:up + db:migrate)
+pnpm --filter @tankei/api test:e2e     # precisa do container do banco (db:up)
 ```
 
-Tabelas só de inserção (`price_reports`, `parameters`, `price_references`) bloqueiam UPDATE, DELETE e TRUNCATE por trigger. Testes e2e não devem gravar nelas, porque não há como limpar depois: teste essas regras com unitários e banco simulado.
+Os testes e2e rodam no banco `<banco>_test`, recriado com as migrations a cada execução (`test/global-setup.ts`); podem gravar em tabelas só de inserção (`price_reports`, `parameters`, `price_references`), que bloqueiam UPDATE, DELETE e TRUNCATE por trigger. Os arquivos rodam em paralelo no mesmo banco: use dados próprios (CNPJs e coordenadas distintos) em cada arquivo.

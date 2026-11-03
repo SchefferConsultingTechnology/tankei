@@ -66,3 +66,13 @@ Informes feitos pelo próprio posto, pelo portal, não têm limite de quantidade
 - Cada informe guarda a referência usada na validação, para que a decisão possa ser explicada e auditada mesmo depois de os parâmetros mudarem.
 - A importação semanal da ANP passa a ser uma rotina agendada da API.
 - Os parâmetros do IQP **não** entram nesta tabela: eles fazem parte da metodologia versionada (ADR 0004), e mudar um peso gera uma nova versão.
+
+## Implementação (2026-11-03)
+
+- `POST /v1/stations/{id}/prices`. Quem gerencia o posto informa como "posto", sem limite de quantidade; os demais, como motorista.
+- Ordem das verificações: posto existe; promoção só do gestor e dentro da duração máxima (parâmetro `price.promotion_max_days`, inicial 7 dias); combustível vendido pelo posto (o gestor pode acrescentar um combustível novo); limites da conta; confirmação de variação; classificação pela referência.
+- Variação acima do parâmetro em relação ao preço vigente responde `409` com `code: CONFIRMATION_REQUIRED`; o app reenvia com `confirmed: true`. Nada é gravado antes da confirmação.
+- Informe rejeitado é gravado e responde `422` com `code: PRICE_OUT_OF_RANGE`. Conta para os limites da conta.
+- Informes suspeitos do posto aparecem; os de motoristas, só confirmados.
+- "Desatualizado" vem como `stale: true`, junto do selo de origem, para o app mostrar as duas informações.
+- As regras de classificação e de preço exibido são funções puras (`src/prices/price-rules.ts`), testadas caso a caso.

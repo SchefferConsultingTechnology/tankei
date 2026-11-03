@@ -50,6 +50,20 @@
       "when": 1793704910065,
       "tag": "0006_users_and_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793708619787,
+      "tag": "0007_price_reports_reporter_reference_promotion",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793708620717,
+      "tag": "0008_promotion_max_days_parameter",
+      "breakpoints": true
     }
   ]
 }

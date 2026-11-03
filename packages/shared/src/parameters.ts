@@ -55,6 +55,11 @@ export const PARAMETER_DEFINITIONS = {
     schema: positiveInt,
     description: 'Máximo de informes de preço por conta por dia.',
   },
+  'price.promotion_max_days': {
+    schema: positiveInt,
+    description:
+      'Duração máxima (dias) de um preço promocional informado pelo posto.',
+  },
 } satisfies Record<string, { schema: z.ZodType; description: string }>;
 
 export type ParameterKey = keyof typeof PARAMETER_DEFINITIONS;

@@ -8,10 +8,14 @@ import {
 import { and, eq, isNotNull, sql } from 'drizzle-orm';
 import { DRIZZLE, type Database } from '../database/database.module';
 import { stationFuels, stations } from '../database/schema';
+import { PriceReportsService } from '../prices/price-reports.service';
 
 @Injectable()
 export class StationsService {
-  constructor(@Inject(DRIZZLE) private readonly db: Database) {}
+  constructor(
+    @Inject(DRIZZLE) private readonly db: Database,
+    private readonly priceReports: PriceReportsService,
+  ) {}
 
   /**
    * Postos ativos dentro do raio, do mais próximo ao mais distante.
@@ -58,6 +62,10 @@ export class StationsService {
       .orderBy(distance)
       .limit(NEARBY_MAX_RESULTS);
 
+    const prices = await this.priceReports.currentPrices(
+      rows.map((row) => row.id),
+    );
+
     return rows.map((row) => ({
       id: row.id,
       name: row.tradeName ?? row.legalName,
@@ -70,6 +78,7 @@ export class StationsService {
       location: { lat: row.location!.y, lng: row.location!.x },
       distanceMeters: Math.round(row.distance),
       fuels: row.fuels,
+      prices: prices.get(row.id) ?? [],
     }));
   }
 }
