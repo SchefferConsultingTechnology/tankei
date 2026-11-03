@@ -47,6 +47,10 @@ pnpm dev                         # sobe api, portal, admin e mobile
 
 Um app só: `pnpm --filter @tankei/api dev`.
 
+### Dados de demonstração
+
+`pnpm --filter @tankei/api demo:db` recria o banco `tankei_demo` com os postos do banco de desenvolvimento e preços e avaliações **fictícios** (todos os selos, promoção e IQP). O banco de desenvolvimento não é alterado. Suba a API apontando para ele com o comando que o script imprime.
+
 ### App mobile no celular
 
 1. Instale o **Expo Go** no celular, conectado à mesma rede Wi-Fi do computador.

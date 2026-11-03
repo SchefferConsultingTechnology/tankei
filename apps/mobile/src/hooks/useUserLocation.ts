@@ -11,9 +11,9 @@ export type LocationState =
   | { status: 'denied'; coords: Coordinates };
 
 /**
- * Localização atual, pedindo permissão uma vez. Sem permissão ou com erro,
- * usa o centro da cidade-piloto. A localização não é enviada à API além da
- * busca (ADR 0009).
+ * Localização atual, pedindo permissão uma vez. Sem permissão, sem posição
+ * em 10 s ou com erro, usa o centro da cidade-piloto. A localização só é
+ * usada na busca e não é guardada pela API (ADR 0009).
  */
 export function useUserLocation(): LocationState {
   const [state, setState] = useState<LocationState>({
@@ -27,9 +27,16 @@ export function useUserLocation(): LocationState {
       try {
         const { granted } = await Location.requestForegroundPermissionsAsync();
         if (!granted) throw new Error('sem permissão');
-        const position = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
+        // Sem sinal de GPS, a posição atual pode nunca chegar: depois do
+        // prazo, vale a última posição conhecida.
+        const position =
+          (await withTimeout(
+            Location.getCurrentPositionAsync({
+              accuracy: Location.Accuracy.Balanced,
+            }),
+            POSITION_TIMEOUT_MS,
+          ).catch(() => null)) ?? (await Location.getLastKnownPositionAsync());
+        if (!position) throw new Error('sem posição');
         if (!cancelled) {
           setState({
             status: 'granted',
@@ -50,4 +57,22 @@ export function useUserLocation(): LocationState {
   }, []);
 
   return state;
+}
+
+const POSITION_TIMEOUT_MS = 10_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('tempo esgotado')), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error: unknown) => {
+        clearTimeout(timer);
+        reject(error instanceof Error ? error : new Error(String(error)));
+      },
+    );
+  });
 }

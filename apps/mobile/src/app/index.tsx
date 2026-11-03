@@ -100,7 +100,8 @@ export default function HomeScreen() {
         </View>
         {location.status === 'denied' && (
           <Text style={styles.notice}>
-            Sem acesso à localização: mostrando o centro de Curitibanos.
+            Não foi possível obter sua localização: mostrando o centro de
+            Curitibanos.
           </Text>
         )}
       </View>
