@@ -6,7 +6,8 @@ Monorepo (pnpm workspaces + Turborepo) de uma plataforma de preços e qualidade 
 - `apps/portal`, `apps/admin`: React + Vite + TypeScript.
 - `apps/mobile`: Expo. Leia `apps/mobile/AGENTS.md` antes de mexer, porque as APIs do Expo mudam a cada SDK.
 - `packages/shared`: tipos de domínio (combustíveis, critérios do IQP). Rode o build antes dos apps.
-- Banco: PostgreSQL + PostGIS via `docker compose`, porta 5433.
+- Banco: PostgreSQL + PostGIS via `docker compose`, porta 5433. Acesso pela API com Drizzle (ADR 0005). Revise o SQL gerado: o drizzle-kit omite o SRID de colunas `geometry` (corrigir para `geometry(point, 4326)`).
+- Decisões ficam em `docs/adr/`.
 
 ## Regras de domínio
 
@@ -18,11 +19,13 @@ Monorepo (pnpm workspaces + Turborepo) de uma plataforma de preços e qualidade 
 
 ## Comandos
 
-Use `pnpm` (se não estiver no PATH: `corepack pnpm`).
+Use `pnpm`. Ele precisa estar no PATH (`corepack enable`): o Turbo procura o binário e falha com `corepack pnpm`.
 
 ```bash
 pnpm install
 pnpm db:up
+pnpm db:migrate                  # aplica as migrations (apps/api/drizzle)
+pnpm db:generate                 # gera migration após mudar apps/api/src/database/schema
 pnpm build | pnpm typecheck | pnpm lint | pnpm test
 pnpm --filter @tankei/api dev
 ```

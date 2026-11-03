@@ -21,4 +21,6 @@ export const FUEL_LABELS: Record<FuelType, string> = {
 };
 
 /** De onde veio um preço. Nunca sobrescrevemos: cada informe é um registro novo. */
-export type PriceSource = 'usuario' | 'posto' | 'anp';
+export const PRICE_SOURCES = ['usuario', 'posto', 'anp'] as const;
+
+export type PriceSource = (typeof PRICE_SOURCES)[number];

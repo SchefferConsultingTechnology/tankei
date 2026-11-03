@@ -38,6 +38,7 @@ pnpm install
 pnpm db:up                       # PostGIS em localhost:5433
 cp apps/api/.env.example apps/api/.env
 pnpm --filter @tankei/shared build
+pnpm db:migrate                  # aplica as migrations do Drizzle
 pnpm dev                         # sobe api, portal, admin e mobile
 ```
 
