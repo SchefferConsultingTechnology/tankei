@@ -46,6 +46,7 @@ Os números das regras de preço ficam em **parâmetros no banco**, não no cód
 
 | Parâmetro | Valor inicial |
 |---|---|
+| UF da referência de preço | SC |
 | Limite normal de distância da referência | 25% |
 | Limite máximo de distância da referência | 60% |
 | Variação que pede confirmação ao usuário | 10% |

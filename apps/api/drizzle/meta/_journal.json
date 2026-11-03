@@ -29,6 +29,20 @@
       "when": 1793667867820,
       "tag": "0003_stations_geography_index",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793701120275,
+      "tag": "0004_parameters_and_price_references",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793701581661,
+      "tag": "0005_parameters_seed_and_append_only",
+      "breakpoints": true
     }
   ]
 }

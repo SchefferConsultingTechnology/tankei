@@ -38,3 +38,5 @@ pnpm build | pnpm typecheck | pnpm lint | pnpm test
 pnpm --filter @tankei/api dev
 pnpm --filter @tankei/api test:e2e     # precisa do banco (db:up + db:migrate)
 ```
+
+Tabelas só de inserção (`price_reports`, `parameters`, `price_references`) bloqueiam UPDATE, DELETE e TRUNCATE por trigger. Testes e2e não devem gravar nelas, porque não há como limpar depois: teste essas regras com unitários e banco simulado.

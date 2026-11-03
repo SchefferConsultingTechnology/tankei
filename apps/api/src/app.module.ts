@@ -1,11 +1,14 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ZodSerializerInterceptor } from 'nestjs-zod';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ZodValidationPipe } from './app.setup';
 import { DatabaseModule } from './database/database.module';
+import { ParametersModule } from './parameters/parameters.module';
+import { PricesModule } from './prices/prices.module';
 import { StationsModule } from './stations/stations.module';
 
 @Module({
@@ -17,8 +20,11 @@ import { StationsModule } from './stations/stations.module';
         limit: Number(process.env.THROTTLE_LIMIT ?? 120),
       },
     ]),
+    ScheduleModule.forRoot(),
     DatabaseModule,
+    ParametersModule,
     StationsModule,
+    PricesModule,
   ],
   controllers: [AppController],
   providers: [
