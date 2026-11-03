@@ -47,6 +47,12 @@ pnpm dev                         # sobe api, portal, admin e mobile
 
 Um app só: `pnpm --filter @tankei/api dev`.
 
+### App mobile no celular
+
+1. Instale o **Expo Go** no celular, conectado à mesma rede Wi-Fi do computador.
+2. Crie `apps/mobile/.env` a partir de `apps/mobile/.env.example`, com o IP do computador na rede local (`hostname -I` no Linux). No celular, `localhost` não alcança a API.
+3. Suba a API (`pnpm --filter @tankei/api dev`) e o app (`pnpm --filter @tankei/mobile start`), e leia o QR code com o Expo Go (Android) ou a câmera (iOS).
+
 | App    | Endereço                           |
 |--------|------------------------------------|
 | API    | http://localhost:3333/v1/health    |

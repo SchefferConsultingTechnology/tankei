@@ -20,6 +20,19 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "O Tankei usa sua localização para mostrar os postos mais próximos de você."
+        }
+      ]
+    ],
+    "scheme": "tankei",
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }
