@@ -48,8 +48,10 @@ export const nearbyQuerySchema = z.object({
 
 export type NearbyQuery = z.output<typeof nearbyQuerySchema>;
 
-/** Posto retornado pela busca por proximidade. */
-export const nearbyStationSchema = z.object({
+const locationSchema = z.object({ lat: z.number(), lng: z.number() });
+
+/** Posto com preços vigentes e resumo do IQP (GET /v1/stations/{id}). */
+export const stationSchema = z.object({
   id: z.uuid(),
   name: z
     .string()
@@ -61,13 +63,23 @@ export const nearbyStationSchema = z.object({
   district: nullable(z.string(), 'Bairro, quando informado.'),
   city: z.string(),
   state: z.string(),
-  location: z.object({ lat: z.number(), lng: z.number() }),
-  distanceMeters: z.number().int(),
+  location: nullable(
+    locationSchema,
+    'Nula enquanto o posto não tiver coordenada.',
+  ),
   fuels: z.array(z.enum(FUEL_TYPES)),
   prices: z
     .array(currentPriceSchema)
     .describe('Preço vigente de cada combustível que tem preço exibível.'),
   iqp: iqpSummarySchema,
+});
+
+export type Station = z.infer<typeof stationSchema>;
+
+/** Posto retornado pela busca por proximidade: sempre com coordenada. */
+export const nearbyStationSchema = stationSchema.extend({
+  location: locationSchema,
+  distanceMeters: z.number().int(),
 });
 
 export type NearbyStation = z.infer<typeof nearbyStationSchema>;

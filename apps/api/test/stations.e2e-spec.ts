@@ -32,6 +32,8 @@ function station(suffix: string, lat: number | null, active = true) {
 describe('StationsController (e2e)', () => {
   let app: INestApplication<App>;
   let db: Database;
+  /** Id de cada posto de teste, pelo sufixo do CNPJ. */
+  let stationIds: Record<string, string>;
 
   const nearby = (query: string) =>
     request(app.getHttpServer()).get(`/v1/stations/nearby?${query}`);
@@ -64,8 +66,10 @@ describe('StationsController (e2e)', () => {
         station('000005', null), // sem coordenada
       ])
       .returning({ id: stations.id, cnpj: stations.cnpj });
-    const id = (suffix: string) =>
-      inserted.find((s) => s.cnpj === `${CNPJ_PREFIX}${suffix}`)!.id;
+    stationIds = Object.fromEntries(
+      inserted.map((s) => [s.cnpj.slice(CNPJ_PREFIX.length), s.id]),
+    );
+    const id = (suffix: string) => stationIds[suffix];
 
     await db.insert(stationFuels).values([
       { stationId: id('000001'), fuelType: 'gasolina_comum' },
@@ -159,5 +163,41 @@ describe('StationsController (e2e)', () => {
     expect(params.map((p) => p.name)).toEqual(
       expect.arrayContaining(['lat', 'lng', 'radius', 'fuel']),
     );
+  });
+
+  describe('GET /v1/stations/:id', () => {
+    const get = (id: string) =>
+      request(app.getHttpServer()).get(`/v1/stations/${id}`);
+
+    it('retorna o posto com combustíveis, preços e IQP', async () => {
+      const res = await get(stationIds['000002']).expect(200);
+
+      expect(res.body).toEqual({
+        id: stationIds['000002'],
+        name: 'POSTO TESTE 000002',
+        brand: 'BANDEIRA BRANCA',
+        address: 'RUA TESTE, 1',
+        district: null,
+        city: 'TESTE',
+        state: 'BA',
+        location: { lat: ORIGIN.lat - 0.009, lng: ORIGIN.lng },
+        fuels: ['gasolina_comum', 'etanol'],
+        prices: [],
+        iqp: { score: null, confidence: null, reviewers: 0 },
+      });
+    });
+
+    it('retorna posto sem coordenada, com a localização nula', async () => {
+      const res = await get(stationIds['000005']).expect(200);
+      expect(res.body).toMatchObject({ location: null, fuels: [] });
+    });
+
+    it.each([
+      ['inativo', () => stationIds['000004'], 404],
+      ['inexistente', () => '00000000-0000-4000-8000-000000000000', 404],
+      ['com id inválido', () => 'nao-e-uuid', 400],
+    ])('responde erro para posto %s', async (_, id, status) => {
+      await get(id()).expect(status);
+    });
   });
 });
