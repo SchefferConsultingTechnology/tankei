@@ -52,6 +52,8 @@ Um app só: `pnpm --filter @tankei/api dev`.
 
 `pnpm --filter @tankei/api demo:db` recria o banco `tankei_demo` com os postos do banco de desenvolvimento e preços e avaliações **fictícios** (todos os selos, promoção e IQP). O banco de desenvolvimento não é alterado. Suba a API apontando para ele com o comando que o script imprime.
 
+Para acrescentar os mesmos dados fictícios a um banco que já tem os postos, como o de testes no Supabase: `DEMO_DATABASE_URL='postgresql://...' pnpm --filter @tankei/api demo:seed`. Preços são só de inserção e não podem ser apagados depois; o script recusa rodar de novo no mesmo banco.
+
 ### App mobile no celular
 
 O app usa um APK de desenvolvimento próprio (`br.com.tankei.app`), não o Expo Go: o login com Google e o mapa exigem código nativo (ADR 0015).

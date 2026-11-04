@@ -27,6 +27,7 @@
     "import:anp-referencias": "nest build && node dist/scripts/import-anp-references.js",
     "user:admin": "nest build && node dist/scripts/promote-admin.js",
     "demo:db": "nest build && node dist/scripts/demo-database.js",
+    "demo:seed": "nest build && node dist/scripts/seed-demo.js",
     "import:ibge": "nest build && node dist/scripts/import-ibge.js"
   },
   "dependencies": {
