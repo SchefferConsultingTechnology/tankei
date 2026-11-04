@@ -1,0 +1,45 @@
+# Blueprint do Render (https://render.com/docs/blueprint-spec): API do Tankei
+# para testes (ADR 0016). Deploy automático a cada push na development.
+#
+# Plano gratuito: o serviço dorme após 15 minutos sem uso (a primeira
+# requisição depois disso leva cerca de 1 minuto) e as rotinas agendadas não
+# rodam enquanto ele dorme. Para produção, trocar `plan`.
+services:
+  - type: web
+    name: tankei-api
+    runtime: node
+    plan: free
+    region: virginia
+    branch: development
+    rootDir: .
+    # Inclui as dependências de desenvolvimento: o build do Nest e as
+    # migrations (drizzle-kit) precisam delas. "@tankei/api..." compila
+    # também o que a API usa (@tankei/shared), na ordem certa; o Turbo não é
+    # usado porque procura o pnpm no PATH.
+    buildCommand: >-
+      npx --yes pnpm@10.18.3 install --frozen-lockfile --prod=false &&
+      npx --yes pnpm@10.18.3 --filter "@tankei/api..." run build
+    # Sem etapa de pré-deploy no plano gratuito: as migrations rodam na subida
+    # (idempotentes; só aplicam as que faltam).
+    startCommand: >-
+      cd apps/api && ./node_modules/.bin/drizzle-kit migrate &&
+      node dist/main.js
+    healthCheckPath: /v1/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: TRUST_PROXY
+        value: '1'
+
+      # Segredos: preencher no painel do Render (Environment), nunca aqui.
+      # DATABASE_URL: Supabase pelo pooler em modo sessão (IPv4), com
+      # ?sslmode=require&uselibpqcompat=true no fim (ADR 0016).
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+
+      # Não são segredos (ADR 0015).
+      - key: GOOGLE_CLIENT_IDS
+        value: 881187129858-3elfcgukc2u988u5gc5sqfvjqv0hd334.apps.googleusercontent.com

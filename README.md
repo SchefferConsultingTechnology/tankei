@@ -54,9 +54,25 @@ Um app só: `pnpm --filter @tankei/api dev`.
 
 ### App mobile no celular
 
-1. Instale o **Expo Go** no celular, conectado à mesma rede Wi-Fi do computador.
-2. Crie `apps/mobile/.env` a partir de `apps/mobile/.env.example`, com o IP do computador na rede local (`hostname -I` no Linux). No celular, `localhost` não alcança a API.
-3. Suba a API (`pnpm --filter @tankei/api dev`) e o app (`pnpm --filter @tankei/mobile start`), e leia o QR code com o Expo Go (Android) ou a câmera (iOS).
+O app usa um APK de desenvolvimento próprio (`br.com.tankei.app`), não o Expo Go: o login com Google e o mapa exigem código nativo (ADR 0015).
+
+1. Celular no cabo USB, com a depuração USB ativa.
+2. Instale o APK: `pnpm --filter @tankei/mobile android` (a primeira compilação leva cerca de 10 minutos).
+3. Encaminhe as portas: `adb reverse tcp:8081 tcp:8081` e `adb reverse tcp:3333 tcp:3333`.
+4. Suba a API e o Metro: `EXPO_PUBLIC_API_URL=http://127.0.0.1:3333/v1 pnpm --filter @tankei/mobile exec expo start --dev-client`.
+
+Só é preciso recompilar o APK quando mudar código nativo (pacotes com código nativo ou plugins no `app.json`).
+
+### Hospedagem de testes
+
+API no Render e banco no Supabase, no plano gratuito (ADR 0016). O `render.yaml` define o serviço; o deploy é automático a cada push na `development`, e as migrations rodam na subida. As cargas iniciais rodam do computador, com `DATABASE_URL` apontando para o Supabase:
+
+```bash
+DATABASE_URL='postgresql://...pooler.supabase.com:5432/postgres?sslmode=require&uselibpqcompat=true' \
+  pnpm --filter @tankei/api import:ibge   # e depois import:anp BR e import:anp-referencias
+```
+
+O serviço gratuito dorme após 15 minutos sem uso: a primeira requisição depois disso leva cerca de 1 minuto.
 
 | App    | Endereço                           |
 |--------|------------------------------------|
