@@ -34,7 +34,7 @@ Toda conta começa como motorista. Um gestor de posto também é motorista.
 
 ### Vínculo do gestor com o posto
 
-No piloto, o **administrador** vincula o gestor ao posto manualmente, depois do contato pessoal com o dono. O fluxo de reivindicação com comprovação de propriedade fica para a expansão.
+No piloto, o **administrador** vincula o gestor ao posto manualmente, depois do contato pessoal com o dono. O fluxo de reivindicação com comprovação de propriedade fica para a expansão. A verificação do responsável e os gestores convidados estão no ADR 0011.
 
 ## Consequências
 
