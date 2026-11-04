@@ -74,6 +74,15 @@ DATABASE_URL='postgresql://...pooler.supabase.com:5432/postgres?sslmode=require&
 
 O serviço gratuito dorme após 15 minutos sem uso: a primeira requisição depois disso leva cerca de 1 minuto.
 
+Para usar o app longe do computador, gere o APK de versão, com o JavaScript embutido e a URL do Render. Ele usa a mesma chave de assinatura do APK de desenvolvimento (login com Google e mapa continuam valendo) e o substitui no celular:
+
+```bash
+cd apps/mobile && pnpm exec expo prebuild --platform android
+cd android && EXPO_PUBLIC_API_URL=https://tankei-api.onrender.com/v1 NODE_ENV=production \
+  ./gradlew app:assembleRelease -PreactNativeArchitectures=arm64-v8a
+adb install -r app/build/outputs/apk/release/app-release.apk
+```
+
 | App    | Endereço                           |
 |--------|------------------------------------|
 | API    | http://localhost:3333/v1/health    |

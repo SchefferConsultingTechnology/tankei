@@ -42,7 +42,15 @@
           "iosUrlScheme": "com.googleusercontent.apps.881187129858-3elfcgukc2u988u5gc5sqfvjqv0hd334"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraProguardRules": "# O Room acha o banco gerado pelo nome (WorkDatabase_Impl, do WorkManager): o R8 não pode renomear nem remover.\n-keep class * extends androidx.room.RoomDatabase { <init>(); }\n-keep class **_Impl { <init>(); }"
+          }
+        }
+      ]
     ],
     "scheme": "tankei",
     "extra": {

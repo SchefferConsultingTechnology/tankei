@@ -27,4 +27,5 @@ O app no celular depende do computador de desenvolvimento (cabo e `adb reverse`)
 - Enquanto dorme, as rotinas agendadas não rodam: o recálculo diário do IQP (que já acontece a cada avaliação) e a importação diária das referências da ANP (que pode ser feita manualmente).
 - **O Supabase gratuito pausa o projeto após 7 dias sem uso.** Reativa-se pelo painel.
 - API e banco ficam nos EUA, na mesma região: a latência entre eles é baixa, e o caminho do celular no Brasil até a API acrescenta cerca de 150 ms por requisição. É aceitável para testes; em produção, a hospedagem deve ficar no Brasil ou perto dele.
-- Para usar o app longe do computador, ele precisa de um APK com o código JavaScript embutido e a URL da API do Render.
+- Para usar o app longe do computador, ele precisa de um APK de versão, com o código JavaScript embutido e a URL da API do Render (passo a passo no README).
+- O build de versão do Expo SDK 58 otimiza o código com o R8, que renomeava a classe do banco interno do WorkManager (usado pelos serviços do Google) e fazia o app fechar ao abrir. Regras de preservação no `app.json` (plugin `expo-build-properties`) resolvem.
