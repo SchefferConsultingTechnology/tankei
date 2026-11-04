@@ -1,13 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import {
+  cityStationsSchema,
+  cityWithStationsSchema,
   nearbyStationSchema,
   stationIqpSchema,
   stationSchema,
+  type FuelType,
 } from '@tankei/shared';
 import { z } from 'zod';
 import { apiGet } from './client';
 
 const nearbyListSchema = z.array(nearbyStationSchema);
+const citiesSchema = z.array(cityWithStationsSchema);
 
 export interface Coordinates {
   lat: number;
@@ -41,5 +45,29 @@ export function useStationIqp(id: string) {
   return useQuery({
     queryKey: ['stations', id, 'iqp'],
     queryFn: () => apiGet(`/stations/${id}/iqp`, stationIqpSchema),
+  });
+}
+
+/** Cidades da UF que têm postos (escolha de cidade). */
+export function useCities(state: string | null) {
+  return useQuery({
+    queryKey: ['cities', state],
+    enabled: state !== null,
+    // A lista de cidades muda raramente.
+    staleTime: 60 * 60 * 1000,
+    queryFn: () => apiGet(`/stations/cities?state=${state!}`, citiesSchema),
+  });
+}
+
+/** Postos de uma cidade, os mais baratos do combustível primeiro. */
+export function useCityStations(municipality: string | null, fuel: FuelType) {
+  return useQuery({
+    queryKey: ['stations', 'city', municipality, fuel],
+    enabled: municipality !== null,
+    queryFn: () =>
+      apiGet(
+        `/stations?municipality=${municipality!}&fuel=${fuel}`,
+        cityStationsSchema,
+      ),
   });
 }

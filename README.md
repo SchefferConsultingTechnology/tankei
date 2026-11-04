@@ -73,7 +73,7 @@ Situação atual:
 
 - **Piloto:** Curitibanos (SC); próxima cidade: Lages (SC). A base tem os ~45 mil postos do Brasil importados da ANP (ADR 0013).
 - **API:** busca de postos por proximidade, login com Google e Apple, informes de preço validados pela referência semanal da ANP, preço vigente com selos, avaliações e IQP (metodologia 1.0.0). A base da API do MVP está completa.
-- **Em andamento:** app mobile, com mapa react-native-maps (ADR 0010).
+- **App mobile (fase A):** mapa e lista pelo menor preço, perto de você ou numa cidade escolhida por estado e cidade (municípios do IBGE, ADR 0014). Mapa com react-native-maps (ADR 0010).
 
 ## Pendências
 

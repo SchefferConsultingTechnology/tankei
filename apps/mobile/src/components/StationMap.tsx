@@ -1,6 +1,6 @@
-import type { FuelType, NearbyStation } from '@tankei/shared';
-import { useEffect, useMemo, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import type { FuelType } from '@tankei/shared';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import type { Coordinates } from '@/api/queries';
 import {
@@ -9,22 +9,25 @@ import {
   placeMarkers,
   type MarkerPlacement,
 } from '@/map-stacking';
-import { priceFor } from '@/stations';
+import {
+  isLocated,
+  priceFor,
+  type ListedStation,
+  type LocatedStation,
+} from '@/stations';
+import { colors } from '@/theme';
 import { PriceTag } from './PriceTag';
 
 interface Props {
-  stations: NearbyStation[];
+  stations: ListedStation[];
   fuel: FuelType;
   center: Coordinates;
   showsUserLocation: boolean;
-  onSelect: (station: NearbyStation) => void;
+  onSelect: (station: ListedStation) => void;
 }
 
 /** Zoom inicial: cerca de 5 km de altura de tela. */
 const INITIAL_DELTA = 0.05;
-
-/** Espaço entre marcadores empilhados, em alturas de marcador. */
-const STACK_STEP = 1.15;
 
 /**
  * Mapa de postos com o preço do combustível escolhido em cada marcador.
@@ -38,16 +41,25 @@ export function StationMap({
   showsUserLocation,
   onSelect,
 }: Props) {
+  const mapRef = useRef<MapView>(null);
   const [latitudeDelta, setLatitudeDelta] = useState(INITIAL_DELTA);
   const [mapHeight, setMapHeight] = useState(0);
+  // Postos sem coordenada não vão para o mapa (aparecem na lista).
+  const located = useMemo(() => stations.filter(isLocated), [stations]);
+  // Só os postos com preço disputam espaço: os sem preço viram um ponto discreto.
   const placements = useMemo(
     () =>
-      placeMarkers(stations, fuel, metersPerPoint(latitudeDelta, mapHeight)),
-    [stations, fuel, latitudeDelta, mapHeight],
+      placeMarkers(
+        located.filter((station) => priceFor(station, fuel)),
+        fuel,
+        metersPerPoint(latitudeDelta, mapHeight),
+      ),
+    [located, fuel, latitudeDelta, mapHeight],
   );
 
   return (
     <MapView
+      ref={mapRef}
       style={StyleSheet.absoluteFill}
       initialRegion={{
         latitude: center.lat,
@@ -59,16 +71,28 @@ export function StationMap({
       onRegionChangeComplete={(region) =>
         setLatitudeDelta(region.latitudeDelta)
       }
+      // O Android ajusta o zoom inicial à proporção da tela sem avisar pela
+      // mudança de região: lê a área visível real assim que o mapa fica pronto.
+      onMapReady={() => {
+        void mapRef.current
+          ?.getMapBoundaries()
+          .then(({ northEast, southWest }) =>
+            setLatitudeDelta(northEast.latitude - southWest.latitude),
+          )
+          .catch(() => undefined);
+      }}
       showsUserLocation={showsUserLocation}
       showsMyLocationButton={showsUserLocation}
       toolbarEnabled={false}
     >
-      {stations.map((station) => (
+      {located.map((station) => (
         <PriceMarker
           key={station.id}
           station={station}
           fuel={fuel}
-          placement={placements.get(station.id) ?? { stack: 0, zIndex: 0 }}
+          placement={
+            placements.get(station.id) ?? { offset: { x: 0, y: 0 }, zIndex: 0 }
+          }
           onPress={() => onSelect(station)}
         />
       ))}
@@ -82,7 +106,7 @@ function PriceMarker({
   placement,
   onPress,
 }: {
-  station: NearbyStation;
+  station: LocatedStation;
   fuel: FuelType;
   placement: MarkerPlacement;
   onPress: () => void;
@@ -99,7 +123,27 @@ function PriceMarker({
   }, [content]);
   const tracking = drawn !== content;
 
-  const lift = placement.stack * STACK_STEP;
+  if (!price) {
+    return (
+      <Marker
+        identifier={station.id}
+        coordinate={{
+          latitude: station.location.lat,
+          longitude: station.location.lng,
+        }}
+        title={station.name}
+        description="Sem preço informado"
+        onPress={onPress}
+        tracksViewChanges={tracking}
+        zIndex={0}
+        anchor={{ x: 0.5, y: 0.5 }}
+      >
+        <View style={styles.noPrice} />
+      </Marker>
+    );
+  }
+
+  const { x, y } = placement.offset;
   return (
     <Marker
       identifier={station.id}
@@ -111,12 +155,27 @@ function PriceMarker({
       onPress={onPress}
       tracksViewChanges={tracking}
       zIndex={placement.zIndex}
-      // Empilhado acima do ponto do posto: anchor no Google Maps (Android),
-      // centerOffset no Apple Maps (iOS).
-      anchor={{ x: 0.5, y: 1 + lift }}
-      centerOffset={{ x: 0, y: -lift * MARKER_SIZE.height }}
+      // Deslocado para a pilha: anchor (fração do marcador) no Google Maps,
+      // centerOffset (pontos) no Apple Maps.
+      anchor={{
+        x: 0.5 - x / MARKER_SIZE.width,
+        y: 1 + y / MARKER_SIZE.height,
+      }}
+      centerOffset={{ x, y: -y }}
     >
       <PriceTag price={price} />
     </Marker>
   );
 }
+
+const styles = StyleSheet.create({
+  // Posto sem preço do combustível escolhido: ponto discreto, tocável.
+  noPrice: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: colors.surface,
+    borderColor: colors.textMuted,
+    borderWidth: 2,
+  },
+});

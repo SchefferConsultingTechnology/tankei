@@ -1,15 +1,15 @@
-import type { FuelType, NearbyStation } from '@tankei/shared';
+import type { FuelType } from '@tankei/shared';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { describePrice, formatDistance } from '@/format';
-import { priceFor, sortByPrice } from '@/stations';
+import { priceFor, sortByPrice, type ListedStation } from '@/stations';
 import { colors, fontSize, radius, spacing } from '@/theme';
 import { IqpPill } from './IqpPill';
 import { PriceTag } from './PriceTag';
 
 interface Props {
-  stations: NearbyStation[];
+  stations: ListedStation[];
   fuel: FuelType;
-  onSelect: (station: NearbyStation) => void;
+  onSelect: (station: ListedStation) => void;
 }
 
 /** Postos do menor para o maior preço do combustível escolhido. */
@@ -34,7 +34,9 @@ export function StationList({ stations, fuel, onSelect }: Props) {
                   {item.name}
                 </Text>
                 <Text style={styles.muted} numberOfLines={1}>
-                  {item.brand} · {formatDistance(item.distanceMeters)}
+                  {item.distanceMeters === undefined
+                    ? `${item.brand} · ${item.district ?? item.city}`
+                    : `${item.brand} · ${formatDistance(item.distanceMeters)}`}
                 </Text>
               </View>
               <PriceTag price={price} size="lg" />
