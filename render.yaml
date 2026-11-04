@@ -9,7 +9,8 @@ services:
     name: tankei-api
     runtime: node
     plan: free
-    region: virginia
+    # Mesma região do banco no Supabase (us-west-2, Oregon).
+    region: oregon
     branch: development
     rootDir: .
     # Inclui as dependências de desenvolvimento: o build do Nest e as
@@ -33,8 +34,10 @@ services:
         value: '1'
 
       # Segredos: preencher no painel do Render (Environment), nunca aqui.
-      # DATABASE_URL: Supabase pelo pooler em modo sessão (IPv4), com
-      # ?sslmode=require&uselibpqcompat=true no fim (ADR 0016).
+      # DATABASE_URL: Supabase pelo pooler em modo sessão (IPv4, porta 5432,
+      # usuário postgres.<projeto>), com ?sslmode=require&uselibpqcompat=true
+      # no fim (ADR 0016). Nem a conexão direta (só IPv6) nem o pooler em modo
+      # transação (porta 6543) servem.
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET
