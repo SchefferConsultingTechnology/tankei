@@ -2,6 +2,8 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { DRIZZLE, type Database } from '../../database/database.module';
 import { stationFuels, stations } from '../../database/schema';
+import { MunicipalitiesService } from '../../municipalities/municipalities.service';
+import type { MunicipalityMatcher } from '../../municipalities/municipality-matcher';
 import { mapAnpStation, type StationFromAnp } from './anp-mapping';
 import {
   AnpRevendedoresClient,
@@ -34,10 +36,12 @@ export class AnpImportService {
   constructor(
     @Inject(DRIZZLE) private readonly db: Database,
     private readonly anp: AnpRevendedoresClient,
+    private readonly municipalities: MunicipalitiesService,
   ) {}
 
   async importar(filtro: AnpFiltro = {}): Promise<AnpImportResult> {
     const postos = await this.anp.listarPostos(filtro);
+    const matcher = await this.municipalities.matcher();
     const mapped = postos.map(mapAnpStation);
     // Um CNPJ repetido no mesmo lote faria o upsert alterar a mesma linha duas vezes.
     const byCnpj = new Map<string, StationFromAnp>();
@@ -60,7 +64,7 @@ export class AnpImportService {
           .insert(stations)
           .values(
             batch.map((station) => ({
-              ...cadastro(station),
+              ...cadastro(station, matcher),
               location: pointSql(station.location),
               locationSource: station.location ? ('anp' as const) : null,
             })),
@@ -77,6 +81,8 @@ export class AnpImportService {
               postalCode: excluded('postal_code'),
               city: excluded('city'),
               state: excluded('state'),
+              // Sem a lista do IBGE importada, mantém o vínculo que já existia.
+              municipalityCode: sql`coalesce(${excluded('municipality_code')}, ${stations.municipalityCode})`,
               // A coordenada da ANP só substitui outra que também veio da ANP:
               // geocodificação e conferência em campo têm prioridade.
               location: sql`case when ${stations.locationSource} is null or ${stations.locationSource} = 'anp' then ${excluded('location')} else ${stations.location} end`,
@@ -126,8 +132,9 @@ function describe(filtro: AnpFiltro): string {
   return filtro.uf ?? 'Brasil';
 }
 
-function cadastro(station: StationFromAnp) {
+function cadastro(station: StationFromAnp, matcher: MunicipalityMatcher) {
   return {
+    municipalityCode: matcher.match(station.state, station.city),
     cnpj: station.cnpj,
     anpAuthorization: station.anpAuthorization,
     legalName: station.legalName,

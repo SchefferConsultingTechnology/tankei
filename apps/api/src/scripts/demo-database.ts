@@ -122,6 +122,31 @@ const DEMO: Record<string, { prices: PriceSpec[]; reviews: ReviewSpec[] }> = {
     ],
     reviews: [],
   },
+  // Lages (próxima cidade, ADR 0013): alguns postos com preço, para a busca por cidade.
+  '05598939000113': {
+    prices: [
+      { fuel: 'gasolina_comum', price: 6.15, ageHours: 4, by: 'posto' },
+      { fuel: 'etanol', price: 4.39, ageHours: 4, by: 'posto' },
+    ],
+    reviews: [],
+  },
+  '41627062000105': {
+    prices: [
+      { fuel: 'gasolina_comum', price: 6.22, ageHours: 9, by: [2, 3] },
+      { fuel: 'diesel_s10', price: 7.05, ageHours: 9, by: 'posto' },
+    ],
+    reviews: [],
+  },
+  '85246718000115': {
+    prices: [{ fuel: 'gasolina_comum', price: 6.31, ageHours: 2, by: [5] }],
+    reviews: [],
+  },
+  '06139250000193': {
+    prices: [
+      { fuel: 'gasolina_comum', price: 6.09, ageHours: 30, by: 'posto' },
+    ],
+    reviews: [],
+  },
   // Frei (Ipiranga): informe de motorista de dois dias atrás.
   '26205769000130': {
     prices: [{ fuel: 'gasolina_comum', price: 6.45, ageHours: 48, by: [0] }],
@@ -137,6 +162,7 @@ async function main() {
   const dev = new Client({ connectionString: devUrl });
   await dev.connect();
   const devDb = drizzle({ client: dev, schema, casing: 'snake_case' });
+  const devMunicipalities = await devDb.select().from(schema.municipalities);
   const devStations = await devDb.select().from(schema.stations);
   const devFuels = await devDb.select().from(schema.stationFuels);
   const devReferences = await devDb.select().from(schema.priceReferences);
@@ -152,6 +178,10 @@ async function main() {
     const now = Date.now();
 
     // Em lotes: o banco de desenvolvimento pode ter os postos do Brasil inteiro.
+    // Municípios antes dos postos, que apontam para eles.
+    for (const batch of chunks(devMunicipalities)) {
+      await db.insert(schema.municipalities).values(batch);
+    }
     for (const batch of chunks(devStations)) {
       await db.insert(schema.stations).values(
         batch.map(({ location, ...station }) => ({

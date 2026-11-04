@@ -1,19 +1,31 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import {
+  CITY_STATIONS_LIMIT,
   NEARBY_MAX_RESULTS,
+  type CityStations,
+  type CityStationsQuery,
+  type CityWithStations,
   type FuelType,
+  type Municipality,
   type NearbyQuery,
   type NearbyStation,
   type Station,
 } from '@tankei/shared';
-import { and, eq, isNotNull, sql } from 'drizzle-orm';
+import { and, asc, count, eq, isNotNull, sql } from 'drizzle-orm';
 import { DRIZZLE, type Database } from '../database/database.module';
-import { stationFuels, stations } from '../database/schema';
+import { municipalities, stationFuels, stations } from '../database/schema';
 import { IqpService } from '../iqp/iqp.service';
 import { PriceReportsService } from '../prices/price-reports.service';
-import { brandDisplayName, stationDisplayName } from './display-name';
+import {
+  brandDisplayName,
+  cityDisplayName,
+  stationDisplayName,
+} from './display-name';
 
-/** Colunas comuns à busca e ao detalhe, com os combustíveis agregados. */
+/**
+ * Colunas comuns às consultas de postos, com os combustíveis agregados e o
+ * nome oficial do município. Exigem os joins com station_fuels e municipalities.
+ */
 const stationColumns = {
   id: stations.id,
   legalName: stations.legalName,
@@ -22,6 +34,7 @@ const stationColumns = {
   address: stations.address,
   district: stations.district,
   city: stations.city,
+  municipalityName: municipalities.name,
   state: stations.state,
   location: stations.location,
   // text[] porque o driver pg não converte arrays de enum.
@@ -38,6 +51,7 @@ interface StationRow {
   address: string;
   district: string | null;
   city: string;
+  municipalityName: string | null;
   state: string;
   location: { x: number; y: number } | null;
   fuels: FuelType[];
@@ -64,6 +78,10 @@ export class StationsService {
       .select({ ...stationColumns, distance })
       .from(stations)
       .leftJoin(stationFuels, eq(stationFuels.stationId, stations.id))
+      .leftJoin(
+        municipalities,
+        eq(municipalities.code, stations.municipalityCode),
+      )
       .where(
         and(
           eq(stations.active, true),
@@ -72,7 +90,7 @@ export class StationsService {
           sql`ST_DWithin(${location}, ${origin}, ${query.radius})`,
         ),
       )
-      .groupBy(stations.id)
+      .groupBy(stations.id, municipalities.code)
       .having(
         query.fuel
           ? sql`bool_or(${stationFuels.fuelType} = ${query.fuel})`
@@ -92,16 +110,91 @@ export class StationsService {
 
   /** Posto ativo com preços vigentes e resumo do IQP. */
   async findById(id: string): Promise<Station> {
-    const rows = await this.db
-      .select(stationColumns)
-      .from(stations)
-      .leftJoin(stationFuels, eq(stationFuels.stationId, stations.id))
+    const rows = await this.selectStations()
       .where(and(eq(stations.id, id), eq(stations.active, true)))
-      .groupBy(stations.id);
+      .groupBy(stations.id, municipalities.code);
     if (rows.length === 0) throw new NotFoundException('Posto não encontrado.');
 
     const [station] = await this.enrich(rows);
     return station;
+  }
+
+  /** Cidades da UF que têm postos ativos, em ordem alfabética (ADR 0014). */
+  async findCities(state: string): Promise<CityWithStations[]> {
+    const rows = await this.db
+      .select({
+        code: municipalities.code,
+        name: municipalities.name,
+        state: municipalities.state,
+        stations: count(stations.id),
+      })
+      .from(municipalities)
+      .innerJoin(
+        stations,
+        and(
+          eq(stations.municipalityCode, municipalities.code),
+          eq(stations.active, true),
+        ),
+      )
+      .where(eq(municipalities.state, state))
+      .groupBy(municipalities.code)
+      .orderBy(asc(municipalities.name));
+    return rows as CityWithStations[];
+  }
+
+  /**
+   * Postos ativos de uma cidade, com preços e IQP. Com combustível, os mais
+   * baratos primeiro (sem preço no fim); sem, por nome. Até CITY_STATIONS_LIMIT.
+   */
+  async findByMunicipality(query: CityStationsQuery): Promise<CityStations> {
+    const [municipality] = await this.db
+      .select({
+        code: municipalities.code,
+        name: municipalities.name,
+        state: municipalities.state,
+      })
+      .from(municipalities)
+      .where(eq(municipalities.code, query.municipality));
+    if (!municipality) {
+      throw new NotFoundException('Município não encontrado.');
+    }
+
+    const rows = await this.selectStations()
+      .where(
+        and(
+          eq(stations.municipalityCode, query.municipality),
+          eq(stations.active, true),
+        ),
+      )
+      .groupBy(stations.id, municipalities.code);
+    const all = await this.enrich(rows);
+
+    const located = all.flatMap((s) => (s.location ? [s.location] : []));
+    const center =
+      located.length > 0
+        ? {
+            lat: located.reduce((sum, l) => sum + l.lat, 0) / located.length,
+            lng: located.reduce((sum, l) => sum + l.lng, 0) / located.length,
+          }
+        : null;
+
+    return {
+      municipality: municipality as Municipality,
+      center,
+      total: all.length,
+      stations: sortStations(all, query.fuel).slice(0, CITY_STATIONS_LIMIT),
+    };
+  }
+
+  private selectStations() {
+    return this.db
+      .select(stationColumns)
+      .from(stations)
+      .leftJoin(stationFuels, eq(stationFuels.stationId, stations.id))
+      .leftJoin(
+        municipalities,
+        eq(municipalities.code, stations.municipalityCode),
+      );
   }
 
   private async enrich(rows: StationRow[]): Promise<Station[]> {
@@ -117,7 +210,7 @@ export class StationsService {
       brand: brandDisplayName(row.brand),
       address: row.address,
       district: row.district,
-      city: row.city,
+      city: row.municipalityName ?? cityDisplayName(row.city),
       state: row.state,
       location: row.location
         ? { lat: row.location.y, lng: row.location.x }
@@ -127,4 +220,14 @@ export class StationsService {
       iqp: this.iqp.summary(iqpScores.get(row.id)),
     }));
   }
+}
+
+function sortStations(list: Station[], fuel?: FuelType): Station[] {
+  const priceOf = (station: Station) =>
+    fuel
+      ? (station.prices.find((p) => p.fuelType === fuel)?.price ?? Infinity)
+      : Infinity;
+  return [...list].sort(
+    (a, b) => priceOf(a) - priceOf(b) || a.name.localeCompare(b.name, 'pt-BR'),
+  );
 }

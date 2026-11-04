@@ -39,6 +39,7 @@ pnpm db:up                       # PostGIS em localhost:5433
 cp apps/api/.env.example apps/api/.env
 pnpm --filter @tankei/shared build
 pnpm db:migrate                  # aplica as migrations do Drizzle
+pnpm --filter @tankei/api import:ibge     # municípios do IBGE (antes do import:anp numa base nova)
 pnpm --filter @tankei/api import:anp BR   # postos do Brasil (ou: SC, ou SC LAGES; sem argumento, Curitibanos)
 pnpm --filter @tankei/api import:anp-referencias   # médias semanais de preço da ANP
 pnpm --filter @tankei/api user:admin EMAIL         # torna administrador quem já fez login

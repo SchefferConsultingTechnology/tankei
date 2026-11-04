@@ -11,6 +11,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { fuelTypeEnum, locationSourceEnum } from './enums';
+import { municipalities } from './municipalities';
 
 /**
  * Posto (estabelecimento). Identificado pelo CNPJ completo: uma mesma empresa
@@ -32,6 +33,8 @@ export const stations = pgTable(
     postalCode: char({ length: 8 }),
     city: text().notNull(),
     state: char({ length: 2 }).notNull(),
+    // Município oficial do IBGE, ligado pelo nome da ANP (ADR 0014).
+    municipalityCode: char({ length: 7 }).references(() => municipalities.code),
     // WGS 84. Nulo enquanto o posto não tiver coordenada (ADR 0005).
     location: geometry({ type: 'point', mode: 'xy', srid: 4326 }),
     locationSource: locationSourceEnum(),
@@ -51,6 +54,7 @@ export const stations = pgTable(
     ),
     index('stations_state_city_idx').on(t.state, t.city),
     index('stations_anp_authorization_idx').on(t.anpAuthorization),
+    index('stations_municipality_idx').on(t.municipalityCode),
   ],
 );
 

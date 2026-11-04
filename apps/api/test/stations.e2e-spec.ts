@@ -178,7 +178,7 @@ describe('StationsController (e2e)', () => {
         brand: 'Bandeira Branca',
         address: 'RUA TESTE, 1',
         district: null,
-        city: 'TESTE',
+        city: 'Teste',
         state: 'BA',
         location: { lat: ORIGIN.lat - 0.009, lng: ORIGIN.lng },
         fuels: ['gasolina_comum', 'etanol'],

@@ -83,3 +83,98 @@ export const nearbyStationSchema = stationSchema.extend({
 });
 
 export type NearbyStation = z.infer<typeof nearbyStationSchema>;
+
+/** Estados brasileiros, para a escolha de cidade no app. */
+export const BRAZIL_STATES = [
+  { code: 'AC', name: 'Acre' },
+  { code: 'AL', name: 'Alagoas' },
+  { code: 'AP', name: 'Amapá' },
+  { code: 'AM', name: 'Amazonas' },
+  { code: 'BA', name: 'Bahia' },
+  { code: 'CE', name: 'Ceará' },
+  { code: 'DF', name: 'Distrito Federal' },
+  { code: 'ES', name: 'Espírito Santo' },
+  { code: 'GO', name: 'Goiás' },
+  { code: 'MA', name: 'Maranhão' },
+  { code: 'MT', name: 'Mato Grosso' },
+  { code: 'MS', name: 'Mato Grosso do Sul' },
+  { code: 'MG', name: 'Minas Gerais' },
+  { code: 'PA', name: 'Pará' },
+  { code: 'PB', name: 'Paraíba' },
+  { code: 'PR', name: 'Paraná' },
+  { code: 'PE', name: 'Pernambuco' },
+  { code: 'PI', name: 'Piauí' },
+  { code: 'RJ', name: 'Rio de Janeiro' },
+  { code: 'RN', name: 'Rio Grande do Norte' },
+  { code: 'RS', name: 'Rio Grande do Sul' },
+  { code: 'RO', name: 'Rondônia' },
+  { code: 'RR', name: 'Roraima' },
+  { code: 'SC', name: 'Santa Catarina' },
+  { code: 'SP', name: 'São Paulo' },
+  { code: 'SE', name: 'Sergipe' },
+  { code: 'TO', name: 'Tocantins' },
+] as const;
+
+export type StateCode = (typeof BRAZIL_STATES)[number]['code'];
+
+const STATE_CODES = BRAZIL_STATES.map((s) => s.code) as [
+  StateCode,
+  ...StateCode[],
+];
+
+/** Município oficial do IBGE (ADR 0014). */
+export const municipalitySchema = z.object({
+  code: z.string().describe('Código IBGE de 7 dígitos.'),
+  name: z.string().describe('Nome oficial, com acentos.'),
+  state: z.enum(STATE_CODES),
+});
+
+export type Municipality = z.infer<typeof municipalitySchema>;
+
+/** Parâmetros de GET /v1/stations/cities. */
+export const citiesQuerySchema = z.object({
+  state: z
+    .string({ error: 'Informe a UF.' })
+    .trim()
+    .toUpperCase()
+    .pipe(z.enum(STATE_CODES, { error: 'UF inválida.' })),
+});
+
+export const cityWithStationsSchema = municipalitySchema.extend({
+  stations: z.number().int().describe('Postos ativos na cidade.'),
+});
+
+export type CityWithStations = z.infer<typeof cityWithStationsSchema>;
+
+/** Postos devolvidos por cidade: os mais baratos primeiro, até este limite. */
+export const CITY_STATIONS_LIMIT = 100;
+
+/** Parâmetros de GET /v1/stations (postos de uma cidade). */
+export const cityStationsQuerySchema = z.object({
+  municipality: z
+    .string({ error: 'Informe o município.' })
+    .regex(/^\d{7}$/, 'Município inválido.')
+    .describe('Código IBGE do município.'),
+  fuel: z
+    .enum(FUEL_TYPES, { error: 'Combustível inválido.' })
+    .optional()
+    .describe(
+      'Ordena pelo menor preço deste combustível. Sem ele, ordena pelo nome.',
+    ),
+});
+
+export type CityStationsQuery = z.output<typeof cityStationsQuerySchema>;
+
+export const cityStationsSchema = z.object({
+  municipality: municipalitySchema,
+  center: nullable(
+    locationSchema,
+    'Centro dos postos da cidade, para posicionar o mapa. Nulo se nenhum tem coordenada.',
+  ),
+  total: z.number().int().describe('Postos ativos na cidade.'),
+  stations: z
+    .array(stationSchema)
+    .describe(`Até ${CITY_STATIONS_LIMIT} postos, os mais baratos primeiro.`),
+});
+
+export type CityStations = z.infer<typeof cityStationsSchema>;

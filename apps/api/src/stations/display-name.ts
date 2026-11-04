@@ -49,3 +49,11 @@ function readable(text: string): string {
     })
     .join(' ');
 }
+
+/**
+ * Cidade legível quando o município do IBGE não foi ligado: "SAO JOSE" →
+ * "Sao Jose" (sem acentos, que a ANP não informa).
+ */
+export function cityDisplayName(city: string): string {
+  return readable(city);
+}
