@@ -66,7 +66,7 @@ Um app só: `pnpm --filter @tankei/api dev`.
 
 ## Plano
 
-O plano de produto, as fases e a arquitetura estão em [docs/referencias/conversa-chatgpt-plano-inicial.md](docs/referencias/conversa-chatgpt-plano-inicial.md). As decisões tomadas estão em [docs/adr/](docs/adr/).
+O plano de produto, as fases e a arquitetura estão em [docs/referencias/conversa-chatgpt-plano-inicial.md](docs/referencias/conversa-chatgpt-plano-inicial.md). As decisões tomadas estão em [docs/adr/](docs/adr/), e os estudos de negócio em [docs/negocio/](docs/negocio/).
 
 Situação atual:
 
