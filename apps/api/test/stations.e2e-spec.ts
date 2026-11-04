@@ -87,7 +87,7 @@ describe('StationsController (e2e)', () => {
     const res = await nearby(`lat=${ORIGIN.lat}&lng=${ORIGIN.lng}`).expect(200);
     const body = res.body as NearbyStation[];
 
-    expect(names(body)).toEqual(['POSTO TESTE 000001', 'POSTO TESTE 000002']);
+    expect(names(body)).toEqual(['Posto Teste 000001', 'Posto Teste 000002']);
     expect(body[0]).toMatchObject({
       distanceMeters: 0,
       location: ORIGIN,
@@ -104,9 +104,9 @@ describe('StationsController (e2e)', () => {
     ).expect(200);
 
     expect(names(res.body as NearbyStation[])).toEqual([
-      'POSTO TESTE 000001',
-      'POSTO TESTE 000002',
-      'POSTO TESTE 000003',
+      'Posto Teste 000001',
+      'Posto Teste 000002',
+      'Posto Teste 000003',
     ]);
   });
 
@@ -115,7 +115,7 @@ describe('StationsController (e2e)', () => {
       `lat=${ORIGIN.lat}&lng=${ORIGIN.lng}&fuel=etanol`,
     ).expect(200);
 
-    expect(names(res.body as NearbyStation[])).toEqual(['POSTO TESTE 000002']);
+    expect(names(res.body as NearbyStation[])).toEqual(['Posto Teste 000002']);
   });
 
   it.each([
@@ -174,8 +174,8 @@ describe('StationsController (e2e)', () => {
 
       expect(res.body).toEqual({
         id: stationIds['000002'],
-        name: 'POSTO TESTE 000002',
-        brand: 'BANDEIRA BRANCA',
+        name: 'Posto Teste 000002',
+        brand: 'Bandeira Branca',
         address: 'RUA TESTE, 1',
         district: null,
         city: 'TESTE',

@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type { Me } from '@tankei/shared';
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { DRIZZLE, type Database } from '../database/database.module';
 import {
   sessions,
@@ -14,6 +14,7 @@ import {
   userIdentities,
   users,
 } from '../database/schema';
+import { stationDisplayName } from '../stations/display-name';
 
 @Injectable()
 export class UsersService {
@@ -31,17 +32,24 @@ export class UsersService {
       .where(and(eq(users.id, userId), isNull(users.deletedAt)));
     if (!user) throw new NotFoundException('Conta não encontrada.');
 
-    const managedStations = await this.db
+    const managed = await this.db
       .select({
         id: stations.id,
-        name: sql<string>`coalesce(${stations.tradeName}, ${stations.legalName})`,
+        tradeName: stations.tradeName,
+        legalName: stations.legalName,
       })
       .from(stationManagers)
       .innerJoin(stations, eq(stations.id, stationManagers.stationId))
       .where(eq(stationManagers.userId, userId))
       .orderBy(stations.legalName);
 
-    return { ...user, managedStations };
+    return {
+      ...user,
+      managedStations: managed.map((station) => ({
+        id: station.id,
+        name: stationDisplayName(station.tradeName, station.legalName),
+      })),
+    };
   }
 
   /**

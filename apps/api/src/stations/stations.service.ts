@@ -11,6 +11,7 @@ import { DRIZZLE, type Database } from '../database/database.module';
 import { stationFuels, stations } from '../database/schema';
 import { IqpService } from '../iqp/iqp.service';
 import { PriceReportsService } from '../prices/price-reports.service';
+import { brandDisplayName, stationDisplayName } from './display-name';
 
 /** Colunas comuns à busca e ao detalhe, com os combustíveis agregados. */
 const stationColumns = {
@@ -112,8 +113,8 @@ export class StationsService {
 
     return rows.map((row) => ({
       id: row.id,
-      name: row.tradeName ?? row.legalName,
-      brand: row.brand,
+      name: stationDisplayName(row.tradeName, row.legalName),
+      brand: brandDisplayName(row.brand),
       address: row.address,
       district: row.district,
       city: row.city,

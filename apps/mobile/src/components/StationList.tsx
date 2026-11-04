@@ -1,6 +1,6 @@
 import type { FuelType, NearbyStation } from '@tankei/shared';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { BADGE_LABELS, formatAge, formatDistance } from '@/format';
+import { describePrice, formatDistance } from '@/format';
 import { priceFor, sortByPrice } from '@/stations';
 import { colors, fontSize, radius, spacing } from '@/theme';
 import { IqpPill } from './IqpPill';
@@ -41,11 +41,7 @@ export function StationList({ stations, fuel, onSelect }: Props) {
             </View>
             <View style={styles.footer}>
               <Text style={styles.muted}>
-                {price
-                  ? `${BADGE_LABELS[price.badge]} · ${
-                      price.stale ? 'desatualizado, ' : ''
-                    }${formatAge(price.updatedAt)}`
-                  : 'Sem preço informado'}
+                {price ? describePrice(price) : 'Sem preço informado'}
               </Text>
               <IqpPill iqp={item.iqp} />
             </View>

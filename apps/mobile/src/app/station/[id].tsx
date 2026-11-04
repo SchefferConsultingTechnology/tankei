@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useStation, useStationIqp } from '@/api/queries';
 import { PriceTag } from '@/components/PriceTag';
-import { BADGE_LABELS, CONFIDENCE_LABELS, formatAge } from '@/format';
+import { CONFIDENCE_LABELS, describePrice } from '@/format';
 import { priceFor } from '@/stations';
 import { badgeColors, colors, fontSize, radius, spacing } from '@/theme';
 
@@ -70,11 +70,7 @@ export default function StationScreen() {
               <View style={styles.priceInfo}>
                 <Text style={styles.body}>{FUEL_LABELS[fuel]}</Text>
                 <Text style={styles.muted}>
-                  {price
-                    ? `${BADGE_LABELS[price.badge]} · ${
-                        price.stale ? 'desatualizado, ' : ''
-                      }${formatAge(price.updatedAt)}`
-                    : 'Sem preço informado'}
+                  {price ? describePrice(price) : 'Sem preço informado'}
                 </Text>
                 {price?.promotion && (
                   <Text style={styles.promotion}>{price.promotion.label}</Text>

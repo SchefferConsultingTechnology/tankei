@@ -234,7 +234,7 @@ describe('Autenticação e conta (e2e)', () => {
         .set(bearer(manager.accessToken))
         .expect(200);
       expect((res.body as Me).managedStations).toEqual([
-        { id: stationId, name: 'POSTO TESTE GESTOR' },
+        { id: stationId, name: 'Posto Teste Gestor' },
       ]);
 
       await http()

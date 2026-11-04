@@ -1,4 +1,4 @@
-import type { IqpConfidence, PriceBadge } from '@tankei/shared';
+import type { CurrentPrice, IqpConfidence, PriceBadge } from '@tankei/shared';
 
 /** Preço como na bomba: 6,29 ou 6,299. */
 export function formatPrice(price: number): string {
@@ -24,6 +24,38 @@ export function formatAge(isoDate: string, now = Date.now()): string {
   if (hours < 24) return `há ${hours} h`;
   const days = Math.floor(hours / 24);
   return days === 1 ? 'há 1 dia' : `há ${days} dias`;
+}
+
+/** "até hoje, 18h", "até amanhã, 18h30", "até qua., 05/11, 18h". */
+export function formatUntil(isoDate: string, now = new Date()): string {
+  const end = new Date(isoDate);
+  const minutes = end.getMinutes();
+  const time = `${end.getHours()}h${minutes ? String(minutes).padStart(2, '0') : ''}`;
+
+  const days = Math.round(
+    (startOfDay(end).getTime() - startOfDay(now).getTime()) / 86_400_000,
+  );
+  if (days === 0) return `até hoje, ${time}`;
+  if (days === 1) return `até amanhã, ${time}`;
+  const day = end.toLocaleDateString('pt-BR', {
+    weekday: 'short',
+    day: '2-digit',
+    month: '2-digit',
+  });
+  return `até ${day}, ${time}`;
+}
+
+function startOfDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+/** Linha que acompanha o preço: origem e idade, ou o prazo da promoção. */
+export function describePrice(price: CurrentPrice): string {
+  if (price.promotion) {
+    return `Promoção ${formatUntil(price.promotion.endsAt)}`;
+  }
+  const stale = price.stale ? 'desatualizado, ' : '';
+  return `${BADGE_LABELS[price.badge]} · ${stale}${formatAge(price.updatedAt)}`;
 }
 
 export const BADGE_LABELS: Record<PriceBadge, string> = {
