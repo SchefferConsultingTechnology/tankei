@@ -79,5 +79,5 @@ Situação atual:
 
 - **CI no GitHub Actions:** adiada até existir um ambiente para a API; será decidida junto com a infraestrutura. Os testes e2e já criam o próprio banco (`<banco>_test`), então basta um serviço PostGIS no workflow; nenhum segredo é necessário.
 - **Coordenadas de 3 postos:** os dois da Gerhardt & Pelegrini e o ALB não têm localização na ANP e não aparecem na busca.
-- **Login com contas reais:** criar as credenciais OAuth no Google Cloud e preencher `GOOGLE_CLIENT_IDS` (a Apple só quando o app for para o iOS).
+- **Login no app:** as credenciais do Google estão criadas (ADR 0015); falta o APK de desenvolvimento e a tela de login. A Apple só quando o app for para o iOS.
 - **Auditoria das ações administrativas** (ADR 0007): a remoção do vínculo de gestor ainda não deixa registro.

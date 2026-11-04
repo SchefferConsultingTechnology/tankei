@@ -7,9 +7,11 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "br.com.tankei.app"
     },
     "android": {
+      "package": "br.com.tankei.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -31,6 +33,9 @@
       ]
     ],
     "scheme": "tankei",
+    "extra": {
+      "googleWebClientId": "881187129858-3elfcgukc2u988u5gc5sqfvjqv0hd334.apps.googleusercontent.com"
+    },
     "experiments": {
       "typedRoutes": true
     }
