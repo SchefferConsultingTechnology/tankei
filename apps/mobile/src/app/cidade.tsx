@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useCities } from '@/api/queries';
+import { useBottomPadding } from '@/hooks/useBottomPadding';
 import { usePlace } from '@/place';
 import { colors, fontSize, radius, spacing } from '@/theme';
 
@@ -26,6 +27,7 @@ export default function ChooseCityScreen() {
     place.kind === 'city' ? place.municipality.state : null,
   );
   const [search, setSearch] = useState('');
+  const bottomPadding = useBottomPadding();
   const cities = useCities(state);
 
   const filtered = useMemo(() => {
@@ -47,7 +49,7 @@ export default function ChooseCityScreen() {
       <FlatList
         data={BRAZIL_STATES}
         keyExtractor={(item) => item.code}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, bottomPadding]}
         ListHeaderComponent={<Text style={styles.step}>Escolha o estado</Text>}
         renderItem={({ item }) => (
           <Pressable
@@ -98,7 +100,7 @@ export default function ChooseCityScreen() {
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.code}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, bottomPadding]}
           keyboardShouldPersistTaps="handled"
           ListEmptyComponent={
             <Text style={styles.muted}>Nenhuma cidade encontrada.</Text>

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useStation, useStationIqp } from '@/api/queries';
 import { PriceTag } from '@/components/PriceTag';
+import { useBottomPadding } from '@/hooks/useBottomPadding';
 import { CONFIDENCE_LABELS, describePrice } from '@/format';
 import { priceFor } from '@/stations';
 import { badgeColors, colors, fontSize, radius, spacing } from '@/theme';
@@ -21,6 +22,7 @@ export default function StationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const station = useStation(id);
   const iqp = useStationIqp(id);
+  const bottomPadding = useBottomPadding();
 
   if (station.isPending) {
     return (
@@ -39,7 +41,7 @@ export default function StationScreen() {
 
   const data = station.data;
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView contentContainerStyle={[styles.content, bottomPadding]}>
       <Stack.Screen options={{ title: data.name }} />
 
       <View style={styles.section}>
@@ -95,7 +97,12 @@ export default function StationScreen() {
         ) : (
           <ActivityIndicator color={colors.primary} />
         )}
-        <SecondaryButton label="Avaliar este posto" onPress={comingSoon} />
+        <SecondaryButton
+          label="Avaliar este posto"
+          onPress={() =>
+            router.push({ pathname: '/station/[id]/avaliar', params: { id } })
+          }
+        />
       </View>
     </ScrollView>
   );
@@ -140,10 +147,6 @@ function IqpDetail({ iqp }: { iqp: StationIqp }) {
       </Text>
     </View>
   );
-}
-
-function comingSoon() {
-  Alert.alert('Em breve', 'Avaliar postos chega na próxima versão do app.');
 }
 
 /** "Traçar rota" abre o app de navegação instalado (ADR 0010). */

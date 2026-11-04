@@ -65,6 +65,10 @@ export default function RootLayout() {
               options={{ title: 'Informar preço', presentation: 'modal' }}
             />
             <Stack.Screen
+              name="station/[id]/avaliar"
+              options={{ title: 'Avaliar posto', presentation: 'modal' }}
+            />
+            <Stack.Screen
               name="cidade"
               options={{ title: 'Escolher cidade', presentation: 'modal' }}
             />

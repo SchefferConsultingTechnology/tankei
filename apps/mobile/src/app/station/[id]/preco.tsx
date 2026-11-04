@@ -21,7 +21,9 @@ import { useStation } from '@/api/queries';
 import { useAuth } from '@/auth/AuthProvider';
 import { authorizedRequest } from '@/auth/session';
 import { FuelSelector } from '@/components/FuelSelector';
+import { SignInRequired } from '@/components/SignInRequired';
 import { describePrice } from '@/format';
+import { useBottomPadding } from '@/hooks/useBottomPadding';
 import { useFuelPreference } from '@/hooks/useFuelPreference';
 import { priceFor } from '@/stations';
 import { colors, fontSize, radius, spacing } from '@/theme';
@@ -49,6 +51,7 @@ export default function ReportPriceScreen() {
   const [chosen, setChosen] = useState<FuelType | null>(null);
   const [digits, setDigits] = useState('');
   const queryClient = useQueryClient();
+  const bottomPadding = useBottomPadding();
 
   const report = useMutation({
     mutationFn: (input: {
@@ -63,22 +66,7 @@ export default function ReportPriceScreen() {
   });
 
   if (state.status !== 'signedIn') {
-    return (
-      <View style={styles.screen}>
-        <Text style={styles.title}>Entre para informar preços</Text>
-        <Text style={styles.muted}>
-          Cada informe fica ligado a uma conta. Isso evita abusos e dá peso aos
-          preços confirmados por mais de uma pessoa.
-        </Text>
-        <Pressable
-          style={styles.button}
-          onPress={() => router.push('/conta')}
-          accessibilityRole="button"
-        >
-          <Text style={styles.buttonText}>Entrar</Text>
-        </Pressable>
-      </View>
-    );
+    return <SignInRequired title="Entre para informar preços" />;
   }
 
   if (station.isPending) {
@@ -149,7 +137,7 @@ export default function ReportPriceScreen() {
     // O botão fica logo abaixo do campo, para caber acima do teclado; a tecla
     // "OK" do teclado também envia.
     <ScrollView
-      contentContainerStyle={styles.screen}
+      contentContainerStyle={[styles.screen, bottomPadding]}
       keyboardShouldPersistTaps="handled"
     >
       <Text style={styles.title}>{data.name}</Text>
