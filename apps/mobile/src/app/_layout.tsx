@@ -43,39 +43,47 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-      <PlaceProvider>
-        <StatusBar style="dark" />
-        <Stack
-          screenOptions={{
-            headerTintColor: colors.primary,
-            headerTitleStyle: { color: colors.text },
-            contentStyle: { backgroundColor: colors.background },
-          }}
-        >
-          <Stack.Screen
-            name="index"
-            options={{
-              title: 'Postos e preços',
-              headerRight: () => <AccountButton />,
+        <PlaceProvider>
+          <StatusBar style="dark" />
+          <Stack
+            screenOptions={{
+              headerTintColor: colors.primary,
+              headerTitleStyle: { color: colors.text },
+              contentStyle: { backgroundColor: colors.background },
             }}
-          />
-          <Stack.Screen name="station/[id]" options={{ title: 'Posto' }} />
-          <Stack.Screen
-            name="cidade"
-            options={{ title: 'Escolher cidade', presentation: 'modal' }}
-          />
-          <Stack.Screen
-            name="conta"
-            options={{ title: 'Conta', presentation: 'modal' }}
-          />
-        </Stack>
-      </PlaceProvider>
+          >
+            <Stack.Screen
+              name="index"
+              options={{
+                title: 'Postos e preços',
+                headerRight: () => <AccountButton />,
+              }}
+            />
+            <Stack.Screen name="station/[id]" options={{ title: 'Posto' }} />
+            <Stack.Screen
+              name="station/[id]/preco"
+              options={{ title: 'Informar preço', presentation: 'modal' }}
+            />
+            <Stack.Screen
+              name="cidade"
+              options={{ title: 'Escolher cidade', presentation: 'modal' }}
+            />
+            <Stack.Screen
+              name="conta"
+              options={{ title: 'Conta', presentation: 'modal' }}
+            />
+          </Stack>
+        </PlaceProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  accountButton: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  accountButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
   account: { color: colors.primary, fontSize: fontSize.lg, fontWeight: '600' },
 });

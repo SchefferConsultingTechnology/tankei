@@ -1,5 +1,5 @@
 import { FUEL_LABELS, type Station, type StationIqp } from '@tankei/shared';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import {
   ActivityIndicator,
   Alert,
@@ -80,7 +80,12 @@ export default function StationScreen() {
             </View>
           );
         })}
-        <SecondaryButton label="Informar preço" onPress={comingSoon} />
+        <SecondaryButton
+          label="Informar preço"
+          onPress={() =>
+            router.push({ pathname: '/station/[id]/preco', params: { id } })
+          }
+        />
       </View>
 
       <View style={styles.section}>
@@ -138,10 +143,7 @@ function IqpDetail({ iqp }: { iqp: StationIqp }) {
 }
 
 function comingSoon() {
-  Alert.alert(
-    'Em breve',
-    'Informar preços e avaliar postos estará disponível quando o login for ativado.',
-  );
+  Alert.alert('Em breve', 'Avaliar postos chega na próxima versão do app.');
 }
 
 /** "Traçar rota" abre o app de navegação instalado (ADR 0010). */

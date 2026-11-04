@@ -74,7 +74,7 @@ Situação atual:
 - **Piloto:** Curitibanos (SC); próxima cidade: Lages (SC). A base tem os ~45 mil postos do Brasil importados da ANP (ADR 0013).
 - **API:** busca de postos por proximidade, login com Google e Apple, informes de preço validados pela referência semanal da ANP, preço vigente com selos, avaliações e IQP (metodologia 1.0.0). A base da API do MVP está completa.
 - **App mobile (fase A):** mapa e lista pelo menor preço, perto de você ou numa cidade escolhida por estado e cidade (municípios do IBGE, ADR 0014). Mapa com react-native-maps (ADR 0010).
-- **App mobile (fase B, em andamento):** login com Google e avatar da conta (ADR 0015). O app roda num APK de desenvolvimento próprio (`pnpm --filter @tankei/mobile android`), não mais no Expo Go. Falta informar preço e avaliar.
+- **App mobile (fase B, em andamento):** login com Google, avatar da conta e informe de preço (ADR 0015). O app roda num APK de desenvolvimento próprio (`pnpm --filter @tankei/mobile android`), não mais no Expo Go. Falta avaliar o posto.
 
 ## Pendências
 

@@ -40,7 +40,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const token = await accessToken();
         const user = token ? await authorizedRequest('/me', meSchema) : null;
         if (active) {
-          setState(user ? { status: 'signedIn', user } : { status: 'signedOut' });
+          setState(
+            user ? { status: 'signedIn', user } : { status: 'signedOut' },
+          );
         }
       } catch {
         // Sem conexão: a sessão continua guardada e volta na próxima abertura.

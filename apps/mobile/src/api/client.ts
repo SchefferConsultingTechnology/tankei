@@ -6,6 +6,8 @@ export class ApiError extends Error {
   constructor(
     message: string,
     readonly status: number,
+    /** Código do caso de erro, quando a API informa (ex.: CONFIRMATION_REQUIRED). */
+    readonly code?: string,
   ) {
     super(message);
   }
@@ -53,11 +55,13 @@ export async function apiRequest<S extends z.ZodType>(
   if (response.status === 204) return undefined as z.output<S>;
   const payload: unknown = await response.json().catch(() => null);
   if (!response.ok) {
+    const error = payload && typeof payload === 'object' ? payload : {};
     const message =
-      payload && typeof payload === 'object' && 'message' in payload
-        ? String(payload.message)
+      'message' in error
+        ? String(error.message)
         : 'Não foi possível carregar os dados.';
-    throw new ApiError(message, response.status);
+    const code = 'code' in error ? String(error.code) : undefined;
+    throw new ApiError(message, response.status, code);
   }
   return schema.parse(payload);
 }
