@@ -39,7 +39,7 @@ pnpm db:up                       # PostGIS em localhost:5433
 cp apps/api/.env.example apps/api/.env
 pnpm --filter @tankei/shared build
 pnpm db:migrate                  # aplica as migrations do Drizzle
-pnpm --filter @tankei/api import:anp   # importa os postos de Curitibanos (API da ANP)
+pnpm --filter @tankei/api import:anp BR   # postos do Brasil (ou: SC, ou SC LAGES; sem argumento, Curitibanos)
 pnpm --filter @tankei/api import:anp-referencias   # médias semanais de preço da ANP
 pnpm --filter @tankei/api user:admin EMAIL         # torna administrador quem já fez login
 pnpm dev                         # sobe api, portal, admin e mobile
@@ -70,7 +70,7 @@ O plano de produto, as fases e a arquitetura estão em [docs/referencias/convers
 
 Situação atual:
 
-- **Piloto:** Curitibanos (SC), com os 10 postos importados da ANP.
+- **Piloto:** Curitibanos (SC); próxima cidade: Lages (SC). A base tem os ~45 mil postos do Brasil importados da ANP (ADR 0013).
 - **API:** busca de postos por proximidade, login com Google e Apple, informes de preço validados pela referência semanal da ANP, preço vigente com selos, avaliações e IQP (metodologia 1.0.0). A base da API do MVP está completa.
 - **Em andamento:** app mobile, com mapa react-native-maps (ADR 0010).
 

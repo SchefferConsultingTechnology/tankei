@@ -3,7 +3,6 @@ import type { FuelType } from '@tankei/shared';
 import { and, desc, eq } from 'drizzle-orm';
 import { DRIZZLE, type Database } from '../database/database.module';
 import { priceReferences } from '../database/schema';
-import { ParametersService } from '../parameters/parameters.service';
 
 /** A ANP não pesquisa gasolina premium: usa a aditivada como referência (ADR 0006). */
 const REFERENCE_FUEL: Partial<Record<FuelType, FuelType>> = {
@@ -21,17 +20,16 @@ export interface PriceReference {
 
 @Injectable()
 export class PriceReferencesService {
-  constructor(
-    @Inject(DRIZZLE) private readonly db: Database,
-    private readonly parameters: ParametersService,
-  ) {}
+  constructor(@Inject(DRIZZLE) private readonly db: Database) {}
 
   /**
-   * Referência mais recente para o combustível, na UF configurada em
-   * `price.reference_state`. Nula se ainda não houver referência importada.
+   * Referência mais recente para o combustível na UF do posto (ADR 0013).
+   * Nula se ainda não houver referência importada para a UF.
    */
-  async latest(fuelType: FuelType): Promise<PriceReference | null> {
-    const state = await this.parameters.get('price.reference_state');
+  async latest(
+    fuelType: FuelType,
+    state: string,
+  ): Promise<PriceReference | null> {
     const referenceFuel = REFERENCE_FUEL[fuelType] ?? fuelType;
 
     const [row] = await this.db

@@ -8,11 +8,6 @@ const positiveInt = z.number().int().positive();
  * a descrição: os valores ficam no banco, com histórico de alterações.
  */
 export const PARAMETER_DEFINITIONS = {
-  'price.reference_state': {
-    schema: z.string().regex(/^[A-Z]{2}$/),
-    description:
-      'UF cuja média semanal da ANP serve de referência para validar preços.',
-  },
   'price.reference_normal_pct': {
     schema: percent,
     description:

@@ -21,7 +21,8 @@ export const stations = pgTable(
   {
     id: uuid().primaryKey().defaultRandom(),
     cnpj: char({ length: 14 }).notNull().unique('stations_cnpj_unique'),
-    anpAuthorization: text().unique('stations_anp_authorization_unique'),
+    // Não é única: a base da ANP repete autorizações entre CNPJs diferentes.
+    anpAuthorization: text(),
     legalName: text().notNull(),
     tradeName: text(),
     brand: text().notNull(),
@@ -49,6 +50,7 @@ export const stations = pgTable(
       sql`(${t.location}::geography)`,
     ),
     index('stations_state_city_idx').on(t.state, t.city),
+    index('stations_anp_authorization_idx').on(t.anpAuthorization),
   ],
 );
 

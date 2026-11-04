@@ -40,26 +40,31 @@ interface AnpResposta {
   searchPageFilter: { numeroPagina: number; totalPagina: number };
 }
 
+/** Recorte da importação: um município (com UF), uma UF ou, vazio, o Brasil. */
+export interface AnpFiltro {
+  uf?: string;
+  municipio?: string;
+}
+
 @Injectable()
 export class AnpRevendedoresClient {
-  /** Todos os postos de combustíveis em operação no município (percorre as páginas). */
-  async listarPostos(uf: string, municipio: string): Promise<AnpPosto[]> {
+  /** Postos de combustíveis em operação no recorte (percorre as páginas). */
+  async listarPostos(filtro: AnpFiltro = {}): Promise<AnpPosto[]> {
+    if (filtro.municipio && !filtro.uf) {
+      throw new Error('Informe a UF junto com o município.');
+    }
     const postos: AnpPosto[] = [];
     let pagina = 1;
     let totalPaginas = 1;
 
     do {
       const url = new URL(`${BASE_URL}/combustivel`);
-      url.searchParams.set('uf', uf);
-      url.searchParams.set('municipio', municipio);
+      if (filtro.uf) url.searchParams.set('uf', filtro.uf);
+      if (filtro.municipio) url.searchParams.set('municipio', filtro.municipio);
       url.searchParams.set('numeropagina', String(pagina));
 
-      const resposta = await fetch(url, {
-        signal: AbortSignal.timeout(TIMEOUT_MS),
-      });
-      if (!resposta.ok) {
-        throw new Error(`API da ANP respondeu ${resposta.status} em ${url}`);
-      }
+      if (pagina > 1) await this.wait(this.timing.pageIntervalMs);
+      const resposta = await this.fetchWithRetry(url);
 
       const corpo = (await resposta.json()) as AnpResposta;
       if (!corpo.succeeded) {
@@ -72,5 +77,42 @@ export class AnpRevendedoresClient {
     } while (pagina <= totalPaginas);
 
     return postos;
+  }
+
+  /** Esperas configuráveis só para os testes não demorarem. */
+  timing = {
+    pageIntervalMs: 2_000,
+    retryBaseMs: 5_000,
+    maxAttempts: 5,
+  };
+
+  /**
+   * A ANP limita a frequência de chamadas (429) e às vezes falha
+   * temporariamente (5xx): tenta de novo com espera crescente, respeitando o
+   * Retry-After quando vier.
+   */
+  private async fetchWithRetry(url: URL): Promise<Response> {
+    for (let attempt = 1; ; attempt++) {
+      const resposta = await fetch(url, {
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      });
+      const temporary = resposta.status === 429 || resposta.status >= 500;
+      if (resposta.ok || !temporary || attempt >= this.timing.maxAttempts) {
+        if (!resposta.ok) {
+          throw new Error(`API da ANP respondeu ${resposta.status} em ${url}`);
+        }
+        return resposta;
+      }
+      const retryAfter = Number(resposta.headers.get('retry-after'));
+      await this.wait(
+        retryAfter > 0
+          ? retryAfter * 1000
+          : this.timing.retryBaseMs * 2 ** (attempt - 1),
+      );
+    }
+  }
+
+  private wait(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

@@ -151,19 +151,22 @@ async function main() {
     const db = app.get<Database>(DRIZZLE);
     const now = Date.now();
 
-    for (const { location, ...station } of devStations) {
-      await db.insert(schema.stations).values({
-        ...station,
-        location: location
-          ? sql`ST_SetSRID(ST_MakePoint(${location.x}, ${location.y}), 4326)`
-          : null,
-      });
+    // Em lotes: o banco de desenvolvimento pode ter os postos do Brasil inteiro.
+    for (const batch of chunks(devStations)) {
+      await db.insert(schema.stations).values(
+        batch.map(({ location, ...station }) => ({
+          ...station,
+          location: location
+            ? sql`ST_SetSRID(ST_MakePoint(${location.x}, ${location.y}), 4326)`
+            : null,
+        })),
+      );
     }
-    if (devFuels.length > 0) {
-      await db.insert(schema.stationFuels).values(devFuels);
+    for (const batch of chunks(devFuels)) {
+      await db.insert(schema.stationFuels).values(batch);
     }
-    if (devReferences.length > 0) {
-      await db.insert(schema.priceReferences).values(devReferences);
+    for (const batch of chunks(devReferences)) {
+      await db.insert(schema.priceReferences).values(batch);
     }
 
     const drivers = await db
@@ -235,6 +238,14 @@ async function main() {
   } finally {
     await app.close();
   }
+}
+
+function chunks<T>(items: T[], size = 1000): T[][] {
+  const result: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    result.push(items.slice(i, i + size));
+  }
+  return result;
 }
 
 main().catch((error) => {

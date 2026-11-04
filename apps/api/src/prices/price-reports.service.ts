@@ -68,7 +68,7 @@ export class PriceReportsService {
     now = new Date(),
   ): Promise<PriceReportResponse> {
     const [station] = await this.db
-      .select({ id: stations.id })
+      .select({ id: stations.id, state: stations.state })
       .from(stations)
       .where(and(eq(stations.id, stationId), eq(stations.active, true)));
     if (!station) throw new NotFoundException('Posto não encontrado.');
@@ -101,7 +101,10 @@ export class PriceReportsService {
       );
     }
 
-    const reference = await this.references.latest(request.fuelType);
+    const reference = await this.references.latest(
+      request.fuelType,
+      station.state,
+    );
     const classification = classifyReport(
       request.price,
       reference?.averagePrice ?? null,

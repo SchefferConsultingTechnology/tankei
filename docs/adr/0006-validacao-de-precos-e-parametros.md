@@ -18,7 +18,7 @@ Além disso, as regras de preço envolvem vários números (percentuais, prazos,
 
 ### Referência de preço
 
-- A referência de cada combustível é o **preço médio da revenda em Santa Catarina** no resumo semanal da ANP mais recente.
+- A referência de cada combustível é o **preço médio da revenda em Santa Catarina** no resumo semanal da ANP mais recente. (Atualizado pelo ADR 0013: vale a média da UF do próprio posto.)
 - A gasolina premium não aparece no resumo: usa a referência da **gasolina aditivada**.
 - A API importa o resumo semanal e grava as referências em uma tabela só de inserção, com a semana, o estado, o combustível, a média, o mínimo, o máximo e o número de postos pesquisados.
 - O nome do arquivo da ANP não segue um padrão fixo: a importação busca o link na página do levantamento.
@@ -46,7 +46,7 @@ Os números das regras de preço ficam em **parâmetros no banco**, não no cód
 
 | Parâmetro | Valor inicial |
 |---|---|
-| UF da referência de preço | SC |
+| ~~UF da referência de preço~~ (substituído pelo ADR 0013: vale a UF do posto) | ~~SC~~ |
 | Limite normal de distância da referência | 25% |
 | Limite máximo de distância da referência | 60% |
 | Variação que pede confirmação ao usuário | 10% |

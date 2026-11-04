@@ -19,7 +19,7 @@ function fakeDb(rows: { key: string; value: unknown }[]) {
 const allParameters = () =>
   PARAMETER_KEYS.map((key) => ({
     key,
-    value: key === 'price.reference_state' ? 'SC' : 10,
+    value: 10,
   }));
 
 describe('ParametersService', () => {
@@ -27,8 +27,8 @@ describe('ParametersService', () => {
     const { db } = fakeDb(allParameters());
     const service = new ParametersService(db);
 
-    await expect(service.get('price.reference_state')).resolves.toBe('SC');
     await expect(service.get('price.reference_max_pct')).resolves.toBe(10);
+    await expect(service.get('review.min_interval_days')).resolves.toBe(10);
   });
 
   it('usa cache entre leituras', async () => {
@@ -68,12 +68,10 @@ describe('ParametersService', () => {
   });
 
   it('falha ao ler valor inválido gravado no banco', async () => {
-    const { db } = fakeDb([
-      { key: 'price.reference_state', value: 'Santa Catarina' },
-    ]);
+    const { db } = fakeDb([{ key: 'price.reference_max_pct', value: 150 }]);
     const service = new ParametersService(db);
 
-    await expect(service.get('price.reference_state')).rejects.toThrow();
+    await expect(service.get('price.reference_max_pct')).rejects.toThrow();
   });
 
   it('impede a subida da API quando falta parâmetro', async () => {
