@@ -14,6 +14,7 @@ describe('OidcIdentityVerifier', () => {
       email: 'maria@example.com',
       email_verified: true,
       name: 'Maria',
+      picture: 'https://lh3.googleusercontent.com/a/foto',
     });
 
     await expect(verifier.verify(token)).resolves.toEqual({
@@ -21,6 +22,15 @@ describe('OidcIdentityVerifier', () => {
       subject: 'google-123',
       email: 'maria@example.com',
       name: 'Maria',
+      picture: 'https://lh3.googleusercontent.com/a/foto',
+    });
+  });
+
+  it('ignora foto fora de https', async () => {
+    const token = sign('google-123', { picture: 'javascript:alert(1)' });
+
+    await expect(verifier.verify(token)).resolves.toMatchObject({
+      picture: null,
     });
   });
 

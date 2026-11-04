@@ -93,18 +93,22 @@ describe('Autenticação e conta (e2e)', () => {
         email: 'maria@teste.tankei',
         email_verified: true,
         name: 'Maria',
+        picture: 'https://lh3.googleusercontent.com/a/maria',
       });
 
       expect(first.user).toMatchObject({
         name: 'Maria',
         email: 'maria@teste.tankei',
+        avatarUrl: 'https://lh3.googleusercontent.com/a/maria',
         role: 'motorista',
         managedStations: [],
       });
       expect(first.expiresIn).toBe(900);
 
+      // Sem foto no provedor, a foto antiga deixa de aparecer.
       const second = await login(subject);
       expect(second.user.id).toBe(first.user.id);
+      expect(second.user.avatarUrl).toBeNull();
     });
 
     it('rejeita token de identidade inválido', async () => {
@@ -281,6 +285,7 @@ describe('Autenticação e conta (e2e)', () => {
         email: 'joao@teste.tankei',
         email_verified: true,
         name: 'João',
+        picture: 'https://lh3.googleusercontent.com/a/joao',
       });
 
       await http()
@@ -292,7 +297,7 @@ describe('Autenticação e conta (e2e)', () => {
         .select()
         .from(users)
         .where(eq(users.id, session.user.id));
-      expect(row).toMatchObject({ name: null, email: null });
+      expect(row).toMatchObject({ name: null, email: null, avatarUrl: null });
       expect(row.deletedAt).not.toBeNull();
 
       await http()

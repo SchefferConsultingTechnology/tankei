@@ -24,7 +24,7 @@ export class AuthService {
 
   /**
    * Login com Google ou Apple (ADR 0007). Na primeira vez, cria a conta como
-   * motorista. Nas seguintes, atualiza o e-mail verificado.
+   * motorista. Nas seguintes, atualiza o e-mail verificado e a foto.
    */
   async login(request: LoginRequest): Promise<LoginResponse> {
     const verifier = this.verifiers[request.provider];
@@ -54,18 +54,24 @@ export class AuthService {
         );
 
       if (existing) {
-        if (identity.email) {
-          await tx
-            .update(users)
-            .set({ email: identity.email })
-            .where(eq(users.id, existing.id));
-        }
+        // A foto pode mudar ou ser removida no provedor: acompanha a cada login.
+        await tx
+          .update(users)
+          .set({
+            avatarUrl: identity.picture,
+            ...(identity.email && { email: identity.email }),
+          })
+          .where(eq(users.id, existing.id));
         return existing;
       }
 
       const [created] = await tx
         .insert(users)
-        .values({ name: name ?? identity.name, email: identity.email })
+        .values({
+          name: name ?? identity.name,
+          email: identity.email,
+          avatarUrl: identity.picture,
+        })
         .returning({ id: users.id, role: users.role });
       await tx.insert(userIdentities).values({
         userId: created.id,

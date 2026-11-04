@@ -92,6 +92,13 @@
       "when": 1793799561038,
       "tag": "0012_municipalities",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793814091130,
+      "tag": "0013_user_avatar",
+      "breakpoints": true
     }
   ]
 }

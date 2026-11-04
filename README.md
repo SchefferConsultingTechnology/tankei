@@ -74,10 +74,11 @@ Situação atual:
 - **Piloto:** Curitibanos (SC); próxima cidade: Lages (SC). A base tem os ~45 mil postos do Brasil importados da ANP (ADR 0013).
 - **API:** busca de postos por proximidade, login com Google e Apple, informes de preço validados pela referência semanal da ANP, preço vigente com selos, avaliações e IQP (metodologia 1.0.0). A base da API do MVP está completa.
 - **App mobile (fase A):** mapa e lista pelo menor preço, perto de você ou numa cidade escolhida por estado e cidade (municípios do IBGE, ADR 0014). Mapa com react-native-maps (ADR 0010).
+- **App mobile (fase B, em andamento):** login com Google e avatar da conta (ADR 0015). O app roda num APK de desenvolvimento próprio (`pnpm --filter @tankei/mobile android`), não mais no Expo Go. Falta informar preço e avaliar.
 
 ## Pendências
 
 - **CI no GitHub Actions:** adiada até existir um ambiente para a API; será decidida junto com a infraestrutura. Os testes e2e já criam o próprio banco (`<banco>_test`), então basta um serviço PostGIS no workflow; nenhum segredo é necessário.
 - **Coordenadas de 3 postos:** os dois da Gerhardt & Pelegrini e o ALB não têm localização na ANP e não aparecem na busca.
-- **Login no app:** as credenciais do Google estão criadas (ADR 0015); falta o APK de desenvolvimento e a tela de login. A Apple só quando o app for para o iOS.
+- **Login com Apple:** só quando o app for para o iOS (junto com o cliente iOS do Google, ADR 0015).
 - **Auditoria das ações administrativas** (ADR 0007): a remoção do vínculo de gestor ainda não deixa registro.

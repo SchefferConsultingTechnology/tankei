@@ -58,6 +58,10 @@ export const meSchema = z.object({
     z.string(),
     'E-mail verificado pelo provedor, quando houver.',
   ),
+  avatarUrl: nullable(
+    z.url(),
+    'Endereço da foto da conta no provedor de login, quando houver.',
+  ),
   role: z.enum(USER_ROLES),
   managedStations: z
     .array(z.object({ id: z.uuid(), name: z.string() }))

@@ -8,6 +8,8 @@ export interface VerifiedIdentity {
   /** Só quando o provedor confirma que o e-mail foi verificado. */
   email: string | null;
   name: string | null;
+  /** Endereço da foto da conta (claim "picture"; a Apple não envia). */
+  picture: string | null;
 }
 
 export interface OidcVerifierConfig {
@@ -54,6 +56,11 @@ export class OidcIdentityVerifier {
       email:
         verified && typeof payload.email === 'string' ? payload.email : null,
       name: typeof payload.name === 'string' ? payload.name : null,
+      picture:
+        typeof payload.picture === 'string' &&
+        payload.picture.startsWith('https://')
+          ? payload.picture
+          : null,
     };
   }
 }

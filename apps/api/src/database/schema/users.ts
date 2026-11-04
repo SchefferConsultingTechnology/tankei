@@ -12,13 +12,15 @@ import { stations } from './stations';
 
 /**
  * Conta de usuário (ADR 0007). Dados pessoais mínimos (ADR 0009): na exclusão
- * da conta, nome e e-mail são apagados e a linha permanece, anônima, para que
- * informes e avaliações continuem no histórico.
+ * da conta, nome, e-mail e foto são apagados e a linha permanece, anônima, para
+ * que informes e avaliações continuem no histórico.
  */
 export const users = pgTable('users', {
   id: uuid().primaryKey().defaultRandom(),
   name: text(),
   email: text(),
+  // Endereço da foto no provedor de login; a imagem não é copiada.
+  avatarUrl: text(),
   role: userRoleEnum().notNull().default('motorista'),
   deletedAt: timestamp({ withTimezone: true }),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),

@@ -26,6 +26,7 @@ export class UsersService {
         id: users.id,
         name: users.name,
         email: users.email,
+        avatarUrl: users.avatarUrl,
         role: users.role,
       })
       .from(users)
@@ -61,7 +62,12 @@ export class UsersService {
     await this.db.transaction(async (tx) => {
       await tx
         .update(users)
-        .set({ name: null, email: null, deletedAt: new Date() })
+        .set({
+          name: null,
+          email: null,
+          avatarUrl: null,
+          deletedAt: new Date(),
+        })
         .where(eq(users.id, userId));
       await tx.delete(userIdentities).where(eq(userIdentities.userId, userId));
       await tx

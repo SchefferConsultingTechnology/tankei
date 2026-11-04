@@ -12,6 +12,11 @@
     },
     "android": {
       "package": "br.com.tankei.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyC-hpnuntdXqK-fAk5nE9t3FLcCqdz-0Fg"
+        }
+      },
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -30,7 +35,14 @@
         {
           "locationWhenInUsePermission": "O Tankei usa sua localização para mostrar os postos mais próximos de você."
         }
-      ]
+      ],
+      [
+        "react-native-nitro-google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.881187129858-3elfcgukc2u988u5gc5sqfvjqv0hd334"
+        }
+      ],
+      "expo-secure-store"
     ],
     "scheme": "tankei",
     "extra": {
