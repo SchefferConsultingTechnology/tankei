@@ -10,8 +10,10 @@ import {
 } from 'react-native';
 import { useCityStations, useNearbyStations } from '@/api/queries';
 import { FuelSelector } from '@/components/FuelSelector';
+import { StationCard } from '@/components/StationCard';
 import { StationList } from '@/components/StationList';
 import { StationMap } from '@/components/StationMap';
+import { useBottomPadding } from '@/hooks/useBottomPadding';
 import { useFuelPreference } from '@/hooks/useFuelPreference';
 import { PILOT_CITY_CENTER, useUserLocation } from '@/hooks/useUserLocation';
 import { usePlace } from '@/place';
@@ -26,6 +28,8 @@ export default function HomeScreen() {
   const location = useUserLocation();
   const [fuel, setFuel] = useFuelPreference();
   const [mode, setMode] = useState<Mode>('mapa');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const cardPadding = useBottomPadding(spacing.md);
 
   // Só uma das buscas fica ativa: perto de você ou a cidade escolhida.
   const nearby = useNearbyStations(city ? null : location.coords);
@@ -39,6 +43,9 @@ export default function HomeScreen() {
     : location.coords;
   const fuels = availableFuels(stations, FUEL_TYPES);
   if (!fuels.includes(fuel)) fuels.unshift(fuel);
+
+  // Some sozinho quando o posto sai da busca (outra cidade ou outro lugar).
+  const selected = stations.find((station) => station.id === selectedId);
 
   const open = (station: ListedStation) =>
     router.push({ pathname: '/station/[id]', params: { id: station.id } });
@@ -63,15 +70,29 @@ export default function HomeScreen() {
     }
     if (mode === 'mapa') {
       return (
-        <StationMap
-          // Remonta ao trocar de lugar, para centralizar o mapa no novo ponto.
-          key={city?.code ?? 'nearby'}
-          stations={stations}
-          fuel={fuel}
-          center={center}
-          showsUserLocation={!city && location.status === 'granted'}
-          onSelect={open}
-        />
+        <>
+          <StationMap
+            // Remonta ao trocar de lugar, para centralizar o mapa no novo ponto.
+            key={city?.code ?? 'nearby'}
+            stations={stations}
+            fuel={fuel}
+            center={center}
+            showsUserLocation={!city && location.status === 'granted'}
+            selectedId={selected?.id ?? null}
+            onSelect={(station) => setSelectedId(station.id)}
+            onDeselect={() => setSelectedId(null)}
+          />
+          {selected && (
+            <View style={[styles.mapCard, cardPadding]} pointerEvents="box-none">
+              <StationCard
+                station={selected}
+                fuel={fuel}
+                onPress={() => open(selected)}
+                style={styles.mapCardShadow}
+              />
+            </View>
+          )}
+        </>
       );
     }
     if (stations.length === 0) {
@@ -219,6 +240,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   content: { flex: 1 },
+  mapCard: {
+    position: 'absolute',
+    left: spacing.lg,
+    right: spacing.lg,
+    bottom: 0,
+  },
+  mapCardShadow: {
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+  },
   centered: {
     flex: 1,
     alignItems: 'center',

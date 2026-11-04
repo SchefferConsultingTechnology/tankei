@@ -23,8 +23,15 @@ interface Props {
   fuel: FuelType;
   center: Coordinates;
   showsUserLocation: boolean;
+  /** Posto destacado no mapa (o cartão dele aparece por cima). */
+  selectedId: string | null;
   onSelect: (station: ListedStation) => void;
+  /** Toque fora dos marcadores. */
+  onDeselect: () => void;
 }
+
+/** Marcador selecionado fica por cima da pilha. */
+const TOP_Z_INDEX = 1_000_000;
 
 /** Zoom inicial: cerca de 5 km de altura de tela. */
 const INITIAL_DELTA = 0.05;
@@ -39,7 +46,9 @@ export function StationMap({
   fuel,
   center,
   showsUserLocation,
+  selectedId,
   onSelect,
+  onDeselect,
 }: Props) {
   const mapRef = useRef<MapView>(null);
   const [latitudeDelta, setLatitudeDelta] = useState(INITIAL_DELTA);
@@ -67,6 +76,10 @@ export function StationMap({
         latitudeDelta: INITIAL_DELTA,
         longitudeDelta: INITIAL_DELTA,
       }}
+      onPress={(event) => {
+        // No iOS, o toque no marcador também chega ao mapa.
+        if (event.nativeEvent.action !== 'marker-press') onDeselect();
+      }}
       onLayout={(event) => setMapHeight(event.nativeEvent.layout.height)}
       onRegionChangeComplete={(region) =>
         setLatitudeDelta(region.latitudeDelta)
@@ -90,6 +103,7 @@ export function StationMap({
           key={station.id}
           station={station}
           fuel={fuel}
+          selected={station.id === selectedId}
           placement={
             placements.get(station.id) ?? { offset: { x: 0, y: 0 }, zIndex: 0 }
           }
@@ -103,11 +117,13 @@ export function StationMap({
 function PriceMarker({
   station,
   fuel,
+  selected,
   placement,
   onPress,
 }: {
   station: LocatedStation;
   fuel: FuelType;
+  selected: boolean;
   placement: MarkerPlacement;
   onPress: () => void;
 }) {
@@ -115,7 +131,7 @@ function PriceMarker({
 
   // Marcador com componente React: o mapa redesenha enquanto acompanha
   // mudanças da view. Acompanha só até o conteúdo atual ser desenhado (desempenho).
-  const content = `${price?.price}|${price?.badge}|${price?.stale}`;
+  const content = `${price?.price}|${price?.badge}|${price?.stale}|${selected}`;
   const [drawn, setDrawn] = useState<string | null>(null);
   useEffect(() => {
     const timer = setTimeout(() => setDrawn(content), 500);
@@ -131,14 +147,13 @@ function PriceMarker({
           latitude: station.location.lat,
           longitude: station.location.lng,
         }}
-        title={station.name}
-        description="Sem preço informado"
+        // Sem title: o nome aparece no cartão, não no balão do mapa.
         onPress={onPress}
         tracksViewChanges={tracking}
-        zIndex={0}
+        zIndex={selected ? TOP_Z_INDEX : 0}
         anchor={{ x: 0.5, y: 0.5 }}
       >
-        <View style={styles.noPrice} />
+        <View style={[styles.noPrice, selected && styles.noPriceSelected]} />
       </Marker>
     );
   }
@@ -151,10 +166,9 @@ function PriceMarker({
         latitude: station.location.lat,
         longitude: station.location.lng,
       }}
-      title={station.name}
       onPress={onPress}
       tracksViewChanges={tracking}
-      zIndex={placement.zIndex}
+      zIndex={selected ? TOP_Z_INDEX : placement.zIndex}
       // Deslocado para a pilha: anchor (fração do marcador) no Google Maps,
       // centerOffset (pontos) no Apple Maps.
       anchor={{
@@ -163,7 +177,7 @@ function PriceMarker({
       }}
       centerOffset={{ x, y: -y }}
     >
-      <PriceTag price={price} />
+      <PriceTag price={price} highlighted={selected} />
     </Marker>
   );
 }
@@ -178,4 +192,5 @@ const styles = StyleSheet.create({
     borderColor: colors.textMuted,
     borderWidth: 2,
   },
+  noPriceSelected: { borderColor: colors.primary, borderWidth: 4 },
 });
