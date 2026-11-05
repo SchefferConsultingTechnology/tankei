@@ -1,3 +1,17 @@
+import Alert from '@mui/material/Alert';
+import Autocomplete from '@mui/material/Autocomplete';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import MenuItem from '@mui/material/MenuItem';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import Step from '@mui/material/Step';
+import StepLabel from '@mui/material/StepLabel';
+import Stepper from '@mui/material/Stepper';
+import TextField from '@mui/material/TextField';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import Typography from '@mui/material/Typography';
 import {
   BRAZIL_STATES,
   CLAIM_POSITION_LABELS,
@@ -24,117 +38,148 @@ export function ClaimForm({
   onSent: () => void;
 }) {
   const [station, setStation] = useState<ClaimableStation | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
+  const step = confirmed && station ? 1 : 0;
 
   return (
-    <section className="stack">
-      <h1 className="page-title">Reivindicar posto</h1>
-      <p className="muted" style={{ margin: 0 }}>
-        Passo {station ? 2 : 1} de 2 ·{' '}
-        {station ? 'Seus dados para contato' : 'Encontre o posto'}
-      </p>
-      {station ? (
-        <ContactStep
-          user={user}
+    <Stack spacing={2.5}>
+      <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
+        Reivindicar posto
+      </Typography>
+      <Stepper activeStep={step} alternativeLabel>
+        <Step>
+          <StepLabel>Encontre o posto</StepLabel>
+        </Step>
+        <Step>
+          <StepLabel>Seus dados</StepLabel>
+        </Step>
+      </Stepper>
+
+      {step === 0 ? (
+        <SearchStep
           station={station}
-          onBack={() => setStation(null)}
-          onSent={onSent}
+          onStation={setStation}
+          onNext={() => setConfirmed(true)}
+          onCancel={onCancel}
         />
       ) : (
-        <SearchStep onPick={setStation} onCancel={onCancel} />
+        <ContactStep
+          user={user}
+          station={station!}
+          onBack={() => setConfirmed(false)}
+          onSent={onSent}
+        />
       )}
-    </section>
+    </Stack>
+  );
+}
+
+function StationSummary({ station }: { station: ClaimableStation }) {
+  return (
+    <Paper variant="outlined" sx={{ p: 2 }}>
+      <Typography sx={{ fontWeight: 700 }}>{station.name}</Typography>
+      <Typography variant="body2" color="text.secondary">
+        {station.legalName} · CNPJ {station.cnpj}
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
+        {station.brand} · {station.address} · {station.city}/{station.state}
+      </Typography>
+    </Paper>
   );
 }
 
 function SearchStep({
-  onPick,
+  station,
+  onStation,
+  onNext,
   onCancel,
 }: {
-  onPick: (station: ClaimableStation) => void;
+  station: ClaimableStation | null;
+  onStation: (station: ClaimableStation | null) => void;
+  onNext: () => void;
   onCancel: () => void;
 }) {
-  const [text, setText] = useState('');
+  const [input, setInput] = useState('');
   const [query, setQuery] = useState('');
   const [state, setState] = useState('');
   const search = useClaimSearch(query, state);
 
   useEffect(() => {
-    const timer = setTimeout(() => setQuery(text), SEARCH_DELAY_MS);
+    const timer = setTimeout(() => setQuery(input), SEARCH_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [text]);
+  }, [input]);
 
   const ready = query.trim().length >= 3;
-  const results = search.data ?? [];
 
   return (
-    <div className="stack">
-      <div className="card stack">
-        <div className="field">
-          <label htmlFor="claim-q">CNPJ ou nome do posto</label>
-          <input
-            id="claim-q"
-            className="input"
-            autoFocus
-            autoComplete="off"
-            placeholder="00.000.000/0000-00 ou Posto Exemplo"
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-          />
-        </div>
-        <div className="field">
-          <label htmlFor="claim-state">Estado (para buscar pelo nome)</label>
-          <select
-            id="claim-state"
-            className="input"
-            value={state}
-            onChange={(event) => setState(event.target.value)}
-          >
-            <option value="">Todos</option>
-            {BRAZIL_STATES.map((s) => (
-              <option key={s.code} value={s.code}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {search.isError && <p className="error">{search.error.message}</p>}
-      {ready && search.isFetching && <p className="muted">Buscando…</p>}
-      {ready && search.isSuccess && results.length === 0 && (
-        <p className="card muted">
-          Nenhum posto encontrado. Confira o CNPJ (está na nota fiscal) ou tente
-          parte do nome.
-        </p>
-      )}
-
-      {results.length > 0 && (
-        <ul className="list card">
-          {results.map((station) => (
-            <li key={station.id}>
-              <button
-                type="button"
-                className="pick"
-                onClick={() => onPick(station)}
-              >
-                <strong>{station.name}</strong>
-                <span className="muted">
-                  {station.legalName} · CNPJ {station.cnpj}
-                </span>
-                <span className="muted">
-                  {station.brand} · {station.address} · {station.city}/
-                  {station.state}
-                </span>
-              </button>
+    <Stack spacing={2}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+        <Autocomplete
+          sx={{ flex: 2 }}
+          options={ready ? (search.data ?? []) : []}
+          value={station}
+          onChange={(_, value) => onStation(value)}
+          inputValue={input}
+          onInputChange={(_, value) => setInput(value)}
+          // A filtragem é feita pela API (CNPJ ou nome, sem acento).
+          filterOptions={(options) => options}
+          getOptionLabel={(option) => option.name}
+          isOptionEqualToValue={(a, b) => a.id === b.id}
+          loading={ready && search.isFetching}
+          noOptionsText={
+            ready
+              ? 'Nenhum posto encontrado. Confira o CNPJ (está na nota fiscal) ou tente parte do nome.'
+              : 'Digite pelo menos 3 caracteres'
+          }
+          loadingText="Buscando…"
+          renderOption={({ key, ...props }, option) => (
+            <li key={key} {...props}>
+              <Box>
+                <Typography sx={{ fontWeight: 600 }}>{option.name}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {option.legalName} · CNPJ {option.cnpj}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {option.brand} · {option.city}/{option.state}
+                </Typography>
+              </Box>
             </li>
+          )}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              autoFocus
+              label="CNPJ ou nome do posto"
+              placeholder="00.000.000/0000-00 ou Posto Exemplo"
+            />
+          )}
+        />
+        <TextField
+          select
+          label="Estado (busca por nome)"
+          value={state}
+          onChange={(event) => setState(event.target.value)}
+          sx={{ flex: 1 }}
+        >
+          <MenuItem value="">Todos</MenuItem>
+          {BRAZIL_STATES.map((s) => (
+            <MenuItem key={s.code} value={s.code}>
+              {s.name}
+            </MenuItem>
           ))}
-        </ul>
-      )}
+        </TextField>
+      </Stack>
 
-      <button type="button" className="button secondary" onClick={onCancel}>
-        Cancelar
-      </button>
-    </div>
+      {search.isError && <Alert severity="error">{search.error.message}</Alert>}
+      {station && <StationSummary station={station} />}
+
+      <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+        <Button onClick={onCancel}>Cancelar</Button>
+        <Button variant="contained" disabled={!station} onClick={onNext}>
+          Continuar
+        </Button>
+      </Stack>
+    </Stack>
   );
 }
 
@@ -156,10 +201,8 @@ function ContactStep({
   const [message, setMessage] = useState('');
 
   const phoneDigits = phone.replace(/\D/g, '');
-  const valid =
-    contactName.trim().length >= 3 &&
-    (phoneDigits.length === 10 || phoneDigits.length === 11) &&
-    position !== null;
+  const phoneOk = phoneDigits.length === 10 || phoneDigits.length === 11;
+  const valid = contactName.trim().length >= 3 && phoneOk && position !== null;
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -177,107 +220,82 @@ function ContactStep({
   }
 
   return (
-    <form className="stack" onSubmit={submit}>
-      <div className="card stack" style={{ gap: 4 }}>
-        <strong>{station.name}</strong>
-        <span className="muted">
-          {station.legalName} · CNPJ {station.cnpj}
-        </span>
-        <span className="muted">
-          {station.address} · {station.city}/{station.state}
-        </span>
-        <button
-          type="button"
-          className="button ghost"
-          style={{ justifySelf: 'start', paddingLeft: 0 }}
-          onClick={onBack}
+    <Stack component="form" spacing={2} onSubmit={submit}>
+      <StationSummary station={station} />
+
+      <TextField
+        label="Seu nome"
+        autoComplete="name"
+        value={contactName}
+        onChange={(event) => setContactName(event.target.value)}
+        fullWidth
+      />
+      <TextField
+        label="Telefone com DDD"
+        type="tel"
+        placeholder="(49) 99999-9999"
+        value={phone}
+        onChange={(event) => setPhone(event.target.value)}
+        error={phone.trim() !== '' && !phoneOk}
+        helperText="A equipe Tankei liga nesse número para confirmar que você responde pelo posto. O telefone não aparece para mais ninguém."
+        fullWidth
+        slotProps={{ htmlInput: { inputMode: 'tel', autoComplete: 'tel' } }}
+      />
+      <Box>
+        <Typography
+          id="claim-position"
+          variant="body2"
+          color="text.secondary"
+          sx={{ mb: 0.75 }}
         >
-          Trocar posto
-        </button>
-      </div>
-
-      <div className="card stack">
-        <div className="field">
-          <label htmlFor="claim-name">Seu nome</label>
-          <input
-            id="claim-name"
-            className="input"
-            autoComplete="name"
-            value={contactName}
-            onChange={(event) => setContactName(event.target.value)}
-          />
-        </div>
-        <div className="field">
-          <label htmlFor="claim-phone">Telefone com DDD</label>
-          <input
-            id="claim-phone"
-            className="input"
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            placeholder="(49) 99999-9999"
-            value={phone}
-            onChange={(event) => setPhone(event.target.value)}
-          />
-        </div>
-        <div className="field">
-          <span
-            id="claim-position"
-            style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}
-          >
-            Seu cargo no posto
-          </span>
-          <div
-            className="segmented"
-            role="radiogroup"
-            aria-labelledby="claim-position"
-          >
-            {CLAIM_POSITIONS.map((p) => (
-              <button
-                key={p}
-                type="button"
-                role="radio"
-                aria-checked={position === p}
-                onClick={() => setPosition(p)}
-              >
-                {CLAIM_POSITION_LABELS[p]}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="field">
-          <label htmlFor="claim-message">Observação (opcional)</label>
-          <input
-            id="claim-message"
-            className="input"
-            maxLength={500}
-            placeholder="Melhor horário para ligar, por exemplo"
-            value={message}
-            onChange={(event) => setMessage(event.target.value)}
-          />
-        </div>
-      </div>
-
-      <p className="muted" style={{ margin: 0 }}>
-        A equipe Tankei liga nesse número para confirmar que você responde pelo
-        posto. O telefone não aparece para ninguém além da equipe.
-      </p>
+          Seu cargo no posto
+        </Typography>
+        <ToggleButtonGroup
+          exclusive
+          fullWidth
+          color="primary"
+          value={position}
+          onChange={(_, value: ClaimPosition | null) =>
+            value && setPosition(value)
+          }
+          aria-labelledby="claim-position"
+        >
+          {CLAIM_POSITIONS.map((p) => (
+            <ToggleButton key={p} value={p}>
+              {CLAIM_POSITION_LABELS[p]}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      </Box>
+      <TextField
+        label="Observação (opcional)"
+        placeholder="Melhor horário para ligar, por exemplo"
+        value={message}
+        onChange={(event) => setMessage(event.target.value)}
+        multiline
+        minRows={2}
+        fullWidth
+        slotProps={{ htmlInput: { maxLength: 500 } }}
+      />
 
       {create.error && (
-        <p className="error">
+        <Alert severity="error">
           {create.error instanceof ApiError
             ? create.error.message
             : 'Não foi possível enviar. Tente de novo.'}
-        </p>
+        </Alert>
       )}
 
-      <button
-        type="submit"
-        className="button"
-        disabled={!valid || create.isPending}
-      >
-        {create.isPending ? 'Enviando…' : 'Enviar pedido'}
-      </button>
-    </form>
+      <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+        <Button onClick={onBack}>Voltar</Button>
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={!valid || create.isPending}
+        >
+          {create.isPending ? 'Enviando…' : 'Enviar pedido'}
+        </Button>
+      </Stack>
+    </Stack>
   );
 }

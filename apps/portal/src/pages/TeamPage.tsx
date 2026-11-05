@@ -1,3 +1,34 @@
+import DeleteOutline from '@mui/icons-material/DeleteOutlined';
+import EditOutlined from '@mui/icons-material/EditOutlined';
+import PersonAddAlt1Outlined from '@mui/icons-material/PersonAddAlt1Outlined';
+import Alert from '@mui/material/Alert';
+import Avatar from '@mui/material/Avatar';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
+import Chip from '@mui/material/Chip';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import FormControl from '@mui/material/FormControl';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormGroup from '@mui/material/FormGroup';
+import FormLabel from '@mui/material/FormLabel';
+import IconButton from '@mui/material/IconButton';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import Paper from '@mui/material/Paper';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import Snackbar from '@mui/material/Snackbar';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import {
   ORG_ROLE_DESCRIPTIONS,
   ORG_ROLE_LABELS,
@@ -8,18 +39,25 @@ import {
   type OrgScope,
   type TeamMember,
 } from '@tankei/shared';
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 import { ApiError } from '../api/client';
 import { useTeam, useTeamActions } from '../api/queries';
 import { useAuth } from '../auth/AuthProvider';
 import { usePortalContext } from './station-context';
 
-const STATUS_LABEL: Record<InvitationStatus, string> = {
-  pendente: 'Pendente',
-  aceito: 'Aceito',
-  recusado: 'Recusado',
-  revogado: 'Revogado',
-  expirado: 'Expirado',
+type Actions = ReturnType<typeof useTeamActions>;
+type Unit = { id: string; name: string };
+type Access = { role: OrgRole; scope: OrgScope; stationIds: string[] };
+
+const STATUS: Record<
+  InvitationStatus,
+  { label: string; color: 'default' | 'success' | 'warning' | 'error' }
+> = {
+  pendente: { label: 'Pendente', color: 'warning' },
+  aceito: { label: 'Aceito', color: 'success' },
+  recusado: { label: 'Recusado', color: 'default' },
+  revogado: { label: 'Revogado', color: 'default' },
+  expirado: { label: 'Expirado', color: 'default' },
 };
 
 function errorText(error: unknown): string | null {
@@ -29,6 +67,16 @@ function errorText(error: unknown): string | null {
     : 'Não foi possível concluir.';
 }
 
+function scopeText(
+  scope: OrgScope,
+  stationIds: string[],
+  names: Map<string, string>,
+): string {
+  return scope === 'todas'
+    ? 'Todas as unidades'
+    : stationIds.map((id) => names.get(id) ?? 'Unidade').join(', ');
+}
+
 /** Equipe da rede (ADR 0021): só proprietários. */
 export function TeamPage() {
   const { org } = usePortalContext();
@@ -36,396 +84,538 @@ export function TeamPage() {
   const actions = useTeamActions(org.id);
   const { state, refreshUser } = useAuth();
   const myId = state.status === 'signedIn' ? state.user.id : '';
+  const [editing, setEditing] = useState<TeamMember | null>(null);
+  const [removing, setRemoving] = useState<TeamMember | null>(null);
+  const [inviting, setInviting] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
 
-  if (team.isPending) return <p className="muted">Carregando…</p>;
-  if (team.isError) return <p className="error">{team.error.message}</p>;
+  if (team.isPending) {
+    return <Typography color="text.secondary">Carregando…</Typography>;
+  }
+  if (team.isError) return <Alert severity="error">{team.error.message}</Alert>;
   const { members, invitations, stations } = team.data;
-  const stationName = new Map(stations.map((s) => [s.id, s.name]));
+  const names = new Map(stations.map((s) => [s.id, s.name]));
 
   return (
-    <div className="stack">
-      <h1 className="page-title">Equipe</h1>
-      <p className="muted" style={{ margin: 0 }}>
-        Quem cuida das unidades de {org.name}, com o papel e as unidades de cada
-        pessoa. Tudo o que muda aqui fica registrado.
-      </p>
+    <Stack spacing={2}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1.5}
+        sx={{ justifyContent: 'space-between', alignItems: { sm: 'center' } }}
+      >
+        <Box>
+          <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
+            Equipe
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Quem cuida das unidades de {org.name}. Tudo o que muda aqui fica
+            registrado.
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          startIcon={<PersonAddAlt1Outlined />}
+          onClick={() => setInviting(true)}
+          sx={{ flexShrink: 0 }}
+        >
+          Convidar pessoa
+        </Button>
+      </Stack>
 
-      <section className="card stack">
-        <strong>Pessoas</strong>
-        <ul className="list">
-          {members.map((m) => (
-            <MemberRow
+      <Paper variant="outlined">
+        <List disablePadding aria-label="Pessoas da equipe">
+          {members.map((m, index) => (
+            <ListItem
               key={m.userId}
-              member={m}
-              stations={stations}
-              stationName={stationName}
-              isMe={m.userId === myId}
-              actions={actions}
-              onChanged={() => void refreshUser()}
-            />
+              divider={index < members.length - 1}
+              sx={{ gap: 1.5, alignItems: 'flex-start', py: 1.5 }}
+            >
+              <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36 }}>
+                {(m.name ?? m.email ?? '?').trim().charAt(0).toUpperCase()}
+              </Avatar>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography noWrap sx={{ fontWeight: 600 }}>
+                  {m.name ?? 'Sem nome'}
+                  {m.userId === myId && ' (você)'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" noWrap>
+                  {m.email}
+                </Typography>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  useFlexGap
+                  sx={{ mt: 0.75, alignItems: 'center', flexWrap: 'wrap' }}
+                >
+                  <Chip
+                    size="small"
+                    color={m.role === 'proprietario' ? 'primary' : 'default'}
+                    label={ORG_ROLE_LABELS[m.role]}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    {scopeText(m.scope, m.stationIds, names)}
+                  </Typography>
+                </Stack>
+              </Box>
+              <Stack direction="row" sx={{ flexShrink: 0 }}>
+                <Tooltip title="Alterar acesso">
+                  <IconButton
+                    aria-label={`Alterar acesso de ${m.name ?? m.email}`}
+                    onClick={() => setEditing(m)}
+                  >
+                    <EditOutlined />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Remover da equipe">
+                  <IconButton
+                    aria-label={`Remover ${m.name ?? m.email} da equipe`}
+                    onClick={() => setRemoving(m)}
+                  >
+                    <DeleteOutline />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
+            </ListItem>
           ))}
-        </ul>
-      </section>
-
-      <InviteForm stations={stations} actions={actions} />
+        </List>
+      </Paper>
 
       {invitations.length > 0 && (
-        <section className="card stack">
-          <strong>Convites</strong>
-          <ul className="list">
-            {invitations.map((i) => (
+        <Paper variant="outlined">
+          <Typography sx={{ fontWeight: 700, px: 2, pt: 2 }}>
+            Convites
+          </Typography>
+          <List aria-label="Convites">
+            {invitations.map((i, index) => (
               <InvitationRow
                 key={i.id}
                 invitation={i}
-                stationName={stationName}
-                onRevoke={() => actions.revoke.mutate(i.id)}
+                names={names}
+                divider={index < invitations.length - 1}
                 busy={actions.revoke.isPending}
+                onRevoke={() =>
+                  actions.revoke.mutate(i.id, {
+                    onSuccess: () =>
+                      setNotice(`Convite para ${i.email} revogado.`),
+                  })
+                }
               />
             ))}
-          </ul>
+          </List>
           {errorText(actions.revoke.error) && (
-            <p className="error">{errorText(actions.revoke.error)}</p>
+            <Alert severity="error" sx={{ m: 2, mt: 0 }}>
+              {errorText(actions.revoke.error)}
+            </Alert>
           )}
-        </section>
+        </Paper>
       )}
-    </div>
-  );
-}
 
-type Actions = ReturnType<typeof useTeamActions>;
-type Unit = { id: string; name: string };
+      {inviting && (
+        <InviteDialog
+          stations={stations}
+          actions={actions}
+          onClose={() => setInviting(false)}
+          onDone={(email) => {
+            setInviting(false);
+            setNotice(
+              `Convite criado para ${email}. Avise a pessoa para entrar em ${window.location.origin} com essa conta Google.`,
+            );
+          }}
+        />
+      )}
 
-function scopeText(
-  scope: OrgScope,
-  stationIds: string[],
-  stationName: Map<string, string>,
-) {
-  return scope === 'todas'
-    ? 'Todas as unidades'
-    : stationIds.map((id) => stationName.get(id) ?? 'Unidade').join(', ');
-}
-
-function MemberRow({
-  member,
-  stations,
-  stationName,
-  isMe,
-  actions,
-  onChanged,
-}: {
-  member: TeamMember;
-  stations: Unit[];
-  stationName: Map<string, string>;
-  isMe: boolean;
-  actions: Actions;
-  onChanged: () => void;
-}) {
-  const [editing, setEditing] = useState(false);
-
-  return (
-    <li className="stack" style={{ gap: 6 }}>
-      <div className="row" style={{ flexWrap: 'wrap' }}>
-        <div className="grow">
-          <strong>
-            {member.name ?? 'Sem nome'}
-            {isMe && ' (você)'}
-          </strong>
-          <div className="muted truncate">{member.email}</div>
-        </div>
-        <span className="tag">{ORG_ROLE_LABELS[member.role]}</span>
-      </div>
-      <div className="muted">
-        {scopeText(member.scope, member.stationIds, stationName)}
-      </div>
-      {editing ? (
-        <AccessEditor
-          initial={member}
+      {editing && (
+        <AccessDialog
+          title={`Acesso de ${editing.name ?? editing.email ?? 'pessoa'}`}
+          initial={editing}
           stations={stations}
           submitLabel="Salvar"
           pending={actions.update.isPending}
           error={errorText(actions.update.error)}
-          onCancel={() => setEditing(false)}
+          onClose={() => {
+            actions.update.reset();
+            setEditing(null);
+          }}
           onSubmit={(value) =>
             actions.update.mutate(
-              { userId: member.userId, ...value },
+              { userId: editing.userId, ...value },
               {
                 onSuccess: () => {
-                  setEditing(false);
-                  if (isMe) onChanged();
+                  if (editing.userId === myId) void refreshUser();
+                  setEditing(null);
+                  setNotice('Acesso atualizado.');
                 },
               },
             )
           }
         />
-      ) : (
-        <div className="row">
-          <button
-            type="button"
-            className="button ghost"
-            onClick={() => setEditing(true)}
-          >
-            Alterar acesso
-          </button>
-          <button
-            type="button"
-            className="button ghost"
-            style={{ color: 'var(--danger)' }}
-            disabled={actions.remove.isPending}
+      )}
+
+      <Dialog
+        open={removing !== null}
+        onClose={() => {
+          actions.remove.reset();
+          setRemoving(null);
+        }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Remover da equipe?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {removing?.name ?? removing?.email} perde o acesso às unidades de{' '}
+            {org.name} no portal. Para voltar, precisa de um novo convite.
+          </DialogContentText>
+          {errorText(actions.remove.error) && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {errorText(actions.remove.error)}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
             onClick={() => {
-              if (
-                window.confirm(
-                  `Remover ${member.name ?? member.email ?? 'esta pessoa'} da equipe?`,
-                )
-              ) {
-                actions.remove.mutate(member.userId, {
-                  onSuccess: () => {
-                    if (isMe) onChanged();
-                  },
-                });
-              }
+              actions.remove.reset();
+              setRemoving(null);
             }}
           >
-            Remover
-          </button>
-        </div>
-      )}
-      {!editing && errorText(actions.remove.error) && (
-        <p className="error">{errorText(actions.remove.error)}</p>
-      )}
-    </li>
-  );
-}
-
-/** Papel e escopo (usado no convite e na alteração). */
-function AccessEditor({
-  initial,
-  stations,
-  submitLabel,
-  pending,
-  error,
-  onSubmit,
-  onCancel,
-  children,
-}: {
-  initial: { role: OrgRole; scope: OrgScope; stationIds: string[] };
-  stations: Unit[];
-  submitLabel: string;
-  pending: boolean;
-  error: string | null;
-  onSubmit: (value: {
-    role: OrgRole;
-    scope: OrgScope;
-    stationIds: string[];
-  }) => void;
-  onCancel?: () => void;
-  children?: React.ReactNode;
-}) {
-  const [role, setRole] = useState<OrgRole>(initial.role);
-  const [scope, setScope] = useState<OrgScope>(initial.scope);
-  const [picked, setPicked] = useState<Set<string>>(
-    new Set(initial.stationIds),
-  );
-  const effectiveScope: OrgScope = role === 'proprietario' ? 'todas' : scope;
-  const valid = effectiveScope === 'todas' || picked.size > 0;
-
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    if (!valid) return;
-    onSubmit({
-      role,
-      scope: effectiveScope,
-      stationIds: effectiveScope === 'todas' ? [] : [...picked],
-    });
-  }
-
-  return (
-    <form className="stack" onSubmit={submit}>
-      {children}
-      <fieldset className="checklist">
-        <legend className="muted">Papel</legend>
-        {ORG_ROLES.map((r) => (
-          <label
-            key={r}
-            className="row"
-            style={{ gap: 8, alignItems: 'flex-start' }}
-          >
-            <input
-              type="radio"
-              name="role"
-              checked={role === r}
-              onChange={() => setRole(r)}
-            />
-            <span>
-              <strong>{ORG_ROLE_LABELS[r]}</strong>
-              <span className="muted"> · {ORG_ROLE_DESCRIPTIONS[r]}</span>
-            </span>
-          </label>
-        ))}
-      </fieldset>
-
-      {role !== 'proprietario' && stations.length > 1 && (
-        <fieldset className="checklist">
-          <legend className="muted">Unidades</legend>
-          <label className="row" style={{ gap: 8 }}>
-            <input
-              type="radio"
-              name="scope"
-              checked={scope === 'todas'}
-              onChange={() => setScope('todas')}
-            />
-            Todas (inclui as que entrarem na rede depois)
-          </label>
-          <label className="row" style={{ gap: 8 }}>
-            <input
-              type="radio"
-              name="scope"
-              checked={scope === 'selecionadas'}
-              onChange={() => setScope('selecionadas')}
-            />
-            Só as escolhidas
-          </label>
-          {scope === 'selecionadas' &&
-            stations.map((s) => (
-              <label key={s.id} className="row indent" style={{ gap: 8 }}>
-                <input
-                  type="checkbox"
-                  checked={picked.has(s.id)}
-                  onChange={() => {
-                    const next = new Set(picked);
-                    if (next.has(s.id)) next.delete(s.id);
-                    else next.add(s.id);
-                    setPicked(next);
-                  }}
-                />
-                {s.name}
-              </label>
-            ))}
-        </fieldset>
-      )}
-
-      {error && <p className="error">{error}</p>}
-      <div className="row">
-        {onCancel && (
-          <button
-            type="button"
-            className="button secondary grow"
-            onClick={onCancel}
-          >
             Cancelar
-          </button>
-        )}
-        <button
-          type="submit"
-          className="button grow"
-          disabled={!valid || pending}
-        >
-          {pending ? 'Salvando…' : submitLabel}
-        </button>
-      </div>
-    </form>
-  );
-}
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            disabled={actions.remove.isPending}
+            onClick={() =>
+              removing &&
+              actions.remove.mutate(removing.userId, {
+                onSuccess: () => {
+                  if (removing.userId === myId) void refreshUser();
+                  setNotice(
+                    `${removing.name ?? removing.email} saiu da equipe.`,
+                  );
+                  setRemoving(null);
+                },
+              })
+            }
+          >
+            Remover
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-function InviteForm({
-  stations,
-  actions,
-}: {
-  stations: Unit[];
-  actions: Actions;
-}) {
-  const [email, setEmail] = useState('');
-  const [sent, setSent] = useState<string | null>(null);
-  const [formKey, setFormKey] = useState(0);
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-
-  return (
-    <section className="card stack">
-      <div>
-        <strong>Convidar pessoa</strong>
-        <div className="muted">
-          A pessoa entra no portal com uma conta Google desse e-mail e aceita o
-          convite. Ainda não enviamos e-mail: avise-a e mande o endereço do
-          portal ({window.location.origin}).
-        </div>
-      </div>
-      {sent && (
-        <p role="status" style={{ color: 'var(--success)', margin: 0 }}>
-          Convite criado para {sent}.
-        </p>
-      )}
-      <AccessEditor
-        key={formKey}
-        initial={{ role: 'operador', scope: 'todas', stationIds: [] }}
-        stations={stations}
-        submitLabel="Criar convite"
-        pending={actions.invite.isPending}
-        error={errorText(actions.invite.error)}
-        onSubmit={(value) => {
-          if (!emailOk) return;
-          actions.invite.mutate(
-            { email: email.trim(), ...value },
-            {
-              onSuccess: (invitation) => {
-                setSent(invitation.email);
-                setEmail('');
-                setFormKey((k) => k + 1);
-              },
-            },
-          );
-        }}
+      <Snackbar
+        open={notice !== null}
+        autoHideDuration={6000}
+        onClose={() => setNotice(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <div className="field">
-          <label htmlFor="invite-email">E-mail (conta Google)</label>
-          <input
-            id="invite-email"
-            className="input"
-            type="email"
-            autoComplete="off"
-            placeholder="nome@empresa.com.br"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
-        </div>
-      </AccessEditor>
-    </section>
+        <Alert
+          severity="success"
+          variant="filled"
+          onClose={() => setNotice(null)}
+          sx={{ width: '100%' }}
+        >
+          {notice}
+        </Alert>
+      </Snackbar>
+    </Stack>
   );
 }
 
 function InvitationRow({
   invitation,
-  stationName,
-  onRevoke,
+  names,
+  divider,
   busy,
+  onRevoke,
 }: {
   invitation: Invitation;
-  stationName: Map<string, string>;
-  onRevoke: () => void;
+  names: Map<string, string>;
+  divider: boolean;
   busy: boolean;
+  onRevoke: () => void;
 }) {
+  const status = STATUS[invitation.status];
   const pending = invitation.status === 'pendente';
   return (
-    <li className="row" style={{ flexWrap: 'wrap' }}>
-      <div className="grow">
-        <strong className="truncate">{invitation.email}</strong>
-        <div className="muted">
+    <ListItem divider={divider} sx={{ gap: 1.5, alignItems: 'flex-start' }}>
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography noWrap sx={{ fontWeight: 600 }}>
+          {invitation.email}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
           {ORG_ROLE_LABELS[invitation.role]} ·{' '}
-          {scopeText(invitation.scope, invitation.stationIds, stationName)}
+          {scopeText(invitation.scope, invitation.stationIds, names)}
           {pending &&
             ` · vale até ${new Date(invitation.expiresAt).toLocaleDateString('pt-BR')}`}
-        </div>
-      </div>
-      <span className="status muted">{STATUS_LABEL[invitation.status]}</span>
-      {pending && (
-        <button
-          type="button"
-          className="button ghost"
-          style={{ color: 'var(--danger)' }}
-          disabled={busy}
-          onClick={onRevoke}
+        </Typography>
+      </Box>
+      <Stack spacing={0.5} sx={{ alignItems: 'flex-end', flexShrink: 0 }}>
+        <Chip
+          size="small"
+          variant="outlined"
+          color={status.color}
+          label={status.label}
+        />
+        {pending && (
+          <Button size="small" color="error" disabled={busy} onClick={onRevoke}>
+            Revogar
+          </Button>
+        )}
+      </Stack>
+    </ListItem>
+  );
+}
+
+/** Papel (com a descrição) e unidades. Usado no convite e na alteração. */
+function AccessFields({
+  value,
+  onChange,
+  stations,
+}: {
+  value: Access;
+  onChange: (value: Access) => void;
+  stations: Unit[];
+}) {
+  const scope = value.role === 'proprietario' ? 'todas' : value.scope;
+  return (
+    <Stack spacing={2}>
+      <FormControl>
+        <FormLabel id="role-label">Papel</FormLabel>
+        <RadioGroup
+          aria-labelledby="role-label"
+          value={value.role}
+          onChange={(event) =>
+            onChange({ ...value, role: event.target.value as OrgRole })
+          }
         >
-          Revogar
-        </button>
+          {ORG_ROLES.map((r) => (
+            <FormControlLabel
+              key={r}
+              value={r}
+              control={<Radio />}
+              sx={{ alignItems: 'flex-start', mt: 0.5 }}
+              label={
+                <Box sx={{ pt: 1 }}>
+                  <Typography sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                    {ORG_ROLE_LABELS[r]}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {ORG_ROLE_DESCRIPTIONS[r]}
+                  </Typography>
+                </Box>
+              }
+            />
+          ))}
+        </RadioGroup>
+      </FormControl>
+
+      {value.role !== 'proprietario' && stations.length > 1 && (
+        <FormControl>
+          <FormLabel id="scope-label">Unidades</FormLabel>
+          <RadioGroup
+            aria-labelledby="scope-label"
+            value={scope}
+            onChange={(event) =>
+              onChange({ ...value, scope: event.target.value as OrgScope })
+            }
+          >
+            <FormControlLabel
+              value="todas"
+              control={<Radio />}
+              label="Todas (inclui as que entrarem na rede depois)"
+            />
+            <FormControlLabel
+              value="selecionadas"
+              control={<Radio />}
+              label="Só as escolhidas"
+            />
+          </RadioGroup>
+          {scope === 'selecionadas' && (
+            <FormGroup sx={{ pl: 4 }}>
+              {stations.map((s) => (
+                <FormControlLabel
+                  key={s.id}
+                  label={s.name}
+                  control={
+                    <Checkbox
+                      checked={value.stationIds.includes(s.id)}
+                      onChange={(event) =>
+                        onChange({
+                          ...value,
+                          stationIds: event.target.checked
+                            ? [...value.stationIds, s.id]
+                            : value.stationIds.filter((id) => id !== s.id),
+                        })
+                      }
+                    />
+                  }
+                />
+              ))}
+            </FormGroup>
+          )}
+        </FormControl>
       )}
-    </li>
+    </Stack>
+  );
+}
+
+function normalized(value: Access): Access {
+  const scope = value.role === 'proprietario' ? 'todas' : value.scope;
+  return {
+    role: value.role,
+    scope,
+    stationIds: scope === 'todas' ? [] : value.stationIds,
+  };
+}
+
+function ResponsiveDialog({
+  open,
+  onClose,
+  onSubmit,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onSubmit: (event: FormEvent) => void;
+  children: ReactNode;
+}) {
+  const theme = useTheme();
+  const mobile = useMediaQuery(theme.breakpoints.down('sm'));
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullScreen={mobile}
+      fullWidth
+      maxWidth="sm"
+      slotProps={{ paper: { component: 'form', onSubmit } }}
+    >
+      {children}
+    </Dialog>
+  );
+}
+
+function AccessDialog({
+  title,
+  initial,
+  stations,
+  submitLabel,
+  pending,
+  error,
+  onClose,
+  onSubmit,
+}: {
+  title: string;
+  initial: Access;
+  stations: Unit[];
+  submitLabel: string;
+  pending: boolean;
+  error: string | null;
+  onClose: () => void;
+  onSubmit: (value: Access) => void;
+}) {
+  const [value, setValue] = useState<Access>(initial);
+  const final = normalized(value);
+  const valid = final.scope === 'todas' || final.stationIds.length > 0;
+
+  return (
+    <ResponsiveDialog
+      open
+      onClose={onClose}
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (valid) onSubmit(final);
+      }}
+    >
+      <DialogTitle sx={{ fontWeight: 700 }}>{title}</DialogTitle>
+      <DialogContent>
+        <AccessFields value={value} onChange={setValue} stations={stations} />
+        {error && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {error}
+          </Alert>
+        )}
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={onClose}>Cancelar</Button>
+        <Button type="submit" variant="contained" disabled={!valid || pending}>
+          {pending ? 'Salvando…' : submitLabel}
+        </Button>
+      </DialogActions>
+    </ResponsiveDialog>
+  );
+}
+
+function InviteDialog({
+  stations,
+  actions,
+  onClose,
+  onDone,
+}: {
+  stations: Unit[];
+  actions: Actions;
+  onClose: () => void;
+  onDone: (email: string) => void;
+}) {
+  const [email, setEmail] = useState('');
+  const [value, setValue] = useState<Access>({
+    role: 'operador',
+    scope: 'todas',
+    stationIds: [],
+  });
+  const final = normalized(value);
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const valid =
+    emailOk && (final.scope === 'todas' || final.stationIds.length > 0);
+  const error = errorText(actions.invite.error);
+
+  function close() {
+    actions.invite.reset();
+    onClose();
+  }
+
+  return (
+    <ResponsiveDialog
+      open
+      onClose={close}
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (!valid) return;
+        actions.invite.mutate(
+          { email: email.trim(), ...final },
+          { onSuccess: (invitation) => onDone(invitation.email) },
+        );
+      }}
+    >
+      <DialogTitle sx={{ fontWeight: 700 }}>Convidar pessoa</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2.5} sx={{ pt: 1 }}>
+          <TextField
+            label="E-mail da conta Google"
+            type="email"
+            placeholder="nome@empresa.com.br"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            autoFocus
+            fullWidth
+            helperText="A pessoa entra no portal com essa conta e aceita o convite. Ainda não enviamos e-mail: avise-a."
+            slotProps={{ htmlInput: { autoComplete: 'off' } }}
+          />
+          <AccessFields value={value} onChange={setValue} stations={stations} />
+          {error && <Alert severity="error">{error}</Alert>}
+        </Stack>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={close}>Cancelar</Button>
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={!valid || actions.invite.isPending}
+        >
+          {actions.invite.isPending ? 'Criando…' : 'Criar convite'}
+        </Button>
+      </DialogActions>
+    </ResponsiveDialog>
   );
 }

@@ -1,3 +1,13 @@
+import AddBusinessOutlined from '@mui/icons-material/AddBusinessOutlined';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 import {
   CLAIM_POSITION_LABELS,
   CLAIM_STATUS_LABELS,
@@ -10,10 +20,10 @@ import { useMyClaims } from '../api/queries';
 import { useAuth } from '../auth/AuthProvider';
 import { ClaimForm } from './ClaimForm';
 
-const STATUS_COLOR: Record<Claim['status'], string> = {
-  em_analise: 'var(--badge-informado_motorista)',
-  aprovado: 'var(--success)',
-  recusado: 'var(--danger)',
+const STATUS_COLOR: Record<Claim['status'], 'warning' | 'success' | 'error'> = {
+  em_analise: 'warning',
+  aprovado: 'success',
+  recusado: 'error',
 };
 
 /**
@@ -50,82 +60,108 @@ export function ClaimsPage({ user }: { user: Me }) {
 
   const first = user.name?.split(' ')[0];
   const list = claims.data ?? [];
+  const noAccess = user.managedStations.length === 0;
 
   return (
-    <section className="stack">
-      <h1 className="page-title">
-        {user.managedStations.length === 0
-          ? `Olá${first ? `, ${first}` : ''}!`
-          : 'Pedidos de acesso'}
-      </h1>
+    <Stack spacing={2}>
+      <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
+        {noAccess ? `Olá${first ? `, ${first}` : ''}!` : 'Pedidos de acesso'}
+      </Typography>
 
       {sent && (
-        <p className="card" role="status" style={{ color: 'var(--success)' }}>
+        <Alert severity="success" onClose={() => setSent(false)}>
           Pedido enviado. A equipe Tankei vai ligar para confirmar que você
           responde pelo posto; depois disso, o acesso é liberado aqui.
-        </p>
+        </Alert>
       )}
 
-      {user.managedStations.length === 0 && list.length === 0 && (
-        <div className="card stack">
-          <p style={{ margin: 0 }}>
+      {noAccess && list.length === 0 && (
+        <Paper variant="outlined" sx={{ p: 2.5 }}>
+          <Typography sx={{ fontWeight: 600 }}>
             Para usar o portal, peça acesso ao posto que você administra.
-          </p>
-          <p className="muted" style={{ margin: 0 }}>
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             Você encontra o posto pelo CNPJ ou pelo nome. A equipe Tankei
             confirma por telefone que você responde por ele e libera o acesso.
-          </p>
-        </div>
+          </Typography>
+        </Paper>
       )}
 
-      {claims.isError && <p className="error">{claims.error.message}</p>}
+      {claims.isError && <Alert severity="error">{claims.error.message}</Alert>}
 
       {list.length > 0 && (
-        <ul className="list card">
-          {list.map((claim) => (
-            <li key={claim.id} className="stack" style={{ gap: 4 }}>
-              <div className="row">
-                <strong className="grow truncate">{claim.station.name}</strong>
-                <span
-                  className="price-tag"
-                  style={{ color: STATUS_COLOR[claim.status], fontSize: 13 }}
-                >
-                  {CLAIM_STATUS_LABELS[claim.status]}
-                </span>
-              </div>
-              <div className="muted">
-                {claim.station.cnpj} · {claim.station.city}/
-                {claim.station.state} · {CLAIM_POSITION_LABELS[claim.position]}{' '}
-                · pedido em{' '}
-                {new Date(claim.createdAt).toLocaleDateString('pt-BR')}
-              </div>
-              {claim.status === 'recusado' && claim.reason && (
-                <div className="muted">Motivo: {claim.reason}</div>
-              )}
-              {claim.status === 'aprovado' && managed.has(claim.station.id) && (
-                <Link to={`/postos/${claim.station.id}`}>Abrir o posto</Link>
-              )}
-            </li>
-          ))}
-        </ul>
+        <Paper variant="outlined">
+          <List disablePadding aria-label="Seus pedidos">
+            {list.map((claim, index) => (
+              <ListItem
+                key={claim.id}
+                divider={index < list.length - 1}
+                sx={{ gap: 1.5, alignItems: 'flex-start', py: 1.5 }}
+              >
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography noWrap sx={{ fontWeight: 600 }}>
+                    {claim.station.name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    CNPJ {claim.station.cnpj} · {claim.station.city}/
+                    {claim.station.state}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {CLAIM_POSITION_LABELS[claim.position]} · pedido em{' '}
+                    {new Date(claim.createdAt).toLocaleDateString('pt-BR')}
+                  </Typography>
+                  {claim.status === 'recusado' && claim.reason && (
+                    <Typography variant="body2" sx={{ mt: 0.5 }}>
+                      Motivo: {claim.reason}
+                    </Typography>
+                  )}
+                  {claim.status === 'aprovado' &&
+                    managed.has(claim.station.id) && (
+                      <Button
+                        component={Link}
+                        to={`/postos/${claim.station.id}`}
+                        size="small"
+                        sx={{ mt: 0.5, ml: -1 }}
+                      >
+                        Abrir o posto
+                      </Button>
+                    )}
+                </Box>
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  color={STATUS_COLOR[claim.status]}
+                  label={CLAIM_STATUS_LABELS[claim.status]}
+                  sx={{ flexShrink: 0 }}
+                />
+              </ListItem>
+            ))}
+          </List>
+        </Paper>
       )}
 
-      <button
-        type="button"
-        className="button"
-        onClick={() => {
-          setCreating(true);
-          setSent(false);
-        }}
-      >
-        {user.managedStations.length === 0 && list.length === 0
-          ? 'Reivindicar meu posto'
-          : 'Pedir acesso a outro posto'}
-      </button>
+      <Box>
+        <Button
+          variant="contained"
+          startIcon={<AddBusinessOutlined />}
+          onClick={() => {
+            setCreating(true);
+            setSent(false);
+          }}
+        >
+          {noAccess && list.length === 0
+            ? 'Reivindicar meu posto'
+            : 'Pedir acesso a outro posto'}
+        </Button>
+      </Box>
 
-      {user.managedStations.length > 0 && (
-        <Link to="/">Voltar aos meus postos</Link>
+      {!noAccess && (
+        <Box>
+          <Button component={Link} to="/">
+            Voltar aos meus postos
+          </Button>
+        </Box>
       )}
-    </section>
+    </Stack>
   );
 }
