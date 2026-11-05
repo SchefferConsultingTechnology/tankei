@@ -15,4 +15,19 @@ export default defineConfig({
       ),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Como no portal (ADR 0022): React e dados em arquivos próprios.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (/[\\/](react|react-dom|react-router|scheduler)[\\/]/.test(id)) {
+            return 'react';
+          }
+          if (/[\\/](@tanstack|zod)[\\/]/.test(id)) return 'data';
+          return undefined;
+        },
+      },
+    },
+  },
 });
