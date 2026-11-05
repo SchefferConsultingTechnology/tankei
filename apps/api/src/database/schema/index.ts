@@ -6,3 +6,4 @@ export * from './parameters';
 export * from './users';
 export * from './reviews';
 export * from './municipalities';
+export * from './claims';

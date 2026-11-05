@@ -9,6 +9,7 @@ import { and, eq, isNull } from 'drizzle-orm';
 import { DRIZZLE, type Database } from '../database/database.module';
 import {
   sessions,
+  stationClaims,
   stationManagers,
   stations,
   userIdentities,
@@ -73,6 +74,11 @@ export class UsersService {
       await tx
         .delete(stationManagers)
         .where(eq(stationManagers.userId, userId));
+      // Contato dos pedidos de posto (ADR 0019); o pedido e a decisão ficam.
+      await tx
+        .update(stationClaims)
+        .set({ contactName: null, phone: null, message: null })
+        .where(eq(stationClaims.userId, userId));
       await tx
         .update(sessions)
         .set({ revokedAt: new Date() })
@@ -100,7 +106,15 @@ export class UsersService {
 
     const inserted = await this.db
       .insert(stationManagers)
-      .values({ stationId, userId, createdByUserId })
+      // Vínculo direto pelo administrador: verificação presencial (ADR 0011).
+      .values({
+        stationId,
+        userId,
+        createdByUserId,
+        role: 'responsavel',
+        verificationMethod: 'presencial',
+        verifiedAt: new Date(),
+      })
       .onConflictDoNothing()
       .returning({ userId: stationManagers.userId });
     if (inserted.length === 0) {

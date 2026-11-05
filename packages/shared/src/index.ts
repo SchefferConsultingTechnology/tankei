@@ -7,3 +7,4 @@ export * from './auth';
 export * from './price';
 export * from './portal';
 export * from './format';
+export * from './claim';

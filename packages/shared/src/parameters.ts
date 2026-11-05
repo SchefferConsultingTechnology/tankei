@@ -60,6 +60,11 @@ export const PARAMETER_DEFINITIONS = {
     description:
       'Raio (metros) da concorrência local mostrada ao posto no portal.',
   },
+  'claim.max_pending_per_user': {
+    schema: positiveInt,
+    description:
+      'Máximo de reivindicações de posto em análise ao mesmo tempo por conta.',
+  },
   'review.min_interval_days': {
     schema: positiveInt,
     description:

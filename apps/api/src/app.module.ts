@@ -7,6 +7,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ZodValidationPipe } from './app.setup';
 import { AuthModule } from './auth/auth.module';
+import { ClaimsModule } from './claims/claims.module';
 import { DatabaseModule } from './database/database.module';
 import { ParametersModule } from './parameters/parameters.module';
 import { PortalModule } from './portal/portal.module';
@@ -31,6 +32,7 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     AuthModule,
     PortalModule,
+    ClaimsModule,
   ],
   controllers: [AppController],
   providers: [

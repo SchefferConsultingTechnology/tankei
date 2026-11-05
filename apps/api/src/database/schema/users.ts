@@ -7,7 +7,12 @@ import {
   unique,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { authProviderEnum, userRoleEnum } from './enums';
+import {
+  authProviderEnum,
+  managerRoleEnum,
+  userRoleEnum,
+  verificationMethodEnum,
+} from './enums';
 import { stations } from './stations';
 
 /**
@@ -74,7 +79,11 @@ export const sessions = pgTable(
   ],
 );
 
-/** Vínculo do gestor com o posto, feito pelo administrador no piloto (ADR 0007). */
+/**
+ * Vínculo da pessoa com o posto (ADR 0007 e 0011). O responsável comprovou o
+ * vínculo (forma e data registradas); o gestor convidado entra pelo convite
+ * de um responsável.
+ */
 export const stationManagers = pgTable(
   'station_managers',
   {
@@ -84,6 +93,10 @@ export const stationManagers = pgTable(
     stationId: uuid()
       .notNull()
       .references(() => stations.id),
+    role: managerRoleEnum().notNull().default('responsavel'),
+    // Só para responsáveis.
+    verificationMethod: verificationMethodEnum(),
+    verifiedAt: timestamp({ withTimezone: true }),
     createdByUserId: uuid().references(() => users.id),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },

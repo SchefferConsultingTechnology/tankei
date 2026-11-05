@@ -1,10 +1,13 @@
 import { pgEnum } from 'drizzle-orm/pg-core';
 import {
   AUTH_PROVIDERS,
+  CLAIM_POSITIONS,
   FUEL_TYPES,
   IQP_CONFIDENCE_LEVELS,
+  MANAGER_ROLES,
   PRICE_SOURCES,
   USER_ROLES,
+  VERIFICATION_METHODS,
 } from '@tankei/shared';
 
 export const iqpConfidenceEnum = pgEnum(
@@ -32,4 +35,20 @@ export const locationSourceEnum = pgEnum('location_source', [
   'anp',
   'geocodificacao',
   'campo',
+]);
+
+/** Papel no posto (ADR 0011). */
+export const managerRoleEnum = pgEnum('manager_role', MANAGER_ROLES);
+
+/** Como o vínculo com o posto foi comprovado (ADR 0011). */
+export const verificationMethodEnum = pgEnum(
+  'verification_method',
+  VERIFICATION_METHODS,
+);
+
+export const claimPositionEnum = pgEnum('claim_position', CLAIM_POSITIONS);
+
+export const claimDecisionEnum = pgEnum('claim_decision', [
+  'aprovado',
+  'recusado',
 ]);
