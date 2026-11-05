@@ -34,10 +34,8 @@ export function ReputationTab({ stationId }: { stationId: string }) {
         sx={{
           display: 'grid',
           gap: 1.5,
-          gridTemplateColumns: {
-            xs: '1fr 1fr',
-            md: 'repeat(2, minmax(0, 320px))',
-          },
+          // Meio a meio em qualquer largura: no computador, ocupam a linha toda.
+          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
         }}
       >
         <ScoreCard
