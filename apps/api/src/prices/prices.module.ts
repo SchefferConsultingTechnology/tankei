@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { UsersModule } from '../users/users.module';
+import { OrganizationsModule } from '../organizations/organizations.module';
 import { AnpLpcClient } from './anp-reference/anp-lpc.client';
 import { PriceReferenceImportService } from './anp-reference/price-reference-import.service';
 import { PriceReferencesService } from './price-references.service';
@@ -7,7 +7,7 @@ import { PriceReportsController } from './price-reports.controller';
 import { PriceReportsService } from './price-reports.service';
 
 @Module({
-  imports: [UsersModule],
+  imports: [OrganizationsModule],
   controllers: [PriceReportsController],
   providers: [
     AnpLpcClient,

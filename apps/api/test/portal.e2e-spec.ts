@@ -23,11 +23,12 @@ import {
   priceReferences,
   priceReports,
   stationFuels,
-  stationManagers,
+  organizationStations,
   stations,
   users,
 } from './../src/database/schema';
 import { createFakeIdentityProvider } from './support/fake-identity-provider';
+import { addToNetwork } from './support/network';
 
 // Banco de testes compartilhado entre arquivos: UF (TO), município, CNPJs e
 // coordenadas próprios deste arquivo.
@@ -227,16 +228,14 @@ describe('Portal do posto (e2e)', () => {
       .where(eq(users.id, admin.user.id));
     // Token emitido antes da mudança de perfil: entra de novo para carregar o admin.
     admin = await login('Admin Portal', adminSubject);
-    await db
-      .insert(stationManagers)
-      .values({ userId: gestor.user.id, stationId: id.own });
+    const gestorNetwork = await addToNetwork(db, gestor.user.id, [id.own]);
 
     // Histórico: posto próprio, longe dos demais e em outra cidade.
     consumidorB = await login('Consumidor B Portal');
     id.history = await createStation('77000000000109', -2, HISTORY_CITY, fuels);
     await db
-      .insert(stationManagers)
-      .values({ userId: gestor.user.id, stationId: id.history });
+      .insert(organizationStations)
+      .values({ organizationId: gestorNetwork, stationId: id.history });
     const ago = (ms: number) => new Date(Date.now() - ms);
     await price(id.history, 'gasolina_comum', 6.1, {
       reporterUserId: motorista.user.id,
@@ -276,7 +275,7 @@ describe('Portal do posto (e2e)', () => {
         .set('Authorization', `Bearer ${motorista.accessToken}`)
         .expect(403);
       expect((res.body as { message: string }).message).toBe(
-        'Você não gerencia este posto.',
+        'Você não faz parte da equipe deste posto.',
       );
     });
 

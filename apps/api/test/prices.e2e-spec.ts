@@ -18,11 +18,11 @@ import {
   priceReferences,
   priceReports,
   stationFuels,
-  stationManagers,
   stations,
 } from './../src/database/schema';
 import { ParametersService } from './../src/parameters/parameters.service';
 import { createFakeIdentityProvider } from './support/fake-identity-provider';
+import { addToNetwork } from './support/network';
 
 // Roda no banco de testes, recriado a cada execução (test/global-setup.ts).
 // Região própria: os arquivos de teste rodam em paralelo no mesmo banco.
@@ -143,9 +143,7 @@ describe('Informes de preço (e2e)', () => {
       login('Caio'),
       login('Gestor'),
     ]);
-    await db
-      .insert(stationManagers)
-      .values({ userId: gestor.user.id, stationId: station.s2 });
+    await addToNetwork(db, gestor.user.id, [station.s2]);
   });
 
   afterAll(async () => {

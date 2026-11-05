@@ -2,27 +2,20 @@ import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import type { AuthTokens, LoginResponse, Me } from '@tankei/shared';
 import { randomUUID } from 'node:crypto';
-import { eq, inArray } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { configureApp } from './../src/app.setup';
 import { IDENTITY_VERIFIERS } from './../src/auth/identity/identity-verifiers.provider';
 import { DRIZZLE, type Database } from './../src/database/database.module';
-import {
-  sessions,
-  stationManagers,
-  stations,
-  userIdentities,
-  users,
-} from './../src/database/schema';
+import { stations, users } from './../src/database/schema';
 import { createFakeIdentityProvider } from './support/fake-identity-provider';
 
 const TEST_STATION_CNPJ = '99999998000001';
 
 describe('Autenticação e conta (e2e)', () => {
   const google = createFakeIdentityProvider('google');
-  const createdUserIds: string[] = [];
   let app: INestApplication<App>;
   let db: Database;
   let stationId: string;
@@ -36,22 +29,7 @@ describe('Autenticação e conta (e2e)', () => {
       .send({ provider: 'google', idToken: google.sign(subject, claims) })
       .expect(200);
     const body = res.body as LoginResponse;
-    createdUserIds.push(body.user.id);
     return body;
-  }
-
-  async function cleanup() {
-    if (createdUserIds.length > 0) {
-      await db.delete(sessions).where(inArray(sessions.userId, createdUserIds));
-      await db
-        .delete(userIdentities)
-        .where(inArray(userIdentities.userId, createdUserIds));
-      await db
-        .delete(stationManagers)
-        .where(inArray(stationManagers.userId, createdUserIds));
-      await db.delete(users).where(inArray(users.id, createdUserIds));
-    }
-    await db.delete(stations).where(eq(stations.cnpj, TEST_STATION_CNPJ));
   }
 
   beforeAll(async () => {
@@ -82,7 +60,6 @@ describe('Autenticação e conta (e2e)', () => {
   });
 
   afterAll(async () => {
-    await cleanup();
     await app.close();
   });
 
@@ -238,7 +215,11 @@ describe('Autenticação e conta (e2e)', () => {
         .set(bearer(manager.accessToken))
         .expect(200);
       expect((res.body as Me).managedStations).toEqual([
-        { id: stationId, name: 'Posto Teste Gestor' },
+        expect.objectContaining({
+          id: stationId,
+          name: 'Posto Teste Gestor',
+          role: 'proprietario',
+        }),
       ]);
 
       await http()

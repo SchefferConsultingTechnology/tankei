@@ -65,6 +65,10 @@ export const PARAMETER_DEFINITIONS = {
     description:
       'Máximo de reivindicações de posto em análise ao mesmo tempo por conta.',
   },
+  'team.invitation_valid_days': {
+    schema: positiveInt,
+    description: 'Dias de validade de um convite para a equipe de uma rede.',
+  },
   'review.min_interval_days': {
     schema: positiveInt,
     description:

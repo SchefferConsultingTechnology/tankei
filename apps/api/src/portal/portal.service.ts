@@ -1,9 +1,4 @@
-import {
-  ForbiddenException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import {
   FUEL_TYPES,
   IQP_DIMENSIONS,
@@ -11,6 +6,7 @@ import {
   type CurrentPrice,
   type FuelType,
   type Municipality,
+  type OrgAction,
   type PriceHistory,
   type PriceHistoryQuery,
   type StationCompetition,
@@ -31,7 +27,7 @@ import { ParametersService } from '../parameters/parameters.service';
 import { PriceReferencesService } from '../prices/price-references.service';
 import { PriceReportsService } from '../prices/price-reports.service';
 import { StationsService } from '../stations/stations.service';
-import { UsersService } from '../users/users.service';
+import { AccessService } from '../organizations/access.service';
 
 /**
  * Dados do portal do posto (ADR 0012 e 0018). Limite concorrencial: só o que o
@@ -42,7 +38,7 @@ import { UsersService } from '../users/users.service';
 export class PortalService {
   constructor(
     @Inject(DRIZZLE) private readonly db: Database,
-    private readonly users: UsersService,
+    private readonly access: AccessService,
     private readonly stations: StationsService,
     private readonly priceReports: PriceReportsService,
     private readonly references: PriceReferencesService,
@@ -50,12 +46,13 @@ export class PortalService {
     private readonly parameters: ParametersService,
   ) {}
 
-  /** Só gestores do posto (e administradores) acessam os dados do portal. */
-  async assertManages(user: AuthenticatedUser, stationId: string) {
-    if (user.role === 'admin') return;
-    if (!(await this.users.managesStation(user.id, stationId))) {
-      throw new ForbiddenException('Você não gerencia este posto.');
-    }
+  /** Equipe do posto com a ação permitida (ADR 0021); administradores veem. */
+  async assertManages(
+    user: AuthenticatedUser,
+    stationId: string,
+    action: OrgAction = 'view',
+  ) {
+    await this.access.assert(user, stationId, action);
   }
 
   /** `requestedRadius` fica limitado ao máximo do parâmetro. */

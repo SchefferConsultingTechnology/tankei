@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { myOrganizationSchema, ORG_ROLES } from './organization';
 import { nullable } from './validation';
 
 /** Provedores de login (ADR 0007). */
@@ -7,7 +8,7 @@ export type AuthProvider = (typeof AUTH_PROVIDERS)[number];
 
 /**
  * Perfil da conta. Gestor de posto não é um perfil: é quem tem vínculo com
- * algum posto (`managedStations`), e continua sendo motorista.
+ * algum posto (`managedStations`), pela rede (ADR 0021), e continua sendo motorista.
  */
 export const USER_ROLES = ['motorista', 'admin'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
@@ -64,8 +65,21 @@ export const meSchema = z.object({
   ),
   role: z.enum(USER_ROLES),
   managedStations: z
-    .array(z.object({ id: z.uuid(), name: z.string() }))
-    .describe('Postos que a pessoa gerencia.'),
+    .array(
+      z.object({
+        id: z.uuid(),
+        name: z.string(),
+        organizationId: z.uuid().optional(),
+        role: z.enum(ORG_ROLES).optional(),
+      }),
+    )
+    .describe(
+      'Postos a que a pessoa tem acesso no portal, pela rede (ADR 0021), com o papel.',
+    ),
+  organizations: z
+    .array(myOrganizationSchema)
+    .default([])
+    .describe('Redes de que a pessoa faz parte.'),
 });
 export type Me = z.infer<typeof meSchema>;
 

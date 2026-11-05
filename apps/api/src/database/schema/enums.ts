@@ -5,6 +5,8 @@ import {
   FUEL_TYPES,
   IQP_CONFIDENCE_LEVELS,
   MANAGER_ROLES,
+  ORG_ROLES,
+  ORG_SCOPES,
   PRICE_SOURCES,
   USER_ROLES,
   VERIFICATION_METHODS,
@@ -52,3 +54,9 @@ export const claimDecisionEnum = pgEnum('claim_decision', [
   'aprovado',
   'recusado',
 ]);
+
+/** Papel na rede de postos (ADR 0021). */
+export const orgRoleEnum = pgEnum('org_role', ORG_ROLES);
+
+/** Escopo do membro: todas as unidades da rede ou as escolhidas. */
+export const orgScopeEnum = pgEnum('org_scope', ORG_SCOPES);

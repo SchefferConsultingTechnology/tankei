@@ -16,13 +16,14 @@ import {
   type FuelType,
   type PriceReportRequest,
   type PriceReportResponse,
+  roleCan,
 } from '@tankei/shared';
 import { and, count, eq, gt, inArray, ne, or } from 'drizzle-orm';
 import type { AuthenticatedUser } from '../auth/tokens.service';
 import { DRIZZLE, type Database } from '../database/database.module';
 import { priceReports, stationFuels, stations } from '../database/schema';
 import { ParametersService } from '../parameters/parameters.service';
-import { UsersService } from '../users/users.service';
+import { AccessService } from '../organizations/access.service';
 import { PriceReferencesService } from './price-references.service';
 import {
   classifyReport,
@@ -53,7 +54,7 @@ export class PriceReportsService {
     @Inject(DRIZZLE) private readonly db: Database,
     private readonly parameters: ParametersService,
     private readonly references: PriceReferencesService,
-    private readonly users: UsersService,
+    private readonly access: AccessService,
   ) {}
 
   /**
@@ -73,7 +74,15 @@ export class PriceReportsService {
       .where(and(eq(stations.id, stationId), eq(stations.active, true)));
     if (!station) throw new NotFoundException('Posto não encontrado.');
 
-    const isManager = await this.users.managesStation(user.id, stationId);
+    // Equipe do posto (ADR 0021): com permissão, o informe é "do posto";
+    // sem ela (somente leitura), não informa, para não pesar como consumidor.
+    const member = await this.access.roleAt(user.id, stationId);
+    if (member && !roleCan(member.role, 'update_price')) {
+      throw new ForbiddenException(
+        'Seu papel no posto não permite atualizar preços.',
+      );
+    }
+    const isManager = member !== null;
     const source = isManager ? 'posto' : 'usuario';
     const fuelLabel = FUEL_LABELS[request.fuelType];
 

@@ -45,7 +45,8 @@ export class StationManagersController {
   remove(
     @Param('stationId', uuid('Posto inválido.')) stationId: string,
     @Param('userId', uuid('Usuário inválido.')) userId: string,
+    @CurrentUser() admin: AuthenticatedUser,
   ): Promise<void> {
-    return this.users.removeStationManager(stationId, userId);
+    return this.users.removeStationManager(stationId, userId, admin.id);
   }
 }

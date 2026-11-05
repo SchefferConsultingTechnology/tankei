@@ -12,7 +12,7 @@ import type { AuthenticatedUser } from '../auth/tokens.service';
 import { DRIZZLE, type Database } from '../database/database.module';
 import { reviews, stations, type ReviewAnswers } from '../database/schema';
 import { ParametersService } from '../parameters/parameters.service';
-import { UsersService } from '../users/users.service';
+import { AccessService } from '../organizations/access.service';
 import { IqpService } from './iqp.service';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -25,7 +25,7 @@ export class ReviewsService {
   constructor(
     @Inject(DRIZZLE) private readonly db: Database,
     private readonly parameters: ParametersService,
-    private readonly users: UsersService,
+    private readonly access: AccessService,
     private readonly iqp: IqpService,
   ) {}
 
@@ -42,9 +42,9 @@ export class ReviewsService {
       .where(and(eq(stations.id, stationId), eq(stations.active, true)));
     if (!station) throw new NotFoundException('Posto não encontrado.');
 
-    if (await this.users.managesStation(user.id, stationId)) {
+    if (await this.access.roleAt(user.id, stationId)) {
       throw new ForbiddenException(
-        'Gestores não podem avaliar o próprio posto.',
+        'A equipe do posto não pode avaliar o próprio posto.',
       );
     }
 

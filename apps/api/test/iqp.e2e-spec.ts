@@ -9,14 +9,10 @@ import { AppModule } from './../src/app.module';
 import { configureApp } from './../src/app.setup';
 import { IDENTITY_VERIFIERS } from './../src/auth/identity/identity-verifiers.provider';
 import { DRIZZLE, type Database } from './../src/database/database.module';
-import {
-  iqpScores,
-  reviews,
-  stationManagers,
-  stations,
-} from './../src/database/schema';
+import { iqpScores, reviews, stations } from './../src/database/schema';
 import { IqpService } from './../src/iqp/iqp.service';
 import { createFakeIdentityProvider } from './support/fake-identity-provider';
+import { addToNetwork } from './support/network';
 
 // Região e cidade próprias: a média da cidade entra no cálculo e os arquivos
 // de teste rodam em paralelo no mesmo banco.
@@ -92,9 +88,7 @@ describe('Avaliações e IQP (e2e)', () => {
       ['Ana', 'Bia', 'Caio', 'Davi', 'Eva'].map(login),
     );
     gestor = await login('Gestor');
-    await db
-      .insert(stationManagers)
-      .values({ userId: gestor.user.id, stationId: stationA });
+    await addToNetwork(db, gestor.user.id, [stationA]);
   });
 
   afterAll(async () => {
@@ -138,7 +132,7 @@ describe('Avaliações e IQP (e2e)', () => {
       ratings: { atendimento: 5 },
     }).expect(403);
     expect(res.body).toMatchObject({
-      message: 'Gestores não podem avaliar o próprio posto.',
+      message: 'A equipe do posto não pode avaliar o próprio posto.',
     });
   });
 

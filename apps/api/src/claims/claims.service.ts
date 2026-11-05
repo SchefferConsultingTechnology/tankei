@@ -32,6 +32,8 @@ import {
   stations,
   users,
 } from '../database/schema';
+import { AccessService } from '../organizations/access.service';
+import { OrganizationsService } from '../organizations/organizations.service';
 import { ParametersService } from '../parameters/parameters.service';
 import {
   brandDisplayName,
@@ -98,6 +100,8 @@ export class ClaimsService {
   constructor(
     @Inject(DRIZZLE) private readonly db: Database,
     private readonly parameters: ParametersService,
+    private readonly access: AccessService,
+    private readonly organizations: OrganizationsService,
   ) {}
 
   /** Postos ativos por CNPJ (dígitos, pode ser parcial) ou por nome. */
@@ -128,16 +132,9 @@ export class ClaimsService {
       .where(and(eq(stations.id, body.stationId), eq(stations.active, true)));
     if (!station) throw new NotFoundException('Posto não encontrado.');
 
-    const [manager] = await this.db
-      .select({ userId: stationManagers.userId })
-      .from(stationManagers)
-      .where(
-        and(
-          eq(stationManagers.userId, userId),
-          eq(stationManagers.stationId, body.stationId),
-        ),
-      );
-    if (manager) throw new ConflictException('Você já gerencia este posto.');
+    if (await this.access.roleAt(userId, body.stationId)) {
+      throw new ConflictException('Você já gerencia este posto.');
+    }
 
     const pending = await this.pendingOf(userId);
     if (pending.some((p) => p.stationId === body.stationId)) {
@@ -218,7 +215,7 @@ export class ClaimsService {
         decidedByUserId: adminId,
         decidedAt: now,
       });
-      // Já gestor (vinculado por outro caminho): o vínculo fica como está.
+      // Comprovação do vínculo (ADR 0011); já comprovado, fica como está.
       await tx
         .insert(stationManagers)
         .values({
@@ -230,6 +227,13 @@ export class ClaimsService {
           createdByUserId: adminId,
         })
         .onConflictDoNothing();
+      // Acesso pelo portal: o posto entra na rede da pessoa (ADR 0021).
+      await this.organizations.grantVerifiedOwnership(
+        tx,
+        claim.userId,
+        claim.stationId,
+        adminId,
+      );
     });
     return this.adminOne(claimId);
   }

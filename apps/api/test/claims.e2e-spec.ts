@@ -23,6 +23,7 @@ import {
   users,
 } from './../src/database/schema';
 import { createFakeIdentityProvider } from './support/fake-identity-provider';
+import { addToNetwork } from './support/network';
 
 // Banco de testes compartilhado: UF (AP) e CNPJs próprios deste arquivo.
 describe('Reivindicação de posto (e2e)', () => {
@@ -195,10 +196,7 @@ describe('Reivindicação de posto (e2e)', () => {
 
     it('quem já gerencia o posto não pede de novo', async () => {
       const caio = await login('Caio Claims');
-      await db.insert(stationManagers).values({
-        userId: caio.user.id,
-        stationId: station.e,
-      });
+      await addToNetwork(db, caio.user.id, [station.e]);
       await claim(caio, station.e).expect(409);
     });
   });

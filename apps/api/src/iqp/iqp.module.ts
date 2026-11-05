@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { UsersModule } from '../users/users.module';
+import { OrganizationsModule } from '../organizations/organizations.module';
 import { IqpController } from './iqp.controller';
 import { IqpService } from './iqp.service';
 import { ReviewsService } from './reviews.service';
 
 @Module({
-  imports: [UsersModule],
+  imports: [OrganizationsModule],
   controllers: [IqpController],
   providers: [IqpService, ReviewsService],
   exports: [IqpService],
