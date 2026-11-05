@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
-import { colors } from '@/theme';
+import { Image, Text, View } from 'react-native';
+import { createStyles } from '@/appearance';
 
 interface Props {
   name: string | null;
@@ -10,6 +10,7 @@ interface Props {
 
 /** Foto da conta; sem foto, ou se ela não carregar, a inicial do nome. */
 export function Avatar({ name, url, size }: Props) {
+  const styles = useStyles();
   const [failed, setFailed] = useState(false);
   const shape = { width: size, height: size, borderRadius: size / 2 };
 
@@ -32,7 +33,7 @@ export function Avatar({ name, url, size }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((colors) => ({
   image: { backgroundColor: colors.border },
   fallback: {
     backgroundColor: colors.primary,
@@ -40,4 +41,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   initial: { color: colors.primaryText, fontWeight: '700' },
-});
+}));

@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -18,6 +17,10 @@ import { SelectField } from '@/components/SelectField';
 import { StationCard } from '@/components/StationCard';
 import { StationList } from '@/components/StationList';
 import { StationMap } from '@/components/StationMap';
+import {
+  ViewModeSwitch,
+  type ViewMode,
+} from '@/components/ViewModeSwitch';
 import { useBottomPadding } from '@/hooks/useBottomPadding';
 import { useFuelPreference } from '@/hooks/useFuelPreference';
 import { PILOT_CITY_CENTER, useUserLocation } from '@/hooks/useUserLocation';
@@ -28,19 +31,20 @@ import {
   withDistanceFrom,
   type ListedStation,
 } from '@/stations';
-import { colors, fontSize, radius, spacing } from '@/theme';
-
-type Mode = 'mapa' | 'lista';
+import { createStyles, useTheme } from '@/appearance';
+import { fontSize, spacing } from '@/theme';
 
 /** Deslocamento, em metros, que dispara nova busca de postos por perto. */
 const NEARBY_REFRESH_M = 2_000;
 
 export default function HomeScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { place } = usePlace();
   const city = place.kind === 'city' ? place.municipality : null;
   const location = useUserLocation();
   const [fuel, setFuel] = useFuelPreference();
-  const [mode, setMode] = useState<Mode>('mapa');
+  const [mode, setMode] = useState<ViewMode>('mapa');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const cardPadding = useBottomPadding(spacing.md);
 
@@ -156,29 +160,7 @@ export default function HomeScreen() {
           />
           <FuelPicker fuels={fuels} selected={fuel} onSelect={setFuel} />
         </View>
-        <View style={styles.switch}>
-          {(['mapa', 'lista'] as const).map((option) => (
-            <Pressable
-              key={option}
-              onPress={() => setMode(option)}
-              style={[
-                styles.switchItem,
-                mode === option && styles.switchActive,
-              ]}
-              accessibilityRole="button"
-              accessibilityState={{ selected: mode === option }}
-            >
-              <Text
-                style={[
-                  styles.switchText,
-                  mode === option && styles.switchTextActive,
-                ]}
-              >
-                {option === 'mapa' ? 'Mapa' : 'Lista (menor preço)'}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+        <ViewModeSwitch mode={mode} onChange={setMode} />
         {!city && location.status === 'denied' && (
           <Text style={styles.notice}>
             Não foi possível obter sua localização: mostrando o centro de
@@ -205,10 +187,11 @@ export default function HomeScreen() {
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
+  const styles = useStyles();
   return <View style={styles.centered}>{children}</View>;
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((colors) => ({
   screen: { flex: 1 },
   toolbar: {
     backgroundColor: colors.surface,
@@ -222,22 +205,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: spacing.lg,
   },
-  switch: {
-    flexDirection: 'row',
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.background,
-    borderRadius: radius.md,
-    padding: 3,
-  },
-  switchItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    borderRadius: radius.sm,
-  },
-  switchActive: { backgroundColor: colors.surface },
-  switchText: { color: colors.textMuted, fontSize: fontSize.md },
-  switchTextActive: { color: colors.text, fontWeight: '600' },
   notice: {
     color: colors.textMuted,
     fontSize: fontSize.sm,
@@ -253,7 +220,7 @@ const styles = StyleSheet.create({
   },
   mapCardShadow: {
     elevation: 6,
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOpacity: 0.2,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
@@ -267,4 +234,4 @@ const styles = StyleSheet.create({
   },
   error: { color: colors.danger, fontSize: fontSize.md, textAlign: 'center' },
   retry: { color: colors.primary, fontSize: fontSize.md, fontWeight: '600' },
-});
+}));

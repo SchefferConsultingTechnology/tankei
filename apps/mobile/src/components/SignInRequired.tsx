@@ -1,9 +1,11 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, fontSize, radius, spacing } from '@/theme';
+import { Pressable, Text, View } from 'react-native';
+import { createStyles } from '@/appearance';
+import { fontSize, radius, spacing } from '@/theme';
 
 /** Tela de ação que exige conta: explica o motivo e leva ao login. */
 export function SignInRequired({ title }: { title: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.screen}>
       <Text style={styles.title}>{title}</Text>
@@ -22,7 +24,7 @@ export function SignInRequired({ title }: { title: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((colors) => ({
   screen: { padding: spacing.xl, gap: spacing.md },
   title: { color: colors.text, fontSize: fontSize.xl, fontWeight: '700' },
   muted: { color: colors.textMuted, fontSize: fontSize.md },
@@ -38,4 +40,4 @@ const styles = StyleSheet.create({
     fontSize: fontSize.lg,
     fontWeight: '600',
   },
-});
+}));

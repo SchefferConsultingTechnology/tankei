@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "br.com.tankei.app"
@@ -18,9 +18,8 @@
         }
       },
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#012049",
         "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false
@@ -48,6 +47,18 @@
         {
           "android": {
             "extraProguardRules": "# O Room acha o banco gerado pelo nome (WorkDatabase_Impl, do WorkManager): o R8 não pode renomear nem remover.\n-keep class * extends androidx.room.RoomDatabase { <init>(); }\n-keep class **_Impl { <init>(); }"
+          }
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "backgroundColor": "#F5F7FB",
+          "dark": {
+            "image": "./assets/splash-icon.png",
+            "backgroundColor": "#07122A"
           }
         }
       ]

@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, fontSize, radius, spacing } from '@/theme';
+import { Pressable, Text, View } from 'react-native';
+import { createStyles } from '@/appearance';
+import { fontSize, radius, spacing } from '@/theme';
 
 interface Props {
   label: string;
@@ -10,6 +11,7 @@ interface Props {
 
 /** Campo de escolha (rótulo, valor e seta), com cara de botão. */
 export function SelectField({ label, value, onPress, accessibilityLabel }: Props) {
+  const styles = useStyles();
   return (
     <Pressable
       style={({ pressed }) => [styles.field, pressed && styles.pressed]}
@@ -28,7 +30,7 @@ export function SelectField({ label, value, onPress, accessibilityLabel }: Props
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((colors) => ({
   field: {
     flex: 1,
     backgroundColor: colors.background,
@@ -48,4 +50,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   arrow: { color: colors.primary, fontSize: fontSize.lg },
-});
+}));

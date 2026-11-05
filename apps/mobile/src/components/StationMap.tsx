@@ -9,13 +9,15 @@ import {
   placeMarkers,
   type MarkerPlacement,
 } from '@/map-stacking';
+import { DARK_MAP_STYLE } from '@/map-dark-style';
 import {
   isLocated,
   priceFor,
   type ListedStation,
   type LocatedStation,
 } from '@/stations';
-import { colors, fontSize, radius, spacing } from '@/theme';
+import { createStyles, useTheme } from '@/appearance';
+import { fontSize, radius, spacing } from '@/theme';
 import { PriceTag } from './PriceTag';
 
 interface Props {
@@ -51,6 +53,8 @@ export function StationMap({
   onSelect,
   onDeselect,
 }: Props) {
+  const styles = useStyles();
+  const { scheme } = useTheme();
   const mapRef = useRef<MapView>(null);
   const [latitudeDelta, setLatitudeDelta] = useState(INITIAL_DELTA);
   const [mapHeight, setMapHeight] = useState(0);
@@ -111,6 +115,10 @@ export function StationMap({
       showsUserLocation={userLocation !== null}
       showsMyLocationButton={false}
       toolbarEnabled={false}
+      // Segue o tema do app (inclusive a escolha fixa na Conta). No Android,
+      // quem escurece o mapa é o estilo JSON.
+      userInterfaceStyle={scheme}
+      customMapStyle={scheme === 'dark' ? DARK_MAP_STYLE : []}
     >
       {located.map((station) => (
         <PriceMarker
@@ -151,6 +159,7 @@ function PriceMarker({
   placement: MarkerPlacement;
   onPress: () => void;
 }) {
+  const styles = useStyles();
   const price = priceFor(station, fuel);
 
   // Marcador com componente React: o mapa redesenha enquanto acompanha
@@ -206,7 +215,7 @@ function PriceMarker({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((colors) => ({
   // Posto sem preço do combustível escolhido: ponto discreto, tocável.
   noPrice: {
     width: 14,
@@ -225,7 +234,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOpacity: 0.2,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 1 },
@@ -236,4 +245,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   noPriceSelected: { borderColor: colors.primary, borderWidth: 4 },
-});
+}));

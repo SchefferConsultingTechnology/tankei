@@ -16,7 +16,6 @@ import {
   Alert,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -25,7 +24,8 @@ import { useAuth } from '@/auth/AuthProvider';
 import { authorizedRequest } from '@/auth/session';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useBottomPadding } from '@/hooks/useBottomPadding';
-import { colors, fontSize, radius, spacing } from '@/theme';
+import { createStyles, useTheme } from '@/appearance';
+import { fontSize, radius, spacing } from '@/theme';
 
 /** Ausente = "não avaliei"; null = "o posto não tem" (ADR 0004). */
 type Ratings = Partial<Record<IqpRatedCriterion, CriterionRating>>;
@@ -42,6 +42,8 @@ const RATING_HINTS: Record<1 | 2 | 3 | 4 | 5, string> = {
 
 /** Avaliação do posto, agrupada pelas dimensões do IQP (ADR 0004). */
 export default function ReviewScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { state } = useAuth();
   const station = useStation(id);
@@ -168,6 +170,7 @@ function RatingRow({
   value: CriterionRating;
   onRate: (value: CriterionRating) => void;
 }) {
+  const styles = useStyles();
   const unavailable = answered && value === null;
   return (
     <View style={styles.criterion}>
@@ -221,6 +224,7 @@ function YesNoQuestion({
   value: boolean | null | undefined;
   onChange: (value: boolean | null | undefined) => void;
 }) {
+  const styles = useStyles();
   const options = [
     { label: 'Sim', value: true },
     { label: 'Não', value: false },
@@ -252,7 +256,7 @@ function YesNoQuestion({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((colors) => ({
   screen: { padding: spacing.lg, gap: spacing.lg },
   title: { color: colors.text, fontSize: fontSize.xl, fontWeight: '700' },
   muted: { color: colors.textMuted, fontSize: fontSize.sm },
@@ -275,7 +279,7 @@ const styles = StyleSheet.create({
   criterionHeader: { flexDirection: 'row', justifyContent: 'space-between' },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   star: { fontSize: 32, color: colors.border },
-  starFilled: { color: '#F59E0B' },
+  starFilled: { color: colors.star },
   pushRight: { marginLeft: 'auto' },
   chip: {
     borderColor: colors.border,
@@ -300,4 +304,4 @@ const styles = StyleSheet.create({
   },
   disabled: { opacity: 0.5 },
   error: { color: colors.danger, fontSize: fontSize.md },
-});
+}));

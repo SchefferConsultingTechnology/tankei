@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   FlatList,
   Pressable,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -13,7 +12,8 @@ import {
 import { useCities } from '@/api/queries';
 import { useBottomPadding } from '@/hooks/useBottomPadding';
 import { usePlace } from '@/place';
-import { colors, fontSize, radius, spacing } from '@/theme';
+import { createStyles, useTheme } from '@/appearance';
+import { fontSize, radius, spacing } from '@/theme';
 
 /** Sem acentos e em minúsculas, para a busca: "São José" → "sao jose". */
 function searchable(text: string): string {
@@ -22,6 +22,8 @@ function searchable(text: string): string {
 
 /** Escolha de cidade em dois passos: estado e cidade (ADR 0014). */
 export default function ChooseCityScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { place, setPlace } = usePlace();
   const [state, setState] = useState<string | null>(
     place.kind === 'city' ? place.municipality.state : null,
@@ -144,7 +146,7 @@ export default function ChooseCityScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((colors) => ({
   screen: { flex: 1 },
   header: {
     backgroundColor: colors.surface,
@@ -194,4 +196,4 @@ const styles = StyleSheet.create({
   muted: { color: colors.textMuted, fontSize: fontSize.sm },
   loading: { marginTop: spacing.xl },
   error: { color: colors.danger, padding: spacing.xl, textAlign: 'center' },
-});
+}));

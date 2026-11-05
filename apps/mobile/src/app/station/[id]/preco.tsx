@@ -11,7 +11,6 @@ import {
   Alert,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -26,7 +25,8 @@ import { describePrice } from '@/format';
 import { useBottomPadding } from '@/hooks/useBottomPadding';
 import { useFuelPreference } from '@/hooks/useFuelPreference';
 import { priceFor } from '@/stations';
-import { colors, fontSize, radius, spacing } from '@/theme';
+import { createStyles, useTheme } from '@/appearance';
+import { fontSize, radius, spacing } from '@/theme';
 
 /** Preço como na bomba, com 3 casas: 6,299. */
 const MAX_DIGITS = 5;
@@ -44,6 +44,8 @@ function formatDigits(digits: string): string {
 
 /** Informar o preço de um combustível no posto (ADR 0003 e 0006). */
 export default function ReportPriceScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { state } = useAuth();
   const station = useStation(id);
@@ -204,7 +206,7 @@ export default function ReportPriceScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((colors) => ({
   screen: { padding: spacing.xl, gap: spacing.md },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   // O seletor já tem recuo lateral próprio: os chips alinham com o texto.
@@ -249,4 +251,4 @@ const styles = StyleSheet.create({
   },
   disabled: { opacity: 0.5 },
   error: { color: colors.danger, fontSize: fontSize.md },
-});
+}));

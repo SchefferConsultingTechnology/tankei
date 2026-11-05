@@ -1,9 +1,11 @@
 import type { IqpSummary } from '@tankei/shared';
-import { StyleSheet, Text, View } from 'react-native';
-import { colors, fontSize, radius, spacing } from '@/theme';
+import { Text, View } from 'react-native';
+import { createStyles } from '@/appearance';
+import { fontSize, radius, spacing } from '@/theme';
 
 /** IQP resumido: nota de 0 a 100, ou "Sem dados" abaixo do mínimo de avaliações. */
 export function IqpPill({ iqp }: { iqp: IqpSummary }) {
+  const styles = useStyles();
   return (
     <View style={styles.pill}>
       <Text style={styles.text}>
@@ -13,7 +15,7 @@ export function IqpPill({ iqp }: { iqp: IqpSummary }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((colors) => ({
   pill: {
     backgroundColor: colors.background,
     borderRadius: radius.pill,
@@ -21,4 +23,4 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   text: { color: colors.textMuted, fontSize: fontSize.sm, fontWeight: '600' },
-});
+}));

@@ -2,17 +2,20 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { useAuth } from '@/auth/AuthProvider';
 import { googleErrorMessage } from '@/auth/google';
 import { Avatar } from '@/components/Avatar';
-import { colors, fontSize, radius, spacing } from '@/theme';
+import { ThemeChooser } from '@/components/ThemeChooser';
+import { createStyles, useTheme } from '@/appearance';
+import { fontSize, radius, spacing } from '@/theme';
 
 /** Entrar com Google, ou ver a conta e sair (ADR 0007). */
 export default function AccountScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { state, signInWithGoogle, signOut } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +61,9 @@ export default function AccountScreen() {
           )}
         </Pressable>
         {error && <Text style={styles.error}>{error}</Text>}
+        <View style={styles.appearance}>
+          <ThemeChooser />
+        </View>
       </View>
     );
   }
@@ -82,11 +88,14 @@ export default function AccountScreen() {
         <Text style={styles.buttonOutlineText}>Sair</Text>
       </Pressable>
       {error && <Text style={styles.error}>{error}</Text>}
+      <View style={styles.appearance}>
+        <ThemeChooser />
+      </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((colors) => ({
   screen: { flex: 1, padding: spacing.xl, gap: spacing.md },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   title: { color: colors.text, fontSize: fontSize.xxl, fontWeight: '700' },
@@ -118,4 +127,12 @@ const styles = StyleSheet.create({
   },
   disabled: { opacity: 0.6 },
   error: { color: colors.danger, fontSize: fontSize.md },
-});
+  // Separada da conta: vale com ou sem login.
+  appearance: {
+    marginTop: spacing.xl,
+    paddingTop: spacing.lg,
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
+    alignSelf: 'stretch',
+  },
+}));

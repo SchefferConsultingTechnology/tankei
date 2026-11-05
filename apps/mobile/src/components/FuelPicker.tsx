@@ -1,8 +1,9 @@
 import { FUEL_LABELS, type FuelType } from '@tankei/shared';
 import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, Text, View } from 'react-native';
 import { useBottomPadding } from '@/hooks/useBottomPadding';
-import { colors, fontSize, radius, spacing } from '@/theme';
+import { createStyles } from '@/appearance';
+import { fontSize, radius, spacing } from '@/theme';
 import { SelectField } from './SelectField';
 
 interface Props {
@@ -16,6 +17,7 @@ interface Props {
  * opções visíveis de uma vez (sem rolagem lateral escondendo opções).
  */
 export function FuelPicker({ fuels, selected, onSelect }: Props) {
+  const styles = useStyles();
   const [open, setOpen] = useState(false);
   const bottomPadding = useBottomPadding();
 
@@ -68,8 +70,8 @@ export function FuelPicker({ fuels, selected, onSelect }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.4)' },
+const useStyles = createStyles((colors) => ({
+  backdrop: { flex: 1, backgroundColor: colors.backdrop },
   sheet: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: radius.md * 2,
@@ -98,4 +100,4 @@ const styles = StyleSheet.create({
   label: { color: colors.text, fontSize: fontSize.lg },
   labelActive: { color: colors.primaryText, fontWeight: '600' },
   check: { color: colors.primaryText, fontSize: fontSize.lg, fontWeight: '700' },
-});
+}));

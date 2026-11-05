@@ -1,6 +1,7 @@
 import { FUEL_LABELS, type FuelType } from '@tankei/shared';
-import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
-import { colors, fontSize, radius, spacing } from '@/theme';
+import { Pressable, ScrollView, Text } from 'react-native';
+import { createStyles } from '@/appearance';
+import { fontSize, radius, spacing } from '@/theme';
 
 interface Props {
   fuels: FuelType[];
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function FuelSelector({ fuels, selected, onSelect }: Props) {
+  const styles = useStyles();
   return (
     <ScrollView
       horizontal
@@ -35,7 +37,7 @@ export function FuelSelector({ fuels, selected, onSelect }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((colors) => ({
   row: { gap: spacing.sm, paddingHorizontal: spacing.lg },
   chip: {
     backgroundColor: colors.surface,
@@ -48,4 +50,4 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   label: { color: colors.text, fontSize: fontSize.md },
   labelActive: { color: colors.primaryText, fontWeight: '600' },
-});
+}));

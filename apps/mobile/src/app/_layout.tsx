@@ -1,15 +1,23 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { router, Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import * as SystemUI from 'expo-system-ui';
+import { useEffect, useState } from 'react';
+import { Image, Pressable, Text } from 'react-native';
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
 import { Avatar } from '@/components/Avatar';
 import { PlaceProvider } from '@/place';
-import { colors, fontSize, spacing } from '@/theme';
+import {
+  createStyles,
+  ThemePreferenceProvider,
+  useTheme,
+} from '@/appearance';
+import { fontSize, spacing } from '@/theme';
 
 /** Atalho para a conta no cabeçalho: "Entrar", ou a foto e o primeiro nome. */
 function AccountButton() {
+  const styles = useStyles();
   const { state } = useAuth();
   if (state.status === 'loading') return null;
   const user = state.status === 'signedIn' ? state.user : null;
@@ -29,7 +37,45 @@ function AccountButton() {
   );
 }
 
+// A abertura fica até o tema salvo ser aplicado (sem piscar no tema errado).
+SplashScreen.preventAutoHideAsync().catch(() => undefined);
+
+const LOGO = {
+  light: require('../../assets/brand/logo-horizontal.png'),
+  dark: require('../../assets/brand/logo-horizontal-dark.png'),
+};
+
+/** Logo no lugar do título da tela inicial, na variante do tema. */
+function HeaderLogo() {
+  const styles = useStyles();
+  const { scheme } = useTheme();
+  return (
+    <Image
+      source={LOGO[scheme]}
+      style={styles.logo}
+      resizeMode="contain"
+      accessibilityRole="header"
+      accessibilityLabel="Tankei: postos e preços"
+    />
+  );
+}
+
 export default function RootLayout() {
+  return (
+    <ThemePreferenceProvider
+      onReady={() => void SplashScreen.hideAsync().catch(() => undefined)}
+    >
+      <App />
+    </ThemePreferenceProvider>
+  );
+}
+
+function App() {
+  const { colors, scheme } = useTheme();
+  // Fundo da janela nativa (aparece nas transições entre telas).
+  useEffect(() => {
+    SystemUI.setBackgroundColorAsync(colors.background).catch(() => undefined);
+  }, [colors.background]);
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -44,11 +90,12 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <PlaceProvider>
-          <StatusBar style="dark" />
+          <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
           <Stack
             screenOptions={{
               headerTintColor: colors.primary,
               headerTitleStyle: { color: colors.text },
+              headerStyle: { backgroundColor: colors.surface },
               contentStyle: { backgroundColor: colors.background },
             }}
           >
@@ -56,6 +103,7 @@ export default function RootLayout() {
               name="index"
               options={{
                 title: 'Postos e preços',
+                headerTitle: () => <HeaderLogo />,
                 headerRight: () => <AccountButton />,
               }}
             />
@@ -83,11 +131,13 @@ export default function RootLayout() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((colors) => ({
   accountButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
   },
   account: { color: colors.primary, fontSize: fontSize.lg, fontWeight: '600' },
-});
+  // Proporção do logo horizontal (720 × 212).
+  logo: { height: 32, width: 32 * (720 / 212) },
+}));

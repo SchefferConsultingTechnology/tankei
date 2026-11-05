@@ -1,7 +1,6 @@
 import type { FuelType } from '@tankei/shared';
 import {
   Pressable,
-  StyleSheet,
   Text,
   View,
   type StyleProp,
@@ -9,7 +8,8 @@ import {
 } from 'react-native';
 import { describePrice, formatDistance } from '@/format';
 import { priceFor, type ListedStation } from '@/stations';
-import { colors, fontSize, radius, spacing } from '@/theme';
+import { createStyles } from '@/appearance';
+import { fontSize, radius, spacing } from '@/theme';
 import { IqpPill } from './IqpPill';
 import { PriceTag } from './PriceTag';
 
@@ -22,6 +22,7 @@ interface Props {
 
 /** Resumo do posto (nome, bandeira, preço e IQP): na lista e no mapa. */
 export function StationCard({ station, fuel, onPress, style }: Props) {
+  const styles = useStyles();
   const price = priceFor(station, fuel);
   return (
     <Pressable
@@ -53,7 +54,7 @@ export function StationCard({ station, fuel, onPress, style }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((colors) => ({
   card: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
@@ -71,4 +72,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-});
+}));

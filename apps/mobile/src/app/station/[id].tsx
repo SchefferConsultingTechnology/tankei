@@ -7,7 +7,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -16,9 +15,12 @@ import { PriceTag } from '@/components/PriceTag';
 import { useBottomPadding } from '@/hooks/useBottomPadding';
 import { CONFIDENCE_LABELS, describePrice } from '@/format';
 import { priceFor } from '@/stations';
-import { badgeColors, colors, fontSize, radius, spacing } from '@/theme';
+import { createStyles, useTheme } from '@/appearance';
+import { fontSize, radius, spacing } from '@/theme';
 
 export default function StationScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const station = useStation(id);
   const iqp = useStationIqp(id);
@@ -109,6 +111,7 @@ export default function StationScreen() {
 }
 
 function IqpDetail({ iqp }: { iqp: StationIqp }) {
+  const styles = useStyles();
   if (iqp.score === null) {
     return (
       <Text style={styles.muted}>
@@ -186,6 +189,7 @@ function PrimaryButton({
   label: string;
   onPress: () => void;
 }) {
+  const styles = useStyles();
   return (
     <Pressable
       style={styles.primary}
@@ -204,6 +208,7 @@ function SecondaryButton({
   label: string;
   onPress: () => void;
 }) {
+  const styles = useStyles();
   return (
     <Pressable
       style={styles.secondary}
@@ -215,7 +220,7 @@ function SecondaryButton({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((colors, badgeColors) => ({
   content: { padding: spacing.lg, gap: spacing.lg },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   section: {
@@ -275,4 +280,4 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     fontWeight: '600',
   },
-});
+}));

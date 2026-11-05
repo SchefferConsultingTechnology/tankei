@@ -1,7 +1,8 @@
 import type { FuelType } from '@tankei/shared';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, View } from 'react-native';
 import { useBottomPadding } from '@/hooks/useBottomPadding';
 import { sortByPrice, type ListedStation } from '@/stations';
+import { createStyles } from '@/appearance';
 import { spacing } from '@/theme';
 import { StationCard } from './StationCard';
 
@@ -13,6 +14,7 @@ interface Props {
 
 /** Postos do menor para o maior preço do combustível escolhido. */
 export function StationList({ stations, fuel, onSelect }: Props) {
+  const styles = useStyles();
   const bottomPadding = useBottomPadding();
   return (
     <FlatList
@@ -31,6 +33,6 @@ export function StationList({ stations, fuel, onSelect }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((colors) => ({
   list: { padding: spacing.lg },
-});
+}));

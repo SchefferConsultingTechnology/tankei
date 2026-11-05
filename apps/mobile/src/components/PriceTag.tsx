@@ -1,7 +1,8 @@
 import type { CurrentPrice } from '@tankei/shared';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { formatPrice } from '@/format';
-import { badgeColors, colors, fontSize, radius, spacing } from '@/theme';
+import { createStyles, useTheme } from '@/appearance';
+import { fontSize, radius, spacing } from '@/theme';
 
 interface Props {
   price: CurrentPrice | undefined;
@@ -12,6 +13,8 @@ interface Props {
 
 /** Preço com a cor da origem; desatualizado fica esmaecido; sem preço, traço. */
 export function PriceTag({ price, size = 'sm', highlighted = false }: Props) {
+  const styles = useStyles();
+  const { colors, badgeColors } = useTheme();
   const color = price ? badgeColors[price.badge] : colors.textMuted;
   return (
     <View
@@ -34,7 +37,7 @@ export function PriceTag({ price, size = 'sm', highlighted = false }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((colors) => ({
   tag: {
     backgroundColor: colors.surface,
     borderWidth: 1.5,
@@ -44,4 +47,4 @@ const styles = StyleSheet.create({
   },
   text: { fontSize: fontSize.md, fontWeight: '700' },
   large: { fontSize: fontSize.xl },
-});
+}));
