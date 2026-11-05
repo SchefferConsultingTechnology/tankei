@@ -1,68 +1,408 @@
+/*
+ * Tokens da marca Tankei (ADR 0017), iguais aos do app. Tema escuro pelo
+ * sistema ou pela escolha salva (data-theme na raiz).
+ */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  --primary: #012049;
+  --primary-text: #ffffff;
+  --accent: #e8590c;
+  --background: #f5f7fb;
+  --surface: #ffffff;
+  --surface-alt: #eef2f8;
+  --border: #d9e0ea;
+  --text: #0f1b33;
+  --text-muted: #5b6b85;
+  --danger: #b91c1c;
+  --success: #15803d;
+  --shadow: 0 1px 3px rgb(1 32 73 / 0.12);
+  --badge-promocao: #7c3aed;
+  --badge-atualizado_posto: #15803d;
+  --badge-confirmado_motoristas: #1d4ed8;
+  --badge-informado_motorista: #b45309;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  color-scheme: light;
+}
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --primary: #ff7a1a;
+    --primary-text: #012049;
+    --accent: #ff8a2b;
+    --background: #07122a;
+    --surface: #0f1e3d;
+    --surface-alt: #162a50;
+    --border: #24395f;
+    --text: #f1f5fb;
+    --text-muted: #9aabc6;
+    --danger: #f87171;
+    --success: #4ade80;
+    --shadow: 0 1px 3px rgb(0 0 0 / 0.5);
+    --badge-promocao: #c4b5fd;
+    --badge-atualizado_posto: #4ade80;
+    --badge-confirmado_motoristas: #93c5fd;
+    --badge-informado_motorista: #fcd34d;
+    color-scheme: dark;
+  }
+}
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+:root[data-theme='dark'] {
+  --primary: #ff7a1a;
+  --primary-text: #012049;
+  --accent: #ff8a2b;
+  --background: #07122a;
+  --surface: #0f1e3d;
+  --surface-alt: #162a50;
+  --border: #24395f;
+  --text: #f1f5fb;
+  --text-muted: #9aabc6;
+  --danger: #f87171;
+  --success: #4ade80;
+  --shadow: 0 1px 3px rgb(0 0 0 / 0.5);
+  --badge-promocao: #c4b5fd;
+  --badge-atualizado_posto: #4ade80;
+  --badge-confirmado_motoristas: #93c5fd;
+  --badge-informado_motorista: #fcd34d;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--text);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-size: 16px;
+  line-height: 1.4;
+  -webkit-text-size-adjust: 100%;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
 }
 
 a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+  color: var(--primary);
 }
 
-body {
-  margin: 0;
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Layout ---------- */
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+.app-header .logo {
+  height: 30px;
+  display: block;
 }
 
-button {
-  border-radius: 8px;
+.app-header .spacer {
+  flex: 1;
+}
+
+.page {
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 16px;
+  display: grid;
+  /* minmax(0, 1fr): a coluna não cresce além da tela por causa de textos
+     que não quebram (nomes truncados). */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.4rem;
+  line-height: 1.2;
+}
+
+.muted {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.error {
+  color: var(--danger);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+
+.stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.row .grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Botões e campos ---------- */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
   border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+  background: var(--primary);
+  color: var(--primary-text);
+  font-weight: 700;
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  text-decoration: none;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+.button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.button.secondary {
+  background: transparent;
+  color: var(--primary);
+  border-color: var(--border);
+}
+
+.button.ghost {
+  background: transparent;
+  color: var(--text-muted);
+  min-height: 36px;
+  padding: 0 10px;
+  font-weight: 600;
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+}
+
+.field label {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.input {
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  width: 100%;
+}
+
+.input:focus {
+  border-color: var(--primary);
+}
+
+/* ---------- Segmentado (abas e escolhas) ---------- */
+
+.segmented {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.segmented button {
+  flex: 1;
+  min-height: 40px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.segmented button[aria-selected='true'],
+.segmented button[aria-checked='true'] {
+  background: var(--primary);
+  color: var(--primary-text);
+  font-weight: 700;
+}
+
+.fuel-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fuel-chips button {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.fuel-chips button[aria-pressed='true'] {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-text);
+  font-weight: 700;
+}
+
+/* ---------- Preços ---------- */
+
+.price-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1.5px solid currentColor;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.price-tag.lg {
+  font-size: 1.25rem;
+}
+
+.price-tag.stale {
+  opacity: 0.55;
+}
+
+.price-tag.none {
+  color: var(--text-muted);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.card.list {
+  padding: 4px 16px;
+}
+
+.list > li {
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+}
+
+.list > li:first-child {
+  border-top: 0;
+}
+
+.highlight {
+  background: var(--surface-alt);
+  border-radius: var(--radius-sm);
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.stat .value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Reputação ---------- */
+
+.bar {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--surface-alt);
+  overflow: hidden;
+}
+
+.bar > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+.bar.city > span {
+  background: var(--text-muted);
+}
+
+/* ---------- Diálogo ---------- */
+
+dialog {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+  padding: 20px;
+  width: min(92vw, 420px);
+}
+
+dialog::backdrop {
+  background: rgb(1 32 73 / 0.45);
+}
+
+@media (min-width: 720px) {
+  .page {
+    padding: 24px;
   }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
+  .page-title {
+    font-size: 1.75rem;
   }
 }

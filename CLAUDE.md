@@ -3,7 +3,7 @@
 Monorepo (pnpm workspaces + Turborepo) de uma plataforma de preços e qualidade de postos de combustível. "Tankei" é um nome provisório.
 
 - `apps/api`: NestJS. Prefixo global `/v1`, porta 3333.
-- `apps/portal`, `apps/admin`: React + Vite + TypeScript.
+- `apps/portal`, `apps/admin`: React + Vite + TypeScript. O portal (do posto, ADR 0018) importa o `@tankei/shared` pelo código-fonte TypeScript (alias no `vite.config.ts`), porque o pacote é CommonJS.
 - `apps/mobile`: Expo SDK 58 com Expo Router (rotas em `src/app/`). Leia `apps/mobile/AGENTS.md` antes de mexer, porque as APIs do Expo mudam a cada SDK. Instale pacotes com `pnpm exec expo install` (versões compatíveis com o SDK). Só `src/components/StationMap.tsx` importa `react-native-maps` (ADR 0010). Respostas da API são validadas com os schemas de `@tankei/shared` em `src/api/`. Cores só por `useTheme()`/`createStyles()` de `src/appearance.tsx` (temas claro e escuro, ADR 0017), nunca valores fixos nas telas.
 - `packages/shared`: tipos de domínio e schemas Zod dos contratos da API. Rode o build antes dos apps.
 - Banco: PostgreSQL + PostGIS via `docker compose`, porta 5433. Acesso pela API com Drizzle (ADR 0005). Revise o SQL gerado: o drizzle-kit omite o SRID de colunas `geometry` (corrigir para `geometry(point, 4326)`).

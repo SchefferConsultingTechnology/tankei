@@ -1,35 +1,35 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Navigate, Route, Routes } from 'react-router';
+import { useAuth } from './auth/AuthProvider';
+import { Layout } from './components/Layout';
+import { LoginPage } from './pages/LoginPage';
+import { StationPage } from './pages/StationPage';
+import { StationsPage } from './pages/StationsPage';
 
-function App() {
-  const [count, setCount] = useState(0)
+/** Sem login, todas as rotas mostram a entrada. */
+export function App() {
+  const { state } = useAuth();
 
+  if (state.status === 'loading') {
+    return (
+      <Layout>
+        <p className="muted">Carregando…</p>
+      </Layout>
+    );
+  }
+  if (state.status === 'signedOut') {
+    return (
+      <Layout>
+        <LoginPage />
+      </Layout>
+    );
+  }
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Layout>
+      <Routes>
+        <Route path="/" element={<StationsPage user={state.user} />} />
+        <Route path="/postos/:id" element={<StationPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Layout>
+  );
 }
-
-export default App

@@ -54,6 +54,10 @@ Um app só: `pnpm --filter @tankei/api dev`.
 
 Para acrescentar os mesmos dados fictícios a um banco que já tem os postos, como o de testes no Supabase: `DEMO_DATABASE_URL='postgresql://...' pnpm --filter @tankei/api demo:seed`. Preços são só de inserção e não podem ser apagados depois; o script recusa rodar de novo no mesmo banco.
 
+### Portal do posto
+
+`cp apps/portal/.env.example apps/portal/.env` e `pnpm --filter @tankei/portal dev` (porta 5173). O login usa o cliente OAuth Web do Google: a origem `http://localhost:5173` precisa estar em "Authorized JavaScript origins" desse cliente no Google Cloud. Só entra quem um administrador vinculou a um posto (`POST /v1/admin/stations/:id/managers`). Escopo e decisões no ADR 0018.
+
 ### App mobile no celular
 
 O app usa um APK de desenvolvimento próprio (`br.com.tankei.app`), não o Expo Go: o login com Google e o mapa exigem código nativo (ADR 0015).
