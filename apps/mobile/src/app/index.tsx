@@ -1,6 +1,6 @@
 import { FUEL_TYPES } from '@tankei/shared';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -8,7 +8,11 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useCityStations, useNearbyStations } from '@/api/queries';
+import {
+  useCityStations,
+  useNearbyStations,
+  type Coordinates,
+} from '@/api/queries';
 import { FuelSelector } from '@/components/FuelSelector';
 import { StationCard } from '@/components/StationCard';
 import { StationList } from '@/components/StationList';
@@ -17,10 +21,18 @@ import { useBottomPadding } from '@/hooks/useBottomPadding';
 import { useFuelPreference } from '@/hooks/useFuelPreference';
 import { PILOT_CITY_CENTER, useUserLocation } from '@/hooks/useUserLocation';
 import { usePlace } from '@/place';
-import { availableFuels, type ListedStation } from '@/stations';
+import {
+  availableFuels,
+  distanceMeters,
+  withDistanceFrom,
+  type ListedStation,
+} from '@/stations';
 import { colors, fontSize, radius, spacing } from '@/theme';
 
 type Mode = 'mapa' | 'lista';
+
+/** Deslocamento, em metros, que dispara nova busca de postos por perto. */
+const NEARBY_REFRESH_M = 2_000;
 
 export default function HomeScreen() {
   const { place, setPlace } = usePlace();
@@ -31,13 +43,30 @@ export default function HomeScreen() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const cardPadding = useBottomPadding(spacing.md);
 
+  // A busca por proximidade é refeita ao se afastar do ponto da última busca.
+  const [searchCenter, setSearchCenter] = useState<Coordinates | null>(null);
+  if (
+    location.coords &&
+    (!searchCenter ||
+      distanceMeters(location.coords, searchCenter) > NEARBY_REFRESH_M)
+  ) {
+    setSearchCenter(location.coords);
+  }
+  const userLocation =
+    !city && location.status === 'granted' ? location.coords : null;
+
   // Só uma das buscas fica ativa: perto de você ou a cidade escolhida.
-  const nearby = useNearbyStations(city ? null : location.coords);
+  const nearby = useNearbyStations(city ? null : searchCenter);
   const cityStations = useCityStations(city?.code ?? null, fuel);
   const query = city ? cityStations : nearby;
 
-  const stations: ListedStation[] =
-    (city ? cityStations.data?.stations : nearby.data) ?? [];
+  const found = city ? cityStations.data?.stations : nearby.data;
+  const stations: ListedStation[] = useMemo(
+    () =>
+      userLocation ? withDistanceFrom(found ?? [], userLocation) : (found ?? []),
+    // userLocation vem do estado: muda só quando a pessoa se desloca.
+    [found, userLocation],
+  );
   const center = city
     ? (cityStations.data?.center ?? PILOT_CITY_CENTER)
     : location.coords;
@@ -77,7 +106,7 @@ export default function HomeScreen() {
             stations={stations}
             fuel={fuel}
             center={center}
-            showsUserLocation={!city && location.status === 'granted'}
+            userLocation={userLocation}
             selectedId={selected?.id ?? null}
             onSelect={(station) => setSelectedId(station.id)}
             onDeselect={() => setSelectedId(null)}

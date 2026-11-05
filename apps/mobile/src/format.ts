@@ -8,9 +8,11 @@ export function formatPrice(price: number): string {
   });
 }
 
+/** "850 m" ou "1,4 km". Aceita metros fracionados (distância calculada no app). */
 export function formatDistance(meters: number): string {
-  if (meters < 1000) return `${meters} m`;
-  return `${(meters / 1000).toLocaleString('pt-BR', {
+  const rounded = Math.round(meters);
+  if (rounded < 1000) return `${rounded} m`;
+  return `${(rounded / 1000).toLocaleString('pt-BR', {
     maximumFractionDigits: 1,
   })} km`;
 }

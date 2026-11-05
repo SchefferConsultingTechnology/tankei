@@ -1,6 +1,6 @@
 import type { FuelType } from '@tankei/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import type { Coordinates } from '@/api/queries';
 import {
@@ -15,14 +15,15 @@ import {
   type ListedStation,
   type LocatedStation,
 } from '@/stations';
-import { colors } from '@/theme';
+import { colors, fontSize, radius, spacing } from '@/theme';
 import { PriceTag } from './PriceTag';
 
 interface Props {
   stations: ListedStation[];
   fuel: FuelType;
   center: Coordinates;
-  showsUserLocation: boolean;
+  /** Posição da pessoa, que o mapa acompanha; nula na busca por cidade. */
+  userLocation: Coordinates | null;
   /** Posto destacado no mapa (o cartão dele aparece por cima). */
   selectedId: string | null;
   onSelect: (station: ListedStation) => void;
@@ -45,7 +46,7 @@ export function StationMap({
   stations,
   fuel,
   center,
-  showsUserLocation,
+  userLocation,
   selectedId,
   onSelect,
   onDeselect,
@@ -53,6 +54,17 @@ export function StationMap({
   const mapRef = useRef<MapView>(null);
   const [latitudeDelta, setLatitudeDelta] = useState(INITIAL_DELTA);
   const [mapHeight, setMapHeight] = useState(0);
+  // Segue a pessoa até ela arrastar o mapa; o botão volta a seguir.
+  const [following, setFollowing] = useState(true);
+  const followsUser = following && userLocation !== null;
+
+  useEffect(() => {
+    if (!followsUser) return;
+    mapRef.current?.animateCamera(
+      { center: { latitude: userLocation.lat, longitude: userLocation.lng } },
+      { duration: 500 },
+    );
+  }, [followsUser, userLocation?.lat, userLocation?.lng]);
   // Postos sem coordenada não vão para o mapa (aparecem na lista).
   const located = useMemo(() => stations.filter(isLocated), [stations]);
   // Só os postos com preço disputam espaço: os sem preço viram um ponto discreto.
@@ -67,6 +79,7 @@ export function StationMap({
   );
 
   return (
+    <View style={StyleSheet.absoluteFill}>
     <MapView
       ref={mapRef}
       style={StyleSheet.absoluteFill}
@@ -94,8 +107,9 @@ export function StationMap({
           )
           .catch(() => undefined);
       }}
-      showsUserLocation={showsUserLocation}
-      showsMyLocationButton={showsUserLocation}
+      onPanDrag={() => setFollowing(false)}
+      showsUserLocation={userLocation !== null}
+      showsMyLocationButton={false}
       toolbarEnabled={false}
     >
       {located.map((station) => (
@@ -111,6 +125,16 @@ export function StationMap({
         />
       ))}
     </MapView>
+    {userLocation && !following && (
+      <Pressable
+        style={styles.follow}
+        onPress={() => setFollowing(true)}
+        accessibilityRole="button"
+      >
+        <Text style={styles.followText}>Seguir minha posição</Text>
+      </Pressable>
+    )}
+    </View>
   );
 }
 
@@ -191,6 +215,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderColor: colors.textMuted,
     borderWidth: 2,
+  },
+  follow: {
+    position: 'absolute',
+    top: spacing.md,
+    right: spacing.md,
+    backgroundColor: colors.primary,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+  },
+  followText: {
+    color: colors.primaryText,
+    fontSize: fontSize.sm,
+    fontWeight: '600',
   },
   noPriceSelected: { borderColor: colors.primary, borderWidth: 4 },
 });

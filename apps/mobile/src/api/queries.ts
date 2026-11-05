@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import {
   cityStationsSchema,
   cityWithStationsSchema,
@@ -26,6 +26,9 @@ export function useNearbyStations(center: Coordinates | null) {
   return useQuery({
     queryKey: ['stations', 'nearby', center?.lat, center?.lng],
     enabled: center !== null,
+    // Nova busca ao se deslocar: o mapa continua com os postos anteriores
+    // enquanto ela carrega.
+    placeholderData: keepPreviousData,
     queryFn: () =>
       apiGet(
         `/stations/nearby?lat=${center!.lat}&lng=${center!.lng}&radius=${SEARCH_RADIUS_M}`,

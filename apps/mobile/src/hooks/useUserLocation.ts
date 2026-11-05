@@ -11,7 +11,8 @@ export type LocationState =
   | { status: 'denied'; coords: Coordinates };
 
 /**
- * Localização atual, pedindo permissão uma vez. Sem permissão, sem posição
+ * Localização atual, pedindo permissão uma vez, e acompanhada enquanto a tela
+ * está aberta (a cada WATCH_DISTANCE_M metros). Sem permissão, sem posição
  * em 10 s ou com erro, usa o centro da cidade-piloto. A localização só é
  * usada na busca e não é guardada pela API (ADR 0009).
  */
@@ -23,6 +24,17 @@ export function useUserLocation(): LocationState {
 
   useEffect(() => {
     let cancelled = false;
+    let subscription: Location.LocationSubscription | null = null;
+    const update = (position: Location.LocationObject) => {
+      if (cancelled) return;
+      setState({
+        status: 'granted',
+        coords: {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        },
+      });
+    };
     void (async () => {
       try {
         const { granted } = await Location.requestForegroundPermissionsAsync();
@@ -37,15 +49,19 @@ export function useUserLocation(): LocationState {
             POSITION_TIMEOUT_MS,
           ).catch(() => null)) ?? (await Location.getLastKnownPositionAsync());
         if (!position) throw new Error('sem posição');
-        if (!cancelled) {
-          setState({
-            status: 'granted',
-            coords: {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            },
-          });
-        }
+        update(position);
+
+        // Acompanha o deslocamento. Falha aqui não apaga a posição já obtida.
+        const watch = await Location.watchPositionAsync(
+          {
+            // GPS: com a precisão da rede, o ponto pula dezenas de metros.
+            accuracy: Location.Accuracy.High,
+            distanceInterval: WATCH_DISTANCE_M,
+          },
+          update,
+        ).catch(() => null);
+        if (cancelled) watch?.remove();
+        else subscription = watch;
       } catch {
         if (!cancelled)
           setState({ status: 'denied', coords: PILOT_CITY_CENTER });
@@ -53,6 +69,7 @@ export function useUserLocation(): LocationState {
     })();
     return () => {
       cancelled = true;
+      subscription?.remove();
     };
   }, []);
 
@@ -60,6 +77,9 @@ export function useUserLocation(): LocationState {
 }
 
 const POSITION_TIMEOUT_MS = 10_000;
+
+/** Deslocamento mínimo, em metros, para uma nova posição. */
+const WATCH_DISTANCE_M = 25;
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {

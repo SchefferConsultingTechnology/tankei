@@ -1,4 +1,5 @@
 import type { CurrentPrice, FuelType, Station } from '@tankei/shared';
+import type { Coordinates } from '@/api/queries';
 
 /**
  * Posto exibido nas listas e no mapa: com distância na busca por proximidade,
@@ -51,4 +52,32 @@ export function availableFuels(
 ): FuelType[] {
   const sold = new Set(stations.flatMap((s) => s.fuels));
   return order.filter((fuel) => sold.has(fuel));
+}
+
+const EARTH_RADIUS_M = 6_371_000;
+
+/** Distância em linha reta (fórmula de haversine), em metros. */
+export function distanceMeters(a: Coordinates, b: Coordinates): number {
+  const rad = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * rad;
+  const dLng = (b.lng - a.lng) * rad;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) ** 2;
+  return 2 * EARTH_RADIUS_M * Math.asin(Math.sqrt(h));
+}
+
+/**
+ * Distâncias até a posição atual: a busca é refeita só de tempos em tempos,
+ * mas a distância exibida acompanha o deslocamento.
+ */
+export function withDistanceFrom(
+  stations: ListedStation[],
+  origin: Coordinates,
+): ListedStation[] {
+  return stations.map((station) =>
+    station.location
+      ? { ...station, distanceMeters: distanceMeters(origin, station.location) }
+      : station,
+  );
 }
