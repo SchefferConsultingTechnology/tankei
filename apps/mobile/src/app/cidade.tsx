@@ -44,13 +44,33 @@ export default function ChooseCityScreen() {
     router.back();
   }
 
+  // Volta para a busca por proximidade (só aparece com uma cidade escolhida).
+  const nearbyOption = place.kind === 'city' && (
+    <Pressable
+      style={[styles.row, styles.nearby]}
+      onPress={() => {
+        setPlace({ kind: 'nearby' });
+        router.back();
+      }}
+      accessibilityRole="button"
+    >
+      <Text style={styles.nearbyText}>Perto de você</Text>
+      <Text style={styles.nearbyHint}>usar sua localização</Text>
+    </Pressable>
+  );
+
   if (!state) {
     return (
       <FlatList
         data={BRAZIL_STATES}
         keyExtractor={(item) => item.code}
         contentContainerStyle={[styles.list, bottomPadding]}
-        ListHeaderComponent={<Text style={styles.step}>Escolha o estado</Text>}
+        ListHeaderComponent={
+          <View style={styles.listHeader}>
+            {nearbyOption}
+            <Text style={styles.step}>Escolha o estado</Text>
+          </View>
+        }
         renderItem={({ item }) => (
           <Pressable
             style={styles.row}
@@ -69,6 +89,7 @@ export default function ChooseCityScreen() {
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
+        {nearbyOption}
         <View style={styles.headerRow}>
           <Text style={styles.step}>Cidades de {stateName}</Text>
           <Pressable
@@ -137,6 +158,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  listHeader: { gap: spacing.md, marginBottom: spacing.xs },
+  nearby: { backgroundColor: colors.primary, borderColor: colors.primary },
+  nearbyText: {
+    color: colors.primaryText,
+    fontSize: fontSize.lg,
+    fontWeight: '600',
+  },
+  nearbyHint: { color: colors.primaryText, fontSize: fontSize.sm },
   step: { color: colors.text, fontSize: fontSize.lg, fontWeight: '700' },
   link: { color: colors.primary, fontSize: fontSize.md, fontWeight: '600' },
   search: {

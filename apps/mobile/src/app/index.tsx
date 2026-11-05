@@ -13,7 +13,8 @@ import {
   useNearbyStations,
   type Coordinates,
 } from '@/api/queries';
-import { FuelSelector } from '@/components/FuelSelector';
+import { FuelPicker } from '@/components/FuelPicker';
+import { SelectField } from '@/components/SelectField';
 import { StationCard } from '@/components/StationCard';
 import { StationList } from '@/components/StationList';
 import { StationMap } from '@/components/StationMap';
@@ -35,7 +36,7 @@ type Mode = 'mapa' | 'lista';
 const NEARBY_REFRESH_M = 2_000;
 
 export default function HomeScreen() {
-  const { place, setPlace } = usePlace();
+  const { place } = usePlace();
   const city = place.kind === 'city' ? place.municipality : null;
   const location = useUserLocation();
   const [fuel, setFuel] = useFuelPreference();
@@ -142,32 +143,19 @@ export default function HomeScreen() {
   return (
     <View style={styles.screen}>
       <View style={styles.toolbar}>
-        <View style={styles.placeRow}>
-          <Pressable
-            style={styles.placeButton}
+        <View style={styles.filters}>
+          <SelectField
+            label={city ? 'Cidade' : 'Mostrando'}
+            value={city ? `${city.name}/${city.state}` : 'Perto de você'}
             onPress={() => router.push('/cidade')}
-            accessibilityRole="button"
-            accessibilityLabel="Escolher cidade"
-          >
-            <Text style={styles.placeLabel}>
-              {city ? 'Cidade' : 'Mostrando'}
-            </Text>
-            <Text style={styles.placeName} numberOfLines={1}>
-              {city ? `${city.name}/${city.state}` : 'Perto de você'} ▾
-            </Text>
-          </Pressable>
-          {city && (
-            <Pressable
-              style={styles.placeClear}
-              onPress={() => setPlace({ kind: 'nearby' })}
-              accessibilityRole="button"
-              accessibilityLabel="Voltar para perto de você"
-            >
-              <Text style={styles.placeClearText}>Perto de você</Text>
-            </Pressable>
-          )}
+            accessibilityLabel={
+              city
+                ? `Cidade: ${city.name}. Trocar`
+                : 'Mostrando postos perto de você. Escolher cidade'
+            }
+          />
+          <FuelPicker fuels={fuels} selected={fuel} onSelect={setFuel} />
         </View>
-        <FuelSelector fuels={fuels} selected={fuel} onSelect={setFuel} />
         <View style={styles.switch}>
           {(['mapa', 'lista'] as const).map((option) => (
             <Pressable
@@ -229,23 +217,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     gap: spacing.md,
   },
-  placeRow: {
+  filters: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: spacing.sm,
     paddingHorizontal: spacing.lg,
   },
-  placeButton: { flex: 1 },
-  placeLabel: { color: colors.textMuted, fontSize: fontSize.sm },
-  placeName: { color: colors.text, fontSize: fontSize.xl, fontWeight: '700' },
-  placeClear: {
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-  },
-  placeClearText: { color: colors.primary, fontSize: fontSize.sm },
   switch: {
     flexDirection: 'row',
     marginHorizontal: spacing.lg,
