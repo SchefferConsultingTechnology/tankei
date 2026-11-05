@@ -1,4 +1,4 @@
-import { useParams, useSearchParams } from 'react-router';
+import { Link, useParams, useSearchParams } from 'react-router';
 import { useStation } from '../api/queries';
 import { CompetitionTab } from './CompetitionTab';
 import { PricesTab } from './PricesTab';
@@ -55,6 +55,10 @@ export function StationPage() {
         {tab === 'concorrencia' && <CompetitionTab stationId={id} />}
         {tab === 'reputacao' && <ReputationTab stationId={id} />}
       </div>
+
+      <p className="muted">
+        Responde por outro posto? <Link to="/acesso">Peça acesso</Link>.
+      </p>
     </>
   );
 }

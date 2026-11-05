@@ -1,5 +1,6 @@
 import type { Me } from '@tankei/shared';
 import { Link, Navigate } from 'react-router';
+import { ClaimsPage } from './ClaimsPage';
 
 /** Postos que a pessoa gerencia. Com um só, vai direto para ele. */
 export function StationsPage({ user }: { user: Me }) {
@@ -9,21 +10,8 @@ export function StationsPage({ user }: { user: Me }) {
     return <Navigate to={`/postos/${stations[0].id}`} replace />;
   }
 
-  if (stations.length === 0) {
-    return (
-      <section className="card stack">
-        <h1 className="page-title">
-          Olá{user.name ? `, ${user.name.split(' ')[0]}` : ''}!
-        </h1>
-        <p>Sua conta ainda não está vinculada a nenhum posto.</p>
-        <p className="muted">
-          Para liberar o acesso, a equipe Tankei confirma com você que responde
-          pelo posto. Entre em contato e informe o e-mail desta conta
-          {user.email ? ` (${user.email})` : ''}.
-        </p>
-      </section>
-    );
-  }
+  // Sem posto: a tela inicial é a dos pedidos de acesso (ADR 0019).
+  if (stations.length === 0) return <ClaimsPage user={user} />;
 
   return (
     <section className="stack">
@@ -35,6 +23,7 @@ export function StationsPage({ user }: { user: Me }) {
           </li>
         ))}
       </ul>
+      <Link to="/acesso">Pedir acesso a outro posto</Link>
     </section>
   );
 }

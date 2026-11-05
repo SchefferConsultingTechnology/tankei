@@ -27,6 +27,8 @@ interface AuthContext {
   /** Recebe o ID token do botão do Google e abre a sessão na API. */
   signInWithGoogle: (idToken: string) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Recarrega a conta (por exemplo, depois que um pedido de posto é aprovado). */
+  refreshUser: () => Promise<void>;
 }
 
 const Context = createContext<AuthContext | null>(null);
@@ -68,8 +70,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [queryClient]);
 
+  const refreshUser = useCallback(async () => {
+    const user = await authorizedRequest('/me', meSchema);
+    setState({ status: 'signedIn', user });
+  }, []);
+
   return (
-    <Context.Provider value={{ state, signInWithGoogle, signOut }}>
+    <Context.Provider value={{ state, signInWithGoogle, signOut, refreshUser }}>
       {children}
     </Context.Provider>
   );

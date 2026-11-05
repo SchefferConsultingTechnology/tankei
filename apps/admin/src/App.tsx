@@ -1,35 +1,47 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Navigate, Route, Routes } from 'react-router';
+import { useAuth } from './auth/AuthProvider';
+import { Layout } from './components/Layout';
+import { ClaimsQueuePage } from './pages/ClaimsQueuePage';
+import { LoginPage } from './pages/LoginPage';
 
-function App() {
-  const [count, setCount] = useState(0)
+/** Só administradores (ADR 0007); a API também recusa os demais. */
+export function App() {
+  const { state } = useAuth();
 
+  if (state.status === 'loading') {
+    return (
+      <Layout>
+        <p className="muted">Carregando…</p>
+      </Layout>
+    );
+  }
+  if (state.status === 'signedOut') {
+    return (
+      <Layout>
+        <LoginPage />
+      </Layout>
+    );
+  }
+  if (state.user.role !== 'admin') {
+    return (
+      <Layout>
+        <section className="card stack">
+          <h1 className="page-title">Acesso restrito</h1>
+          <p className="muted" style={{ margin: 0 }}>
+            Esta área é da equipe Tankei. A conta
+            {state.user.email ? ` ${state.user.email}` : ''} não é de
+            administrador.
+          </p>
+        </section>
+      </Layout>
+    );
+  }
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Layout>
+      <Routes>
+        <Route path="/" element={<ClaimsQueuePage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Layout>
+  );
 }
-
-export default App

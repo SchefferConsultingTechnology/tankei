@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router';
 import { useAuth } from './auth/AuthProvider';
 import { Layout } from './components/Layout';
+import { ClaimsPage } from './pages/ClaimsPage';
 import { LoginPage } from './pages/LoginPage';
 import { StationPage } from './pages/StationPage';
 import { StationsPage } from './pages/StationsPage';
@@ -28,6 +29,7 @@ export function App() {
       <Routes>
         <Route path="/" element={<StationsPage user={state.user} />} />
         <Route path="/postos/:id" element={<StationPage />} />
+        <Route path="/acesso" element={<ClaimsPage user={state.user} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

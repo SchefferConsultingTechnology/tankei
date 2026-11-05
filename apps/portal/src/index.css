@@ -246,6 +246,22 @@ a {
   border-color: var(--primary);
 }
 
+/* Item de lista tocável (resultado de busca). */
+.pick {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pick:hover strong {
+  color: var(--primary);
+}
+
 /* ---------- Segmentado (abas e escolhas) ---------- */
 
 .segmented {

@@ -58,6 +58,8 @@ Para acrescentar os mesmos dados fictícios a um banco que já tem os postos, co
 
 `cp apps/portal/.env.example apps/portal/.env` e `pnpm --filter @tankei/portal dev` (porta 5173). O login usa o cliente OAuth Web do Google: a origem `http://localhost:5173` precisa estar em "Authorized JavaScript origins" desse cliente no Google Cloud. Só entra quem um administrador vinculou a um posto (`POST /v1/admin/stations/:id/managers`). Escopo e decisões no ADR 0018.
 
+Quem entra sem posto vinculado pede acesso pelo portal ("Reivindicar meu posto"). A aprovação é feita no admin (`pnpm --filter @tankei/admin dev`, porta 5174, só para administradores; a origem `http://localhost:5174` também precisa estar cadastrada no Google). Fluxo no ADR 0019.
+
 ### App mobile no celular
 
 O app usa um APK de desenvolvimento próprio (`br.com.tankei.app`), não o Expo Go: o login com Google e o mapa exigem código nativo (ADR 0015).
