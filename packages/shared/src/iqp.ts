@@ -154,3 +154,17 @@ export const stationIqpSchema = iqpSummarySchema.extend({
   ),
 });
 export type StationIqp = z.infer<typeof stationIqpSchema>;
+
+/** Escala do IQP e das dimensões (ADR 0004): sempre de 0 a 100. */
+export const IQP_SCALE_MAX = 100;
+
+/**
+ * "Como ler o IQP", igual no app e no portal. Sem números da metodologia
+ * (versionada no backend): os pesos vêm da API em cada dimensão.
+ */
+export const IQP_EXPLANATION: readonly string[] = [
+  'A nota vai de 0 a 100. Consumidores avaliam cada item de 1 a 5, e cada avaliação vira uma nota de 0 a 100 (5 vale 100).',
+  'A nota final é a média das dimensões, cada uma com o seu peso.',
+  'Com poucas avaliações, a nota é puxada para a média dos postos da cidade, e avaliações antigas pesam menos.',
+  'Preço não entra na nota, e anúncios ou planos pagos não a alteram.',
+];

@@ -5,9 +5,15 @@ import LinearProgress from '@mui/material/LinearProgress';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { CONFIDENCE_LABELS } from '@tankei/shared';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import InfoOutlined from '@mui/icons-material/InfoOutlined';
+import Accordion from '@mui/material/Accordion';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import { CONFIDENCE_LABELS, IQP_EXPLANATION } from '@tankei/shared';
 import type { ReactNode } from 'react';
 import { useReputation } from '../api/queries';
+import { IqpGauge } from '../components/IqpGauge';
 
 /** IQP do posto por dimensão comparado à média da cidade (ADR 0012). */
 export function ReputationTab({ stationId }: { stationId: string }) {
@@ -66,6 +72,7 @@ export function ReputationTab({ stationId }: { stationId: string }) {
           }
         />
         <ScoreCard
+          muted
           label="Média da cidade"
           score={city.score}
           detail={
@@ -124,11 +131,35 @@ export function ReputationTab({ stationId }: { stationId: string }) {
         </Stack>
       </Paper>
 
-      <Typography variant="body2" color="text.secondary">
-        O IQP é calculado pelo Tankei a partir das avaliações dos consumidores,
-        com a metodologia {station.methodologyVersion}. Preço não entra na nota,
-        e nenhum plano pago a altera.
-      </Typography>
+      <Accordion disableGutters variant="outlined" sx={{ borderRadius: 2 }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+            <InfoOutlined fontSize="small" color="action" />
+            <Typography sx={{ fontWeight: 600 }}>Como ler o IQP</Typography>
+          </Stack>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Box
+            component="ul"
+            sx={{ m: 0, pl: 2.5, display: 'grid', gap: 0.75 }}
+          >
+            {IQP_EXPLANATION.map((line) => (
+              <Typography key={line} component="li" variant="body2">
+                {line}
+              </Typography>
+            ))}
+          </Box>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            component="p"
+            sx={{ mt: 1.5 }}
+          >
+            Índice calculado pelo Tankei com a metodologia{' '}
+            {station.methodologyVersion}.
+          </Typography>
+        </AccordionDetails>
+      </Accordion>
     </Stack>
   );
 }
@@ -138,34 +169,35 @@ function ScoreCard({
   score,
   detail,
   extra,
+  muted = false,
 }: {
   label: string;
   score: number | null;
   detail: string;
   extra?: ReactNode;
+  muted?: boolean;
 }) {
   return (
     <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
-      <Typography variant="body2" color="text.secondary">
-        {label}
-      </Typography>
-      <Typography
-        variant="h4"
-        component="p"
-        sx={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums', my: 0.5 }}
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={2}
+        sx={{ alignItems: { xs: 'flex-start', sm: 'center' } }}
       >
-        {score ?? '—'}
-        {score != null && (
-          <Typography component="span" variant="body2" color="text.secondary">
-            {' '}
-            /100
+        <IqpGauge score={score} muted={muted} />
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="body2" color="text.secondary">
+            {label}
           </Typography>
-        )}
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
-        {detail}
-      </Typography>
-      {extra && <Box sx={{ mt: 1 }}>{extra}</Box>}
+          {score === null && (
+            <Typography sx={{ fontWeight: 700 }}>Sem nota ainda</Typography>
+          )}
+          <Typography variant="body2" color="text.secondary">
+            {detail}
+          </Typography>
+          {extra && <Box sx={{ mt: 1 }}>{extra}</Box>}
+        </Box>
+      </Stack>
     </Paper>
   );
 }
