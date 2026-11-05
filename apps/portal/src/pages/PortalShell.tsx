@@ -1,8 +1,29 @@
 import { ORG_ROLE_LABELS, roleCan, type Me } from '@tankei/shared';
+import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
+import GroupOutlined from '@mui/icons-material/GroupOutlined';
+import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
+import HowToRegOutlined from '@mui/icons-material/HowToRegOutlined';
+import LocalGasStationOutlined from '@mui/icons-material/LocalGasStationOutlined';
+import LocalOfferOutlined from '@mui/icons-material/LocalOfferOutlined';
+import LocationCityOutlined from '@mui/icons-material/LocationCityOutlined';
+import NearMeOutlined from '@mui/icons-material/NearMeOutlined';
+import StarBorderOutlined from '@mui/icons-material/StarBorderOutlined';
+import StorefrontOutlined from '@mui/icons-material/StorefrontOutlined';
+import SwapHorizOutlined from '@mui/icons-material/SwapHorizOutlined';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import Divider from '@mui/material/Divider';
+import List from '@mui/material/List';
+import ListSubheader from '@mui/material/ListSubheader';
+import MenuItem from '@mui/material/MenuItem';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import type { ReactNode } from 'react';
 import {
   Link,
   Navigate,
-  NavLink,
   Outlet,
   useLocation,
   useNavigate,
@@ -10,28 +31,60 @@ import {
 } from 'react-router';
 import { useStation } from '../api/queries';
 import { Layout } from '../components/Layout';
+import { NavItem } from '../components/NavItem';
 import type { PortalContext } from './station-context';
 
 /** Telas de uma unidade, na ordem do menu (o caminho é relativo a /postos/:id). */
-const UNIT_MENU = [
+const UNIT_MENU: {
+  label: string;
+  items: { label: string; to: string; end?: boolean; icon: ReactNode }[];
+}[] = [
   {
     label: 'Preços',
     items: [
-      { label: 'Preços atuais', to: 'precos', end: true },
-      { label: 'Histórico', to: 'precos/historico' },
+      {
+        label: 'Preços atuais',
+        to: 'precos',
+        end: true,
+        icon: <LocalGasStationOutlined fontSize="small" />,
+      },
+      {
+        label: 'Histórico',
+        to: 'precos/historico',
+        icon: <HistoryOutlined fontSize="small" />,
+      },
     ],
   },
   {
     label: 'Concorrência',
     items: [
-      { label: 'Região', to: 'concorrencia', end: true },
-      { label: 'Outras cidades', to: 'concorrencia/cidades' },
-      { label: 'Promoções', to: 'concorrencia/promocoes' },
+      {
+        label: 'Região',
+        to: 'concorrencia',
+        end: true,
+        icon: <NearMeOutlined fontSize="small" />,
+      },
+      {
+        label: 'Outras cidades',
+        to: 'concorrencia/cidades',
+        icon: <LocationCityOutlined fontSize="small" />,
+      },
+      {
+        label: 'Promoções',
+        to: 'concorrencia/promocoes',
+        icon: <LocalOfferOutlined fontSize="small" />,
+      },
     ],
   },
   {
     label: 'Reputação',
-    items: [{ label: 'IQP por dimensão', to: 'reputacao' }],
+    items: [
+      {
+        label: 'IQP por dimensão',
+        to: 'reputacao',
+        icon: <StarBorderOutlined fontSize="small" />,
+      },
+    ],
   },
 ];
 
@@ -73,78 +126,122 @@ export function PortalShell({ user }: { user: Me }) {
 
   const sidebar = (
     <>
-      <div className="sidebar-station">
-        <strong className="truncate">{org.name}</strong>
-        <span className="muted">{ORG_ROLE_LABELS[org.role]}</span>
-        {user.organizations.length > 1 && (
-          <Link to="/" className="muted">
-            Trocar de rede
-          </Link>
-        )}
-      </div>
+      <Box sx={{ px: 2, pb: 1.5 }}>
+        <Typography
+          variant="subtitle1"
+          noWrap
+          title={org.name}
+          sx={{ fontWeight: 700 }}
+        >
+          {org.name}
+        </Typography>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{ alignItems: 'center', mt: 0.5 }}
+        >
+          <Chip label={ORG_ROLE_LABELS[org.role]} size="small" />
+          {user.organizations.length > 1 && (
+            <Button
+              component={Link}
+              to="/"
+              size="small"
+              startIcon={<SwapHorizOutlined />}
+            >
+              Trocar de rede
+            </Button>
+          )}
+        </Stack>
+      </Box>
+      <Divider />
 
       {showNetwork && (
-        <div className="sidebar-group">
-          <span className="sidebar-title">Rede</span>
-          <NavLink to={`/redes/${org.id}`} end className="sidebar-link">
-            Visão geral
-          </NavLink>
+        <List dense subheader={<ListSubheader>Rede</ListSubheader>}>
+          <NavItem
+            to={`/redes/${org.id}`}
+            end
+            label="Visão geral"
+            icon={<DashboardOutlined fontSize="small" />}
+          />
           {roleCan(org.role, 'manage_team') && (
-            <NavLink to={`/redes/${org.id}/equipe`} className="sidebar-link">
-              Equipe
-            </NavLink>
+            <NavItem
+              to={`/redes/${org.id}/equipe`}
+              label="Equipe"
+              icon={<GroupOutlined fontSize="small" />}
+            />
           )}
-        </div>
+        </List>
       )}
 
       {currentUnit && (
-        <div className="sidebar-group">
-          <span className="sidebar-title">Unidade</span>
-          {org.stations.length > 1 ? (
-            <select
-              className="input sidebar-select"
-              aria-label="Unidade"
-              value={stationId ?? ''}
-              onChange={(event) => switchUnit(event.target.value)}
-            >
-              {!stationId && <option value="">Escolha a unidade</option>}
-              {org.stations.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <span className="sidebar-unit truncate">
-              {org.stations[0]?.name}
-            </span>
-          )}
-        </div>
+        <List dense subheader={<ListSubheader>Unidade</ListSubheader>}>
+          <Box sx={{ px: 2, pt: 0.5 }}>
+            {org.stations.length > 1 ? (
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label="Unidade"
+                value={stationId ?? ''}
+                onChange={(event) => switchUnit(event.target.value)}
+                slotProps={{
+                  select: {
+                    displayEmpty: true,
+                    renderValue: (value) =>
+                      value
+                        ? (org.stations.find((s) => s.id === value)?.name ?? '')
+                        : 'Escolha a unidade',
+                  },
+                  inputLabel: { shrink: true },
+                }}
+              >
+                {org.stations.map((s) => (
+                  <MenuItem key={s.id} value={s.id}>
+                    {s.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            ) : (
+              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                <StorefrontOutlined fontSize="small" color="action" />
+                <Typography variant="body2" noWrap sx={{ fontWeight: 600 }}>
+                  {org.stations[0]?.name}
+                </Typography>
+              </Stack>
+            )}
+          </Box>
+        </List>
       )}
 
       {currentUnit &&
         showUnitMenu &&
         UNIT_MENU.map((group) => (
-          <div key={group.label} className="sidebar-group">
-            <span className="sidebar-title">{group.label}</span>
+          <List
+            key={group.label}
+            dense
+            subheader={<ListSubheader>{group.label}</ListSubheader>}
+          >
             {group.items.map((item) => (
-              <NavLink
+              <NavItem
                 key={item.to}
                 to={`/postos/${currentUnit}/${item.to}`}
                 end={item.end}
-                className="sidebar-link"
-              >
-                {item.label}
-              </NavLink>
+                label={item.label}
+                icon={item.icon}
+              />
             ))}
-          </div>
+          </List>
         ))}
 
-      <div className="sidebar-group sidebar-footer">
-        <NavLink to="/acesso" className="sidebar-link">
-          Pedidos de acesso
-        </NavLink>
-      </div>
+      <Box sx={{ flex: 1 }} />
+      <Divider />
+      <List dense>
+        <NavItem
+          to="/acesso"
+          label="Pedidos de acesso"
+          icon={<HowToRegOutlined fontSize="small" />}
+        />
+      </List>
     </>
   );
 

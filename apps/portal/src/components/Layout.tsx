@@ -1,7 +1,29 @@
+import BrightnessAutoOutlined from '@mui/icons-material/BrightnessAutoOutlined';
+import DarkModeOutlined from '@mui/icons-material/DarkModeOutlined';
+import LightModeOutlined from '@mui/icons-material/LightModeOutlined';
+import LogoutOutlined from '@mui/icons-material/LogoutOutlined';
+import MenuIcon from '@mui/icons-material/Menu';
+import AppBar from '@mui/material/AppBar';
+import Avatar from '@mui/material/Avatar';
+import Box from '@mui/material/Box';
+import Divider from '@mui/material/Divider';
+import Drawer from '@mui/material/Drawer';
+import IconButton from '@mui/material/IconButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Toolbar from '@mui/material/Toolbar';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme as useMuiTheme } from '@mui/material/styles';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
 import { useAuth } from '../auth/AuthProvider';
 import { useTheme, type ThemePreference } from '../theme';
+
+/** Largura do menu lateral. */
+const SIDEBAR_WIDTH = 272;
 
 const THEME_NEXT: Record<ThemePreference, ThemePreference> = {
   auto: 'light',
@@ -9,49 +31,19 @@ const THEME_NEXT: Record<ThemePreference, ThemePreference> = {
   dark: 'auto',
 };
 const THEME_LABEL: Record<ThemePreference, string> = {
-  auto: 'Tema: automático',
-  light: 'Tema: claro',
-  dark: 'Tema: escuro',
+  auto: 'Tema automático (segue o aparelho)',
+  light: 'Tema claro',
+  dark: 'Tema escuro',
 };
-/** Ícones em SVG: os caracteres ◐ ☀ ☾ dependiam da fonte do sistema. */
-function ThemeIcon({ preference }: { preference: ThemePreference }) {
-  const common = {
-    width: 20,
-    height: 20,
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: 'currentColor',
-    strokeWidth: 2,
-    strokeLinecap: 'round' as const,
-    strokeLinejoin: 'round' as const,
-    'aria-hidden': true,
-  };
-  if (preference === 'light') {
-    return (
-      <svg {...common}>
-        <circle cx="12" cy="12" r="4" />
-        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-      </svg>
-    );
-  }
-  if (preference === 'dark') {
-    return (
-      <svg {...common}>
-        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
-      </svg>
-    );
-  }
-  return (
-    <svg {...common}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" />
-    </svg>
-  );
-}
+const THEME_ICON: Record<ThemePreference, ReactNode> = {
+  auto: <BrightnessAutoOutlined />,
+  light: <LightModeOutlined />,
+  dark: <DarkModeOutlined />,
+};
 
 /**
- * Cabeçalho com o logo (variante do tema), tema e conta. Com `sidebar`, mostra
- * o menu lateral: fixo no computador, gaveta (botão ☰) no celular.
+ * Cabeçalho (logo, tema, conta) e, com `sidebar`, o menu lateral: fixo a
+ * partir de 900 px, gaveta no celular.
  */
 export function Layout({
   children,
@@ -60,8 +52,9 @@ export function Layout({
   children: ReactNode;
   sidebar?: ReactNode;
 }) {
-  const { state, signOut } = useAuth();
   const { preference, scheme, setPreference } = useTheme();
+  const muiTheme = useMuiTheme();
+  const desktop = useMediaQuery(muiTheme.breakpoints.up('md'));
   const [open, setOpen] = useState(false);
   const location = useLocation();
 
@@ -69,88 +62,169 @@ export function Layout({
   useEffect(() => setOpen(false), [location.pathname]);
 
   return (
-    <>
-      <header className="app-header">
-        {sidebar && (
-          <button
-            type="button"
-            className="button ghost menu-toggle"
-            onClick={() => setOpen((v) => !v)}
-            aria-expanded={open}
-            aria-controls="sidebar"
-            aria-label={open ? 'Fechar menu' : 'Abrir menu'}
-          >
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              aria-hidden
+    <Box sx={{ minHeight: '100vh' }}>
+      <AppBar
+        position="fixed"
+        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
+      >
+        <Toolbar sx={{ gap: 1 }}>
+          {sidebar && !desktop && (
+            <IconButton
+              edge="start"
+              onClick={() => setOpen((v) => !v)}
+              aria-label={open ? 'Fechar menu' : 'Abrir menu'}
+              aria-expanded={open}
+              aria-controls="sidebar"
             >
-              {open ? (
-                <path d="M6 6l12 12M18 6L6 18" />
-              ) : (
-                <path d="M4 7h16M4 12h16M4 17h16" />
-              )}
-            </svg>
-          </button>
-        )}
-        <Link to="/" aria-label="Tankei: início do portal">
-          <img
-            className="logo"
-            src={
-              scheme === 'dark'
-                ? '/logo-horizontal-dark.png'
-                : '/logo-horizontal.png'
-            }
-            alt="Tankei"
-          />
-        </Link>
-        <span className="muted header-label">Portal do posto</span>
-        <span className="spacer" />
-        <button
-          type="button"
-          className="button ghost"
-          onClick={() => setPreference(THEME_NEXT[preference])}
-          title={THEME_LABEL[preference]}
-          aria-label={`${THEME_LABEL[preference]}. Trocar`}
-        >
-          <ThemeIcon preference={preference} />
-        </button>
-        {state.status === 'signedIn' && (
-          <button
-            type="button"
-            className="button ghost"
-            onClick={() => void signOut()}
-          >
-            Sair
-          </button>
-        )}
-      </header>
-      {sidebar ? (
-        <div className="shell">
-          <nav
-            id="sidebar"
-            className={`sidebar${open ? ' open' : ''}`}
-            aria-label="Menu do posto"
-          >
-            {sidebar}
-          </nav>
-          {open && (
-            <div
-              className="sidebar-backdrop"
-              onClick={() => setOpen(false)}
-              aria-hidden
-            />
+              <MenuIcon />
+            </IconButton>
           )}
-          <main className="page">{children}</main>
-        </div>
+          <Box
+            component={Link}
+            to="/"
+            aria-label="Tankei: início do portal"
+            sx={{ display: 'flex', alignItems: 'center' }}
+          >
+            <Box
+              component="img"
+              src={
+                scheme === 'dark'
+                  ? '/logo-horizontal-dark.png'
+                  : '/logo-horizontal.png'
+              }
+              alt="Tankei"
+              sx={{ height: 30, display: 'block' }}
+            />
+          </Box>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ display: { xs: 'none', sm: 'block' }, ml: 1 }}
+          >
+            Portal do posto
+          </Typography>
+          <Box sx={{ flex: 1 }} />
+          <Tooltip title={`${THEME_LABEL[preference]}. Clique para trocar.`}>
+            <IconButton
+              onClick={() => setPreference(THEME_NEXT[preference])}
+              aria-label={`${THEME_LABEL[preference]}. Trocar`}
+            >
+              {THEME_ICON[preference]}
+            </IconButton>
+          </Tooltip>
+          <AccountMenu />
+        </Toolbar>
+      </AppBar>
+
+      {/* Espaço da barra fixa. */}
+      <Toolbar />
+
+      {sidebar ? (
+        <Box sx={{ display: 'flex' }}>
+          <Drawer
+            id="sidebar"
+            variant={desktop ? 'permanent' : 'temporary'}
+            open={desktop || open}
+            onClose={() => setOpen(false)}
+            ModalProps={{ keepMounted: true }}
+            sx={{
+              width: { md: SIDEBAR_WIDTH },
+              flexShrink: 0,
+              '& .MuiDrawer-paper': {
+                width: SIDEBAR_WIDTH,
+                boxSizing: 'border-box',
+              },
+            }}
+          >
+            <Toolbar />
+            <Box
+              component="nav"
+              aria-label="Menu do posto"
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                flex: 1,
+                overflowY: 'auto',
+                py: 1,
+              }}
+            >
+              {sidebar}
+            </Box>
+          </Drawer>
+          <main
+            className="page"
+            style={{ maxWidth: 1120, flex: 1, minWidth: 0 }}
+          >
+            {children}
+          </main>
+        </Box>
       ) : (
         <main className="page">{children}</main>
       )}
+    </Box>
+  );
+}
+
+/** Foto da conta com o menu: nome, e-mail e sair. */
+function AccountMenu() {
+  const { state, signOut } = useAuth();
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  if (state.status !== 'signedIn') return null;
+  const user = state.user;
+  const initial = (user.name ?? user.email ?? '?')
+    .trim()
+    .charAt(0)
+    .toUpperCase();
+
+  return (
+    <>
+      <Tooltip title="Sua conta">
+        <IconButton
+          onClick={(event) => setAnchor(event.currentTarget)}
+          aria-label="Sua conta"
+          aria-haspopup="menu"
+          aria-expanded={Boolean(anchor)}
+          size="small"
+        >
+          <Avatar
+            src={user.avatarUrl ?? undefined}
+            alt=""
+            sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}
+          >
+            {initial}
+          </Avatar>
+        </IconButton>
+      </Tooltip>
+      <Menu
+        anchorEl={anchor}
+        open={Boolean(anchor)}
+        onClose={() => setAnchor(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Box sx={{ px: 2, py: 1, maxWidth: 280 }}>
+          <Typography variant="subtitle2" noWrap>
+            {user.name ?? 'Sua conta'}
+          </Typography>
+          {user.email && (
+            <Typography variant="body2" color="text.secondary" noWrap>
+              {user.email}
+            </Typography>
+          )}
+        </Box>
+        <Divider />
+        <MenuItem
+          onClick={() => {
+            setAnchor(null);
+            void signOut();
+          }}
+        >
+          <ListItemIcon>
+            <LogoutOutlined fontSize="small" />
+          </ListItemIcon>
+          Sair
+        </MenuItem>
+      </Menu>
     </>
   );
 }
