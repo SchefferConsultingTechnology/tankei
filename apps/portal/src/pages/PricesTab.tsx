@@ -1,8 +1,31 @@
+import EditOutlined from '@mui/icons-material/EditOutlined';
+import LocalOfferOutlined from '@mui/icons-material/LocalOfferOutlined';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import InputAdornment from '@mui/material/InputAdornment';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import Paper from '@mui/material/Paper';
+import Snackbar from '@mui/material/Snackbar';
+import Stack from '@mui/material/Stack';
+import Switch from '@mui/material/Switch';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import {
   describePrice,
   FUEL_LABELS,
   FUEL_TYPES,
   formatPrice,
+  type CurrentPrice,
   type FuelType,
   type Station,
 } from '@tankei/shared';
@@ -11,91 +34,121 @@ import { ApiError } from '../api/client';
 import { useReportPrice, type PriceUpdate } from '../api/queries';
 import { PriceTag } from '../components/PriceTag';
 
-/** Preços vigentes do posto, com atualização rápida por combustível. */
+/** Preços vigentes da unidade, com atualização por combustível. */
 export function PricesTab({
   station,
   canUpdate = true,
 }: {
   station: Station;
-  /** Somente leitura (ADR 0021): vê os preços, sem o formulário. */
+  /** Somente leitura (ADR 0021): vê os preços, sem atualizar. */
   canUpdate?: boolean;
 }) {
   const [editing, setEditing] = useState<FuelType | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const fuels = FUEL_TYPES.filter((fuel) => station.fuels.includes(fuel));
+  const priceOf = (fuel: FuelType) =>
+    station.prices.find((p) => p.fuelType === fuel);
 
   if (fuels.length === 0) {
     return (
-      <p className="card muted">
+      <Alert severity="info">
         Os combustíveis deste posto ainda não foram informados pela ANP.
-      </p>
+      </Alert>
     );
   }
 
   return (
-    <div className="stack">
-      <h2 className="section-title">
-        {canUpdate ? 'Atualizar preços' : 'Preços atuais'}
-      </h2>
-      {notice && (
-        <p className="card" role="status" style={{ color: 'var(--success)' }}>
-          {notice}
-        </p>
-      )}
-      <ul className="list card">
-        {fuels.map((fuel) => {
-          const price = station.prices.find((p) => p.fuelType === fuel);
-          return (
-            <li key={fuel} className="stack">
-              <div className="row">
-                <div className="grow">
-                  <strong>{FUEL_LABELS[fuel]}</strong>
-                  <div className="muted">
+    <Stack spacing={2}>
+      <Typography variant="h6" component="h2" sx={{ fontWeight: 700 }}>
+        Preços atuais
+      </Typography>
+
+      <Paper variant="outlined">
+        <List disablePadding aria-label="Preços por combustível">
+          {fuels.map((fuel, index) => {
+            const price = priceOf(fuel);
+            return (
+              <ListItem
+                key={fuel}
+                divider={index < fuels.length - 1}
+                sx={{ gap: 1.5, alignItems: 'center', py: 1.5 }}
+              >
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography sx={{ fontWeight: 700 }}>
+                    {FUEL_LABELS[fuel]}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
                     {price ? describePrice(price) : 'Sem preço informado'}
-                  </div>
+                  </Typography>
                   {price?.promotion && (
-                    <div
-                      className="muted"
-                      style={{ color: 'var(--badge-promocao)' }}
-                    >
-                      {price.promotion.label}
-                    </div>
+                    <Chip
+                      size="small"
+                      variant="outlined"
+                      icon={<LocalOfferOutlined />}
+                      label={price.promotion.label}
+                      sx={{
+                        mt: 0.5,
+                        color: 'var(--badge-promocao)',
+                        borderColor: 'var(--badge-promocao)',
+                        '& .MuiChip-icon': { color: 'inherit' },
+                      }}
+                    />
                   )}
-                </div>
-                <PriceTag price={price} large />
-              </div>
-              {!canUpdate ? null : editing === fuel ? (
-                <PriceForm
-                  stationId={station.id}
-                  fuel={fuel}
-                  current={price?.price}
-                  onDone={(message) => {
-                    setEditing(null);
-                    setNotice(message);
-                  }}
-                  onCancel={() => setEditing(null)}
-                />
-              ) : (
-                <button
-                  type="button"
-                  className="button secondary"
-                  onClick={() => {
-                    setEditing(fuel);
-                    setNotice(null);
-                  }}
-                >
-                  Atualizar preço
-                </button>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-      <p className="muted">
-        Os preços informados aqui aparecem no app com o selo “Atualizado pelo
-        posto”. Correções criam um registro novo; o histórico é mantido.
-      </p>
-    </div>
+                </Box>
+                <Stack spacing={1} sx={{ alignItems: 'flex-end' }}>
+                  <PriceTag price={price} large />
+                  {canUpdate && (
+                    <Button
+                      size="small"
+                      startIcon={<EditOutlined />}
+                      onClick={() => setEditing(fuel)}
+                      aria-label={`Atualizar preço de ${FUEL_LABELS[fuel].toLowerCase()}`}
+                    >
+                      Atualizar
+                    </Button>
+                  )}
+                </Stack>
+              </ListItem>
+            );
+          })}
+        </List>
+      </Paper>
+
+      <Typography variant="body2" color="text.secondary">
+        {canUpdate
+          ? 'Os preços informados aqui aparecem no app com o selo “Atualizado pelo posto”. Correções criam um registro novo; o histórico é mantido.'
+          : 'Seu papel na equipe permite ver os preços, sem alterá-los.'}
+      </Typography>
+
+      {editing && (
+        <PriceDialog
+          stationId={station.id}
+          fuel={editing}
+          current={priceOf(editing)}
+          onClose={() => setEditing(null)}
+          onDone={(message) => {
+            setEditing(null);
+            setNotice(message);
+          }}
+        />
+      )}
+
+      <Snackbar
+        open={notice !== null}
+        autoHideDuration={5000}
+        onClose={() => setNotice(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          severity="success"
+          variant="filled"
+          onClose={() => setNotice(null)}
+          sx={{ width: '100%' }}
+        >
+          {notice}
+        </Alert>
+      </Snackbar>
+    </Stack>
   );
 }
 
@@ -111,21 +164,24 @@ function toLocalInput(date: Date): string {
   return new Date(date.getTime() - offset).toISOString().slice(0, 16);
 }
 
-function PriceForm({
+/** Novo preço (e promoção) de um combustível. Tela cheia no celular. */
+function PriceDialog({
   stationId,
   fuel,
   current,
+  onClose,
   onDone,
-  onCancel,
 }: {
   stationId: string;
   fuel: FuelType;
-  current: number | undefined;
+  current: CurrentPrice | undefined;
+  onClose: () => void;
   onDone: (message: string) => void;
-  onCancel: () => void;
 }) {
+  const theme = useTheme();
+  const mobile = useMediaQuery(theme.breakpoints.down('sm'));
   const report = useReportPrice(stationId);
-  const [text, setText] = useState(current ? formatPrice(current) : '');
+  const [text, setText] = useState(current ? formatPrice(current.price) : '');
   const [isPromotion, setIsPromotion] = useState(false);
   const [label, setLabel] = useState('');
   const [endsAt, setEndsAt] = useState(() =>
@@ -133,6 +189,7 @@ function PriceForm({
   );
   const [confirming, setConfirming] = useState<string | null>(null);
   const price = parsePrice(text);
+  const invalidText = text.trim() !== '' && price === null;
 
   function send(confirmed: boolean) {
     if (price === null) return;
@@ -169,102 +226,108 @@ function PriceForm({
         ? report.error.message
         : 'Não foi possível enviar. Tente de novo.'
       : null;
+  const canSend =
+    price !== null &&
+    !report.isPending &&
+    (!isPromotion || label.trim() !== '');
 
   return (
-    <form className="stack" onSubmit={submit}>
-      <div className="field">
-        <label htmlFor={`price-${fuel}`}>Novo preço (R$ por litro)</label>
-        <input
-          id={`price-${fuel}`}
-          className="input"
-          inputMode="decimal"
-          autoComplete="off"
-          autoFocus
-          placeholder="6,29"
-          value={text}
-          onChange={(event) => setText(event.target.value)}
-        />
-      </div>
-
-      <label className="row" style={{ gap: 8 }}>
-        <input
-          type="checkbox"
-          checked={isPromotion}
-          onChange={(event) => setIsPromotion(event.target.checked)}
-        />
-        É um preço promocional
-      </label>
-
-      {isPromotion && (
-        <div className="stack">
-          <div className="field">
-            <label htmlFor={`promo-${fuel}`}>Nome da promoção</label>
-            <input
-              id={`promo-${fuel}`}
-              className="input"
-              maxLength={60}
-              placeholder="Semana do motorista"
-              value={label}
-              onChange={(event) => setLabel(event.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor={`ends-${fuel}`}>Válida até</label>
-            <input
-              id={`ends-${fuel}`}
-              className="input"
-              type="datetime-local"
-              value={endsAt}
-              onChange={(event) => setEndsAt(event.target.value)}
-            />
-          </div>
-        </div>
-      )}
-
-      {confirming ? (
-        <div className="card stack" role="alert">
-          <strong>Confira o valor</strong>
-          <p style={{ margin: 0 }}>{confirming}</p>
-          <div className="row">
-            <button
-              type="button"
-              className="button secondary grow"
-              onClick={() => setConfirming(null)}
-            >
-              Corrigir
-            </button>
-            <button
-              type="button"
-              className="button grow"
-              onClick={() => send(true)}
-            >
-              Está correto
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="row">
-          <button
-            type="button"
-            className="button secondary grow"
-            onClick={onCancel}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="button grow"
-            disabled={
-              price === null ||
-              report.isPending ||
-              (isPromotion && !label.trim())
+    <Dialog
+      open
+      onClose={onClose}
+      fullScreen={mobile}
+      fullWidth
+      maxWidth="xs"
+      slotProps={{ paper: { component: 'form', onSubmit: submit } }}
+    >
+      <DialogTitle sx={{ fontWeight: 700 }}>
+        {FUEL_LABELS[fuel]}
+        <Typography variant="body2" color="text.secondary" component="div">
+          {current
+            ? `Atual: R$ ${formatPrice(current.price)} · ${describePrice(current)}`
+            : 'Ainda sem preço informado'}
+        </Typography>
+      </DialogTitle>
+      <DialogContent>
+        <Stack spacing={2} sx={{ pt: 1 }}>
+          <TextField
+            label="Novo preço por litro"
+            placeholder="6,29"
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            error={invalidText}
+            helperText={
+              invalidText ? 'Use números, com vírgula: 6,29' : undefined
             }
-          >
-            {report.isPending ? 'Enviando…' : 'Publicar preço'}
-          </button>
-        </div>
-      )}
-      {error && <p className="error">{error}</p>}
-    </form>
+            autoFocus
+            fullWidth
+            slotProps={{
+              htmlInput: { inputMode: 'decimal', autoComplete: 'off' },
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">R$</InputAdornment>
+                ),
+              },
+            }}
+          />
+
+          <FormControlLabel
+            control={
+              <Switch
+                checked={isPromotion}
+                onChange={(event) => setIsPromotion(event.target.checked)}
+              />
+            }
+            label="Preço promocional"
+          />
+
+          {isPromotion && (
+            <>
+              <TextField
+                label="Nome da promoção"
+                placeholder="Semana do motorista"
+                value={label}
+                onChange={(event) => setLabel(event.target.value)}
+                fullWidth
+                slotProps={{ htmlInput: { maxLength: 60 } }}
+              />
+              <TextField
+                label="Válida até"
+                type="datetime-local"
+                value={endsAt}
+                onChange={(event) => setEndsAt(event.target.value)}
+                fullWidth
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+            </>
+          )}
+
+          {confirming && (
+            <Alert
+              severity="warning"
+              action={
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={() => send(true)}
+                  disabled={report.isPending}
+                >
+                  Está correto
+                </Button>
+              }
+            >
+              {confirming}
+            </Alert>
+          )}
+          {error && <Alert severity="error">{error}</Alert>}
+        </Stack>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={onClose}>Cancelar</Button>
+        <Button type="submit" variant="contained" disabled={!canSend}>
+          {report.isPending ? 'Publicando…' : 'Publicar preço'}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }

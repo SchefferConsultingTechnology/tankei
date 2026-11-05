@@ -1,6 +1,11 @@
+import Box from '@mui/material/Box';
 import { formatPrice, type CurrentPrice } from '@tankei/shared';
 
-/** Preço com a cor da origem (ADR 0003); desatualizado fica esmaecido. */
+/**
+ * Preço com a cor da origem (ADR 0003); desatualizado fica esmaecido; sem
+ * preço, traço. As cores das origens vêm das variáveis do tema (index.css),
+ * as mesmas do app.
+ */
 export function PriceTag({
   price,
   large = false,
@@ -8,15 +13,27 @@ export function PriceTag({
   price: CurrentPrice | null | undefined;
   large?: boolean;
 }) {
-  if (!price) {
-    return <span className={`price-tag none${large ? ' lg' : ''}`}>—</span>;
-  }
+  const color = price ? `var(--badge-${price.badge})` : 'text.secondary';
   return (
-    <span
-      className={`price-tag${large ? ' lg' : ''}${price.stale ? ' stale' : ''}`}
-      style={{ color: `var(--badge-${price.badge})` }}
+    <Box
+      component="span"
+      sx={{
+        display: 'inline-block',
+        px: 1,
+        py: 0.25,
+        border: '1.5px solid',
+        borderColor: price ? color : 'divider',
+        borderRadius: 1.5,
+        color,
+        fontWeight: 700,
+        fontSize: large ? '1.25rem' : '1rem',
+        fontVariantNumeric: 'tabular-nums',
+        whiteSpace: 'nowrap',
+        lineHeight: 1.5,
+        opacity: price?.stale ? 0.55 : 1,
+      }}
     >
-      R$ {formatPrice(price.price)}
-    </span>
+      {price ? `R$ ${formatPrice(price.price)}` : '—'}
+    </Box>
   );
 }
