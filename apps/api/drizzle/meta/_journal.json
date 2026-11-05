@@ -99,6 +99,13 @@
       "when": 1793814091130,
       "tag": "0013_user_avatar",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793875681832,
+      "tag": "0014_portal_competition_radius_parameter",
+      "breakpoints": true
     }
   ]
 }

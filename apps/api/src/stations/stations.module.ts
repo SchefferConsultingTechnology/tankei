@@ -11,6 +11,6 @@ import { StationsService } from './stations.service';
   imports: [PricesModule, IqpModule, MunicipalitiesModule],
   controllers: [StationsController],
   providers: [AnpRevendedoresClient, AnpImportService, StationsService],
-  exports: [AnpImportService],
+  exports: [AnpImportService, StationsService],
 })
 export class StationsModule {}

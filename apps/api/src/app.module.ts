@@ -9,6 +9,7 @@ import { ZodValidationPipe } from './app.setup';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
 import { ParametersModule } from './parameters/parameters.module';
+import { PortalModule } from './portal/portal.module';
 import { PricesModule } from './prices/prices.module';
 import { StationsModule } from './stations/stations.module';
 import { UsersModule } from './users/users.module';
@@ -29,6 +30,7 @@ import { UsersModule } from './users/users.module';
     PricesModule,
     UsersModule,
     AuthModule,
+    PortalModule,
   ],
   controllers: [AppController],
   providers: [

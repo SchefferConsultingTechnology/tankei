@@ -55,6 +55,11 @@ export const PARAMETER_DEFINITIONS = {
     description:
       'Duração máxima (dias) de um preço promocional informado pelo posto.',
   },
+  'portal.competition_radius_m': {
+    schema: positiveInt,
+    description:
+      'Raio (metros) da concorrência local mostrada ao posto no portal.',
+  },
   'review.min_interval_days': {
     schema: positiveInt,
     description:

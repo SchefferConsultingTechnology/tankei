@@ -5,3 +5,4 @@ export * from './station';
 export * from './parameters';
 export * from './auth';
 export * from './price';
+export * from './portal';
