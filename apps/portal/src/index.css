@@ -444,6 +444,7 @@ dialog::backdrop {
 .shell > .page {
   flex: 1;
   min-width: 0;
+  max-width: 1120px;
 }
 
 .sidebar {
@@ -579,9 +580,91 @@ dialog::backdrop {
   white-space: nowrap;
 }
 
+/* Status com texto longo (ex.: aviso de promoção) pode quebrar. */
+.status.wrap-ok {
+  white-space: normal;
+  text-align: right;
+}
+
 .compare-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 2px 8px;
   font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Rede (ADR 0021) ---------- */
+
+.sidebar-select {
+  min-height: 40px;
+  font-weight: 600;
+}
+
+.sidebar-unit {
+  padding: 4px 8px;
+  font-weight: 600;
+}
+
+.table-scroll {
+  padding: 0;
+  overflow-x: auto;
+}
+
+.grid-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.grid-table th,
+.grid-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.grid-table thead th {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: var(--surface-alt);
+}
+
+.grid-table tbody tr:last-child th,
+.grid-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.grid-table tbody th {
+  font-weight: 600;
+  white-space: normal;
+  min-width: 160px;
+}
+
+.small {
+  font-size: 0.75rem;
+}
+
+.checklist {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.checklist legend {
+  margin-bottom: 4px;
+}
+
+.indent {
+  padding-left: 24px;
+}
+
+.invitation {
+  border-left: 4px solid var(--accent);
 }

@@ -24,7 +24,7 @@ Monorepo (pnpm workspaces + Turborepo) de uma plataforma de preços e qualidade 
 - Campo que pode ser nulo: use `nullable(schema, descrição)` de `@tankei/shared`, nunca `.nullable()` direto (sem descrição, o Swagger documenta o campo como array).
 - Documentação em `/v1/docs` (JSON em `/v1/docs-json`). Nos testes e2e, chame `configureApp(app)` para ter o prefixo `/v1` e o Swagger.
 - Rotas, parâmetros e campos em inglês; mensagens de erro em português.
-- Toda rota exige login (guard global, ADR 0007). Marque rotas abertas com `@Public()`; perfil com `@Roles('admin')`; usuário com `@CurrentUser()`. Gestor de posto não é perfil: verifique com `UsersService.managesStation`.
+- Toda rota exige login (guard global, ADR 0007). Marque rotas abertas com `@Public()`; perfil com `@Roles('admin')`; usuário com `@CurrentUser()`. Gestor de posto não é perfil: o acesso vem da rede do posto, com papel e escopo (ADR 0021); verifique sempre com `AccessService.can`/`assert` (ação por posto), nunca consultando as tabelas direto.
 - Prefira dependências CommonJS: o Jest não carrega pacotes só ESM no Node 22 (por isso `@nestjs/schedule` 6.x e `jsonwebtoken` em vez de `jose`/`@nestjs/jwt`).
 
 ## Comandos

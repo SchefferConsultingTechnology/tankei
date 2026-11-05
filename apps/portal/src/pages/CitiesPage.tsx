@@ -94,7 +94,8 @@ export function CitiesPage() {
                 {f.positionThere && (
                   <span className="muted">
                     Com o seu preço, o posto seria o {f.positionThere.position}º
-                    de {f.positionThere.total} nessa cidade, contando o seu (1º = mais barato).
+                    de {f.positionThere.total} nessa cidade, contando o seu (1º
+                    = mais barato).
                   </span>
                 )}
               </li>

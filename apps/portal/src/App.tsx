@@ -9,14 +9,16 @@ import { LoginPage } from './pages/LoginPage';
 import { PriceHistoryPage } from './pages/PriceHistoryPage';
 import { PricesTab } from './pages/PricesTab';
 import { ReputationTab } from './pages/ReputationTab';
-import { useStationContext } from './pages/station-context';
-import { StationShell } from './pages/StationShell';
+import { NetworkOverviewPage } from './pages/NetworkOverviewPage';
+import { PortalShell } from './pages/PortalShell';
+import { useCan, useStationContext } from './pages/station-context';
+import { TeamPage } from './pages/TeamPage';
 import { StationsPage } from './pages/StationsPage';
 
 /** Telas que recebem o posto da moldura (StationShell). */
 function PricesRoute() {
   const { station } = useStationContext();
-  return <PricesTab station={station} />;
+  return <PricesTab station={station} canUpdate={useCan('update_price')} />;
 }
 function RegionRoute() {
   const { station } = useStationContext();
@@ -70,7 +72,11 @@ export function App() {
           </Layout>
         }
       />
-      <Route path="/postos/:id" element={<StationShell user={user} />}>
+      <Route path="/redes/:orgId" element={<PortalShell user={user} />}>
+        <Route index element={<NetworkOverviewPage />} />
+        <Route path="equipe" element={<TeamPage />} />
+      </Route>
+      <Route path="/postos/:id" element={<PortalShell user={user} />}>
         <Route index element={<LegacyStationRedirect />} />
         <Route path="precos" element={<PricesRoute />} />
         <Route path="precos/historico" element={<PriceHistoryPage />} />

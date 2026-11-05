@@ -5,6 +5,11 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import {
+  bulkPriceResultSchema,
+  invitationSchema,
+  myInvitationSchema,
+  organizationOverviewSchema,
+  teamSchema,
   cityComparisonSchema,
   cityWithStationsSchema,
   claimableStationSchema,
@@ -14,7 +19,10 @@ import {
   stationCompetitionSchema,
   stationReputationSchema,
   stationSchema,
+  type BulkPrice,
   type CreateClaim,
+  type CreateInvitation,
+  type UpdateMember,
   type FuelType,
 } from '@tankei/shared';
 import { z } from 'zod';
@@ -24,6 +32,7 @@ import { authorizedRequest } from './session';
 export function useStation(id: string) {
   return useQuery({
     queryKey: ['stations', id],
+    enabled: id !== '',
     queryFn: () => apiRequest(`/stations/${id}`, stationSchema),
   });
 }
@@ -153,5 +162,110 @@ export function useCreateClaim() {
       authorizedRequest('/claims', claimSchema, { method: 'POST', body }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['claims', 'mine'] }),
+  });
+}
+
+// ---------- Rede (ADR 0021) ----------
+
+export function useOverview(orgId: string) {
+  return useQuery({
+    queryKey: ['org', orgId, 'overview'],
+    queryFn: () =>
+      authorizedRequest(
+        `/portal/organizations/${orgId}`,
+        organizationOverviewSchema,
+      ),
+  });
+}
+
+export function useBulkPrice(orgId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (
+      body: Omit<BulkPrice, 'confirmed'> & { confirmed?: boolean },
+    ) =>
+      authorizedRequest(
+        `/portal/organizations/${orgId}/prices`,
+        bulkPriceResultSchema,
+        { method: 'POST', body },
+      ),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['org', orgId] }),
+        queryClient.invalidateQueries({ queryKey: ['stations'] }),
+        queryClient.invalidateQueries({ queryKey: ['portal'] }),
+      ]),
+  });
+}
+
+export function useTeam(orgId: string) {
+  return useQuery({
+    queryKey: ['org', orgId, 'team'],
+    queryFn: () =>
+      authorizedRequest(`/portal/organizations/${orgId}/team`, teamSchema),
+  });
+}
+
+/** Ações da equipe; todas recarregam a tela da equipe. */
+export function useTeamActions(orgId: string) {
+  const queryClient = useQueryClient();
+  const refresh = () =>
+    queryClient.invalidateQueries({ queryKey: ['org', orgId] });
+  const base = `/portal/organizations/${orgId}`;
+  return {
+    invite: useMutation({
+      mutationFn: (
+        body: Omit<CreateInvitation, 'stationIds'> & { stationIds: string[] },
+      ) =>
+        authorizedRequest(`${base}/invitations`, invitationSchema, {
+          method: 'POST',
+          body,
+        }),
+      onSuccess: refresh,
+    }),
+    revoke: useMutation({
+      mutationFn: (invitationId: string) =>
+        authorizedRequest(`${base}/invitations/${invitationId}`, z.unknown(), {
+          method: 'DELETE',
+        }),
+      onSuccess: refresh,
+    }),
+    update: useMutation({
+      mutationFn: ({ userId, ...body }: UpdateMember & { userId: string }) =>
+        authorizedRequest(`${base}/members/${userId}`, z.unknown(), {
+          method: 'PATCH',
+          body,
+        }),
+      onSuccess: refresh,
+    }),
+    remove: useMutation({
+      mutationFn: (userId: string) =>
+        authorizedRequest(`${base}/members/${userId}`, z.unknown(), {
+          method: 'DELETE',
+        }),
+      onSuccess: refresh,
+    }),
+  };
+}
+
+export function useMyInvitations() {
+  return useQuery({
+    queryKey: ['invitations', 'mine'],
+    queryFn: () =>
+      authorizedRequest('/portal/invitations', z.array(myInvitationSchema)),
+  });
+}
+
+export function useAnswerInvitation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, accept }: { id: string; accept: boolean }) =>
+      authorizedRequest(
+        `/portal/invitations/${id}/${accept ? 'accept' : 'decline'}`,
+        z.unknown(),
+        { method: 'POST' },
+      ),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['invitations'] }),
   });
 }

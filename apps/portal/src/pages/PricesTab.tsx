@@ -12,7 +12,14 @@ import { useReportPrice, type PriceUpdate } from '../api/queries';
 import { PriceTag } from '../components/PriceTag';
 
 /** Preços vigentes do posto, com atualização rápida por combustível. */
-export function PricesTab({ station }: { station: Station }) {
+export function PricesTab({
+  station,
+  canUpdate = true,
+}: {
+  station: Station;
+  /** Somente leitura (ADR 0021): vê os preços, sem o formulário. */
+  canUpdate?: boolean;
+}) {
   const [editing, setEditing] = useState<FuelType | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const fuels = FUEL_TYPES.filter((fuel) => station.fuels.includes(fuel));
@@ -27,7 +34,9 @@ export function PricesTab({ station }: { station: Station }) {
 
   return (
     <div className="stack">
-      <h2 className="section-title">Atualizar preços</h2>
+      <h2 className="section-title">
+        {canUpdate ? 'Atualizar preços' : 'Preços atuais'}
+      </h2>
       {notice && (
         <p className="card" role="status" style={{ color: 'var(--success)' }}>
           {notice}
@@ -55,7 +64,7 @@ export function PricesTab({ station }: { station: Station }) {
                 </div>
                 <PriceTag price={price} large />
               </div>
-              {editing === fuel ? (
+              {!canUpdate ? null : editing === fuel ? (
                 <PriceForm
                   stationId={station.id}
                   fuel={fuel}
