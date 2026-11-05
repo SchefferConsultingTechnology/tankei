@@ -189,6 +189,8 @@ function AccountMenu() {
           <Avatar
             src={user.avatarUrl ?? undefined}
             alt=""
+            // Foto do Google: sem referer, que às vezes faz a imagem ser recusada.
+            slotProps={{ img: { referrerPolicy: 'no-referrer' } }}
             sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}
           >
             {initial}
