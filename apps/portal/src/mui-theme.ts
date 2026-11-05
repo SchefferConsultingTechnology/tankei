@@ -81,6 +81,18 @@ export function muiTheme(scheme: 'light' | 'dark'): Theme {
           }),
         },
       },
+      // Opção escolhida com a cor de ação (como o item do menu).
+      MuiToggleButton: {
+        styleOverrides: {
+          root: ({ theme }) => ({
+            fontWeight: 600,
+            '&.Mui-selected, &.Mui-selected:hover': {
+              backgroundColor: theme.palette.primary.main,
+              color: theme.palette.primary.contrastText,
+            },
+          }),
+        },
+      },
       MuiListItemIcon: {
         styleOverrides: { root: { minWidth: 36 } },
       },

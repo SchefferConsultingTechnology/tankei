@@ -1,3 +1,15 @@
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import MenuItem from '@mui/material/MenuItem';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import Typography from '@mui/material/Typography';
 import {
   FUEL_LABELS,
   FUEL_TYPES,
@@ -13,13 +25,13 @@ import { useStationContext } from './station-context';
 
 const PERIODS = [7, 30, 90] as const;
 
-const STATUS: Record<PriceReportStatus, { label: string; color: string }> = {
-  valido: { label: 'Válido', color: 'var(--success)' },
-  suspeito: {
-    label: 'Suspeito',
-    color: 'var(--badge-informado_motorista)',
-  },
-  rejeitado: { label: 'Rejeitado', color: 'var(--danger)' },
+const STATUS: Record<
+  PriceReportStatus,
+  { label: string; color: 'success' | 'warning' | 'error' }
+> = {
+  valido: { label: 'Válido', color: 'success' },
+  suspeito: { label: 'Suspeito', color: 'warning' },
+  rejeitado: { label: 'Rejeitado', color: 'error' },
 };
 
 /**
@@ -28,78 +40,107 @@ const STATUS: Record<PriceReportStatus, { label: string; color: string }> = {
  */
 export function PriceHistoryPage() {
   const { station } = useStationContext();
-  const [fuel, setFuel] = useState<FuelType | null>(null);
+  const [fuel, setFuel] = useState<FuelType | 'todos'>('todos');
   const [days, setDays] = useState<number>(30);
-  const history = usePriceHistory(station.id, fuel, days);
+  const history = usePriceHistory(
+    station.id,
+    fuel === 'todos' ? null : fuel,
+    days,
+  );
   const fuels = FUEL_TYPES.filter((f) => station.fuels.includes(f));
+  const entries = history.data?.entries ?? [];
 
   return (
-    <div className="stack">
-      <h2 className="section-title">Histórico de preços</h2>
+    <Stack spacing={2}>
+      <Typography variant="h6" component="h2" sx={{ fontWeight: 700 }}>
+        Histórico de preços
+      </Typography>
 
-      <div className="fuel-chips" role="group" aria-label="Combustível">
-        <button
-          type="button"
-          aria-pressed={fuel === null}
-          onClick={() => setFuel(null)}
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1.5}
+        sx={{ alignItems: { xs: 'stretch', sm: 'center' } }}
+      >
+        <TextField
+          select
+          size="small"
+          label="Combustível"
+          value={fuel}
+          onChange={(event) =>
+            setFuel(event.target.value as FuelType | 'todos')
+          }
+          sx={{ flex: 1, maxWidth: { sm: 320 } }}
         >
-          Todos
-        </button>
-        {fuels.map((f) => (
-          <button
-            key={f}
-            type="button"
-            aria-pressed={fuel === f}
-            onClick={() => setFuel(f)}
-          >
-            {FUEL_LABELS[f]}
-          </button>
-        ))}
-      </div>
-
-      <div className="segmented" role="radiogroup" aria-label="Período">
-        {PERIODS.map((p) => (
-          <button
-            key={p}
-            type="button"
-            role="radio"
-            aria-checked={days === p}
-            onClick={() => setDays(p)}
-          >
-            {p} dias
-          </button>
-        ))}
-      </div>
-
-      {history.isPending && <p className="muted">Carregando…</p>}
-      {history.isError && <p className="error">{history.error.message}</p>}
-      {history.data && history.data.entries.length === 0 && (
-        <p className="card muted">Nenhum preço informado no período.</p>
-      )}
-      {history.data && history.data.entries.length > 0 && (
-        <ul className="list card">
-          {history.data.entries.map((entry) => (
-            <HistoryRow key={entry.id} entry={entry} showFuel={fuel === null} />
+          <MenuItem value="todos">Todos</MenuItem>
+          {fuels.map((f) => (
+            <MenuItem key={f} value={f}>
+              {FUEL_LABELS[f]}
+            </MenuItem>
           ))}
-        </ul>
+        </TextField>
+        <ToggleButtonGroup
+          exclusive
+          size="small"
+          color="primary"
+          value={days}
+          onChange={(_, value: number | null) => value && setDays(value)}
+          aria-label="Período"
+        >
+          {PERIODS.map((p) => (
+            <ToggleButton
+              key={p}
+              value={p}
+              sx={{ flex: { xs: 1, sm: 'none' }, px: 2 }}
+            >
+              {p} dias
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      </Stack>
+
+      {history.isPending && (
+        <Typography color="text.secondary">Carregando…</Typography>
+      )}
+      {history.isError && (
+        <Alert severity="error">{history.error.message}</Alert>
+      )}
+      {history.isSuccess && entries.length === 0 && (
+        <Alert severity="info">Nenhum preço informado no período.</Alert>
       )}
 
-      <p className="muted">
+      {entries.length > 0 && (
+        <Paper variant="outlined">
+          <List disablePadding aria-label="Preços informados">
+            {entries.map((entry, index) => (
+              <HistoryRow
+                key={entry.id}
+                entry={entry}
+                showFuel={fuel === 'todos'}
+                divider={index < entries.length - 1}
+              />
+            ))}
+          </List>
+        </Paper>
+      )}
+
+      <Typography variant="body2" color="text.secondary">
         Consumidores aparecem com um apelido (o mesmo para a mesma pessoa neste
         posto), sem nome. Informes suspeitos só entram no preço depois de
         confirmados; rejeitados nunca entram. Nada é apagado: correções criam um
         registro novo.
-      </p>
-    </div>
+      </Typography>
+    </Stack>
   );
 }
 
 function HistoryRow({
   entry,
   showFuel,
+  divider,
 }: {
   entry: PriceHistoryEntry;
   showFuel: boolean;
+  divider: boolean;
 }) {
   const status = STATUS[entry.status];
   const when = new Date(entry.reportedAt).toLocaleString('pt-BR', {
@@ -110,24 +151,50 @@ function HistoryRow({
   });
 
   return (
-    <li className={entry.current ? 'row highlight' : 'row'}>
-      <div className="grow">
-        <div className="row wrap" style={{ gap: 8 }}>
-          <strong className="nowrap">R$ {formatPrice(entry.price)}</strong>
+    <ListItem
+      divider={divider}
+      sx={{
+        gap: 1.5,
+        alignItems: 'flex-start',
+        bgcolor: entry.current ? 'action.selected' : undefined,
+      }}
+    >
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+        >
+          <Typography sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
+            R$ {formatPrice(entry.price)}
+          </Typography>
           {showFuel && (
-            <span className="muted">{FUEL_LABELS[entry.fuelType]}</span>
+            <Typography variant="body2" color="text.secondary">
+              {FUEL_LABELS[entry.fuelType]}
+            </Typography>
           )}
-          {entry.current && <span className="tag">Em vigor</span>}
-        </div>
-        <div className="muted truncate">
+          {entry.current && (
+            <Chip label="Em vigor" size="small" color="primary" />
+          )}
+        </Stack>
+        <Typography variant="body2" color="text.secondary">
           {when} · {entry.reporter}
-          {entry.promotion &&
-            ` · Promoção “${entry.promotion.label}” ${formatUntil(entry.promotion.endsAt)}`}
-        </div>
-      </div>
-      <span className="status" style={{ color: status.color }}>
-        {status.label}
-      </span>
-    </li>
+        </Typography>
+        {entry.promotion && (
+          <Typography variant="body2" color="text.secondary">
+            Promoção “{entry.promotion.label}”{' '}
+            {formatUntil(entry.promotion.endsAt)}
+          </Typography>
+        )}
+      </Box>
+      <Chip
+        label={status.label}
+        size="small"
+        color={status.color}
+        variant="outlined"
+        sx={{ flexShrink: 0, fontWeight: 700 }}
+      />
+    </ListItem>
   );
 }
