@@ -1,3 +1,9 @@
+import LocalOfferOutlined from '@mui/icons-material/LocalOfferOutlined';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 import {
   formatDistance,
   formatPrice,
@@ -8,24 +14,22 @@ import {
 import { useCompetition } from '../api/queries';
 import { useStationContext } from './station-context';
 
+type Offer = { fuel: string; price: number; label: string; endsAt: string };
+
 /** Promoções vigentes dos postos no raio máximo (o que o app já mostra). */
 export function CompetitorPromotionsPage() {
   const { station } = useStationContext();
   const competition = useCompetition(station.id);
 
-  if (competition.isPending) return <p className="muted">Carregando…</p>;
+  if (competition.isPending) {
+    return <Typography color="text.secondary">Carregando…</Typography>;
+  }
   if (competition.isError) {
-    return <p className="error">{competition.error.message}</p>;
+    return <Alert severity="error">{competition.error.message}</Alert>;
   }
 
   // Um posto com promoção em vários combustíveis aparece agrupado.
-  const byStation = new Map<
-    string,
-    {
-      station: Competitor;
-      offers: { fuel: string; price: number; label: string; endsAt: string }[];
-    }
-  >();
+  const byStation = new Map<string, { station: Competitor; offers: Offer[] }>();
   for (const fuel of competition.data.fuels) {
     for (const c of fuel.nearby) {
       if (!c.price.promotion) continue;
@@ -44,41 +48,62 @@ export function CompetitorPromotionsPage() {
   );
 
   return (
-    <div className="stack">
-      <h2 className="section-title">Promoções da concorrência</h2>
-      <p className="muted" style={{ margin: 0 }}>
-        Postos a até {formatDistance(competition.data.radiusMeters)} com preço
-        promocional vigente no app.
-      </p>
+    <Stack spacing={2}>
+      <Box>
+        <Typography variant="h6" component="h2" sx={{ fontWeight: 700 }}>
+          Promoções da concorrência
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Postos a até {formatDistance(competition.data.radiusMeters)} com preço
+          promocional vigente no app, do mais perto ao mais longe.
+        </Typography>
+      </Box>
+
       {promotions.length === 0 ? (
-        <p className="card muted">Nenhuma promoção vigente na região.</p>
+        <Alert severity="info">Nenhuma promoção vigente na região.</Alert>
       ) : (
-        <ul className="list card">
-          {promotions.map(({ station: s, offers }) => (
-            <li key={s.id} className="stack" style={{ gap: 4 }}>
-              <div>
-                <strong>{s.name}</strong>
-                <div className="muted">
-                  {s.brand} · {formatDistance(s.distanceMeters)}
-                </div>
-              </div>
+        promotions.map(({ station: s, offers }) => (
+          <Paper key={s.id} variant="outlined" sx={{ p: 2 }}>
+            <Typography sx={{ fontWeight: 700 }}>{s.name}</Typography>
+            <Typography variant="body2" color="text.secondary">
+              {s.brand} · {formatDistance(s.distanceMeters)}
+            </Typography>
+            <Stack spacing={1} sx={{ mt: 1.5 }}>
               {offers.map((o) => (
-                <div key={o.fuel} className="row">
-                  <span className="grow">
-                    {o.fuel} · “{o.label}” · {formatUntil(o.endsAt)}
-                  </span>
-                  <span
-                    className="price-tag"
-                    style={{ color: 'var(--badge-promocao)' }}
+                <Stack
+                  key={o.fuel}
+                  direction="row"
+                  spacing={1.5}
+                  sx={{ alignItems: 'flex-start' }}
+                >
+                  <LocalOfferOutlined
+                    fontSize="small"
+                    sx={{ color: 'var(--badge-promocao)', mt: 0.25 }}
+                  />
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {o.fuel} · “{o.label}”
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {formatUntil(o.endsAt)}
+                    </Typography>
+                  </Box>
+                  <Typography
+                    sx={{
+                      fontWeight: 800,
+                      color: 'var(--badge-promocao)',
+                      whiteSpace: 'nowrap',
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
                   >
                     R$ {formatPrice(o.price)}
-                  </span>
-                </div>
+                  </Typography>
+                </Stack>
               ))}
-            </li>
-          ))}
-        </ul>
+            </Stack>
+          </Paper>
+        ))
       )}
-    </div>
+    </Stack>
   );
 }

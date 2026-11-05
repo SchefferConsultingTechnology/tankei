@@ -271,28 +271,6 @@ a {
   font-weight: 700;
 }
 
-.fuel-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.fuel-chips button {
-  min-height: 36px;
-  padding: 0 12px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  cursor: pointer;
-}
-
-.fuel-chips button[aria-pressed='true'] {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--primary-text);
-  font-weight: 700;
-}
-
 /* ---------- Preços ---------- */
 
 .price-tag {
@@ -440,13 +418,6 @@ dialog::backdrop {
 .status.wrap-ok {
   white-space: normal;
   text-align: right;
-}
-
-.compare-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 2px 8px;
-  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- Rede (ADR 0021) ---------- */
