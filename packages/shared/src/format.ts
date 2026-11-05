@@ -68,8 +68,8 @@ export function describePrice(price: CurrentPrice): string {
 export const BADGE_LABELS: Record<PriceBadge, string> = {
   promocao: 'Promoção',
   atualizado_posto: 'Atualizado pelo posto',
-  confirmado_motoristas: 'Confirmado por motoristas',
-  informado_motorista: 'Informado por motorista',
+  confirmado_motoristas: 'Confirmado por consumidores',
+  informado_motorista: 'Informado por consumidor',
 };
 
 export const CONFIDENCE_LABELS: Record<IqpConfidence, string> = {

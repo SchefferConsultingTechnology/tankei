@@ -16,6 +16,7 @@ export function ReputationTab({ stationId }: { stationId: string }) {
 
   return (
     <div className="stack">
+      <h2 className="section-title">Reputação (IQP)</h2>
       <div className="stats">
         <div className="card stat">
           <div className="muted">IQP do seu posto</div>
@@ -71,7 +72,7 @@ export function ReputationTab({ stationId }: { stationId: string }) {
       </section>
 
       <p className="muted">
-        O IQP é calculado pelo Tankei a partir das avaliações dos motoristas,
+        O IQP é calculado pelo Tankei a partir das avaliações dos consumidores,
         com a metodologia {station.methodologyVersion}. Preço não entra na nota,
         e nenhum plano pago a altera.
       </p>

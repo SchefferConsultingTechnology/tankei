@@ -4,11 +4,19 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
+  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
+  cityComparisonQuerySchema,
+  cityComparisonSchema,
+  competitionQuerySchema,
+  priceHistoryQuerySchema,
+  priceHistorySchema,
   stationCompetitionSchema,
   stationReputationSchema,
+  type CityComparison,
+  type PriceHistory,
   type StationCompetition,
   type StationReputation,
 } from '@tankei/shared';
@@ -19,6 +27,11 @@ import { PortalService } from './portal.service';
 
 class StationCompetitionDto extends createZodDto(stationCompetitionSchema) {}
 class StationReputationDto extends createZodDto(stationReputationSchema) {}
+class CompetitionQueryDto extends createZodDto(competitionQuerySchema) {}
+class PriceHistoryQueryDto extends createZodDto(priceHistoryQuerySchema) {}
+class PriceHistoryDto extends createZodDto(priceHistorySchema) {}
+class CityComparisonQueryDto extends createZodDto(cityComparisonQuerySchema) {}
+class CityComparisonDto extends createZodDto(cityComparisonSchema) {}
 
 const stationIdPipe = new ParseUUIDPipe({
   exceptionFactory: () => new BadRequestException('Posto inválido.'),
@@ -39,10 +52,43 @@ export class PortalController {
   })
   async competition(
     @Param('stationId', stationIdPipe) stationId: string,
+    @Query() query: CompetitionQueryDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<StationCompetition> {
     await this.portal.assertManages(user, stationId);
-    return this.portal.competition(stationId);
+    return this.portal.competition(stationId, query.radius);
+  }
+
+  @Get('price-history')
+  @ZodResponse({
+    status: 200,
+    type: PriceHistoryDto,
+    description:
+      'Informes de preço do posto (posto e consumidores) no período, com a situação e qual está em vigor.',
+  })
+  async history(
+    @Param('stationId', stationIdPipe) stationId: string,
+    @Query() query: PriceHistoryQueryDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<PriceHistory> {
+    await this.portal.assertManages(user, stationId);
+    return this.portal.history(stationId, query);
+  }
+
+  @Get('city-comparison')
+  @ZodResponse({
+    status: 200,
+    type: CityComparisonDto,
+    description:
+      'Menor preço, média e mediana de outra cidade por combustível, e a posição que o posto teria lá.',
+  })
+  async cityComparison(
+    @Param('stationId', stationIdPipe) stationId: string,
+    @Query() query: CityComparisonQueryDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<CityComparison> {
+    await this.portal.assertManages(user, stationId);
+    return this.portal.cityComparison(stationId, query.municipality);
   }
 
   @Get('reputation')

@@ -7,15 +7,25 @@ import {
 import {
   FUEL_TYPES,
   IQP_DIMENSIONS,
+  type CityComparison,
   type CurrentPrice,
   type FuelType,
+  type Municipality,
+  type PriceHistory,
+  type PriceHistoryQuery,
   type StationCompetition,
   type StationReputation,
 } from '@tankei/shared';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq, gt } from 'drizzle-orm';
+import { createHash } from 'node:crypto';
 import type { AuthenticatedUser } from '../auth/tokens.service';
 import { DRIZZLE, type Database } from '../database/database.module';
-import { stations } from '../database/schema';
+import {
+  municipalities,
+  priceReports,
+  stations,
+  users,
+} from '../database/schema';
 import { IqpService } from '../iqp/iqp.service';
 import { ParametersService } from '../parameters/parameters.service';
 import { PriceReferencesService } from '../prices/price-references.service';
@@ -48,10 +58,18 @@ export class PortalService {
     }
   }
 
-  async competition(stationId: string): Promise<StationCompetition> {
+  /** `requestedRadius` fica limitado ao máximo do parâmetro. */
+  async competition(
+    stationId: string,
+    requestedRadius?: number,
+  ): Promise<StationCompetition> {
     const station = await this.stations.findById(stationId);
     const municipalityCode = await this.municipalityOf(stationId);
-    const radius = await this.parameters.get('portal.competition_radius_m');
+    const maxRadius = await this.parameters.get('portal.competition_radius_m');
+    const radius = Math.max(
+      1,
+      Math.min(requestedRadius ?? maxRadius, maxRadius),
+    );
     const fuels = FUEL_TYPES.filter((fuel) => station.fuels.includes(fuel));
 
     const [nearby, cityPrices, references] = await Promise.all([
@@ -71,6 +89,7 @@ export class PortalService {
 
     return {
       radiusMeters: radius,
+      maxRadiusMeters: maxRadius,
       fuels: fuels.map((fuelType, index) => {
         const price = priceOf(station.prices, fuelType);
         const reference = references[index];
@@ -138,6 +157,133 @@ export class PortalService {
     };
   }
 
+  /**
+   * Informes do posto no período, do posto e dos consumidores (ADR 0020).
+   * Consumidores aparecem sob um apelido estável por posto, sem dados pessoais.
+   */
+  async history(
+    stationId: string,
+    query: PriceHistoryQuery,
+    now = new Date(),
+  ): Promise<PriceHistory> {
+    await this.municipalityOf(stationId); // 404 se o posto não existir
+    const since = new Date(now.getTime() - query.days * 86_400_000);
+    const [rows, current] = await Promise.all([
+      this.db
+        .select({
+          id: priceReports.id,
+          fuelType: priceReports.fuelType,
+          price: priceReports.price,
+          source: priceReports.source,
+          status: priceReports.status,
+          reportedAt: priceReports.reportedAt,
+          reporterUserId: priceReports.reporterUserId,
+          reporterName: users.name,
+          promotionLabel: priceReports.promotionLabel,
+          promotionStartsAt: priceReports.promotionStartsAt,
+          promotionEndsAt: priceReports.promotionEndsAt,
+        })
+        .from(priceReports)
+        .leftJoin(users, eq(users.id, priceReports.reporterUserId))
+        .where(
+          and(
+            eq(priceReports.stationId, stationId),
+            gt(priceReports.reportedAt, since),
+            query.fuel ? eq(priceReports.fuelType, query.fuel) : undefined,
+          ),
+        )
+        .orderBy(desc(priceReports.reportedAt))
+        .limit(HISTORY_LIMIT),
+      this.priceReports.currentPrices([stationId], now),
+    ]);
+    const displayed = current.get(stationId) ?? [];
+
+    return {
+      days: query.days,
+      entries: rows.map((row) => {
+        const shown = priceOf(displayed, row.fuelType);
+        return {
+          id: row.id,
+          fuelType: row.fuelType,
+          price: row.price,
+          source: row.source,
+          status: row.status,
+          reportedAt: row.reportedAt.toISOString(),
+          reporter:
+            row.source === 'posto'
+              ? `Posto${row.reporterName ? ` (${row.reporterName.split(' ')[0]})` : ''}`
+              : row.source === 'anp'
+                ? 'ANP'
+                : `Consumidor ${pseudonym(row.reporterUserId, stationId)}`,
+          promotion:
+            row.promotionLabel && row.promotionStartsAt && row.promotionEndsAt
+              ? {
+                  label: row.promotionLabel,
+                  startsAt: row.promotionStartsAt.toISOString(),
+                  endsAt: row.promotionEndsAt.toISOString(),
+                }
+              : null,
+          current:
+            !!shown &&
+            shown.updatedAt === row.reportedAt.toISOString() &&
+            shown.price === row.price,
+        };
+      }),
+    };
+  }
+
+  /** Preços de outra cidade comparados aos do posto (só dados públicos). */
+  async cityComparison(
+    stationId: string,
+    code: string,
+  ): Promise<CityComparison> {
+    const station = await this.stations.findById(stationId);
+    const [municipality] = await this.db
+      .select({
+        code: municipalities.code,
+        name: municipalities.name,
+        state: municipalities.state,
+      })
+      .from(municipalities)
+      .where(eq(municipalities.code, code));
+    if (!municipality) throw new NotFoundException('Município não encontrado.');
+
+    const prices = await this.cityPrices(code);
+    const fuels = FUEL_TYPES.filter((fuel) => station.fuels.includes(fuel));
+    return {
+      municipality: municipality as Municipality,
+      fuels: fuels.map((fuelType) => {
+        const values = prices
+          .filter((p) => p.fuelType === fuelType)
+          .map((p) => p.price)
+          .sort((a, b) => a - b);
+        const own = priceOf(station.prices, fuelType)?.price ?? null;
+        return {
+          fuelType,
+          ownPrice: own,
+          stations: values.length,
+          min: values[0] ?? null,
+          average:
+            values.length === 0
+              ? null
+              : Math.round(
+                  (values.reduce((sum, v) => sum + v, 0) / values.length) *
+                    1000,
+                ) / 1000,
+          median: median(values),
+          positionThere:
+            own === null || values.length === 0
+              ? null
+              : {
+                  // O posto entra na conta como se estivesse lá.
+                  position: 1 + values.filter((v) => v < own).length,
+                  total: values.length + 1,
+                },
+        };
+      }),
+    };
+  }
+
   private async municipalityOf(stationId: string): Promise<string | null> {
     const [row] = await this.db
       .select({ code: stations.municipalityCode })
@@ -164,6 +310,27 @@ export class PortalService {
     const prices = await this.priceReports.currentPrices(ids);
     return [...prices.values()].flat();
   }
+}
+
+/** Informes por consulta de histórico (o período máximo é 90 dias). */
+const HISTORY_LIMIT = 500;
+
+/** Apelido estável do consumidor neste posto: o mesmo em todo o histórico. */
+function pseudonym(userId: string | null, stationId: string): string {
+  if (!userId) return 'anônimo';
+  return createHash('sha256')
+    .update(`${stationId}:${userId}`)
+    .digest('hex')
+    .slice(0, 4)
+    .toUpperCase();
+}
+
+function median(sorted: number[]): number | null {
+  if (sorted.length === 0) return null;
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2
+    ? sorted[middle]
+    : Math.round(((sorted[middle - 1] + sorted[middle]) / 2) * 1000) / 1000;
 }
 
 function priceOf(prices: CurrentPrice[], fuel: FuelType) {

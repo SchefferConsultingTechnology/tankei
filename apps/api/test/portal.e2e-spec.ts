@@ -3,7 +3,9 @@ import { Test } from '@nestjs/testing';
 import type {
   FuelType,
   IqpDimension,
+  CityComparison,
   LoginResponse,
+  PriceHistory,
   StationCompetition,
   StationReputation,
 } from '@tankei/shared';
@@ -32,6 +34,8 @@ import { createFakeIdentityProvider } from './support/fake-identity-provider';
 const ORIGIN = { lat: -11, lng: -48 };
 const CITY = '1799901';
 const OTHER_CITY = '1799902';
+const HISTORY_CITY = '1799903';
+const DAY = 86_400_000;
 
 describe('Portal do posto (e2e)', () => {
   const google = createFakeIdentityProvider('google');
@@ -40,13 +44,18 @@ describe('Portal do posto (e2e)', () => {
   let gestor: LoginResponse;
   let motorista: LoginResponse;
   let admin: LoginResponse;
-  const id: Record<'own' | 'near1' | 'near2' | 'noPrice' | 'far', string> = {
+  const id: Record<
+    'own' | 'near1' | 'near2' | 'noPrice' | 'far' | 'history',
+    string
+  > = {
     own: '',
     near1: '',
     near2: '',
     noPrice: '',
     far: '',
+    history: '',
   };
+  let consumidorB: LoginResponse;
 
   const http = () => request(app.getHttpServer());
 
@@ -87,13 +96,19 @@ describe('Portal do posto (e2e)', () => {
     return created.id;
   }
 
-  async function price(stationId: string, fuelType: FuelType, value: number) {
+  async function price(
+    stationId: string,
+    fuelType: FuelType,
+    value: number,
+    extra: Partial<typeof priceReports.$inferInsert> = {},
+  ) {
     await db.insert(priceReports).values({
       stationId,
       fuelType,
       price: value,
       source: 'usuario',
       status: 'valido',
+      ...extra,
     });
   }
 
@@ -147,6 +162,12 @@ describe('Portal do posto (e2e)', () => {
         normalizedName: 'outra cidade portal',
         state: 'TO',
       },
+      {
+        code: HISTORY_CITY,
+        name: 'Cidade Historico',
+        normalizedName: 'cidade historico',
+        state: 'TO',
+      },
     ]);
     await db.insert(priceReferences).values({
       weekStart: '2026-10-18',
@@ -174,6 +195,24 @@ describe('Portal do posto (e2e)', () => {
     await price(id.near2, 'etanol', 4.5);
     await price(id.far, 'gasolina_comum', 5.9);
 
+    // Outra cidade, a cerca de 110 km: fora do raio.
+    const other1 = await createStation('77000000000106', 1, OTHER_CITY, fuels);
+    const other2 = await createStation(
+      '77000000000107',
+      1.01,
+      OTHER_CITY,
+      fuels,
+    );
+    const other3 = await createStation(
+      '77000000000108',
+      1.02,
+      OTHER_CITY,
+      fuels,
+    );
+    await price(other1, 'gasolina_comum', 5.8);
+    await price(other2, 'gasolina_comum', 6.0);
+    await price(other3, 'gasolina_comum', 6.4);
+
     await score(id.own, 80, { atendimento_agilidade: 90, seguranca: 70 });
     await score(id.near1, 60, { atendimento_agilidade: 50, seguranca: 90 });
     await score(id.near2, null, {}); // "Dados insuficientes": fora da média.
@@ -191,6 +230,35 @@ describe('Portal do posto (e2e)', () => {
     await db
       .insert(stationManagers)
       .values({ userId: gestor.user.id, stationId: id.own });
+
+    // Histórico: posto próprio, longe dos demais e em outra cidade.
+    consumidorB = await login('Consumidor B Portal');
+    id.history = await createStation('77000000000109', -2, HISTORY_CITY, fuels);
+    await db
+      .insert(stationManagers)
+      .values({ userId: gestor.user.id, stationId: id.history });
+    const ago = (ms: number) => new Date(Date.now() - ms);
+    await price(id.history, 'gasolina_comum', 6.1, {
+      reporterUserId: motorista.user.id,
+      reportedAt: ago(3 * DAY),
+    });
+    await price(id.history, 'etanol', 4.3, {
+      reporterUserId: motorista.user.id,
+      reportedAt: ago(2 * DAY),
+    });
+    await price(id.history, 'gasolina_comum', 6.15, {
+      reporterUserId: consumidorB.user.id,
+      reportedAt: ago(DAY),
+    });
+    await price(id.history, 'gasolina_comum', 6.2, {
+      source: 'posto',
+      reporterUserId: gestor.user.id,
+      reportedAt: ago(60 * 60 * 1000),
+    });
+    await price(id.history, 'gasolina_comum', 6.0, {
+      reporterUserId: motorista.user.id,
+      reportedAt: ago(40 * DAY),
+    });
   });
 
   afterAll(async () => {
@@ -275,6 +343,114 @@ describe('Portal do posto (e2e)', () => {
         .get(`/v1/portal/stations/${id.own}/competition`)
         .set('Authorization', `Bearer ${admin.accessToken}`)
         .expect(200);
+    });
+  });
+
+  describe('raio da concorrência', () => {
+    it('o raio escolhido filtra os postos e fica limitado ao parâmetro', async () => {
+      const near = await http()
+        .get(`/v1/portal/stations/${id.own}/competition?radius=1000`)
+        .set('Authorization', `Bearer ${gestor.accessToken}`)
+        .expect(200);
+      const small = near.body as StationCompetition;
+      expect(small.radiusMeters).toBe(1000);
+      expect(small.maxRadiusMeters).toBe(5000);
+      // Os vizinhos ficam a cerca de 1,1 km: fora de 1 km.
+      expect(small.fuels[0].nearby).toEqual([]);
+
+      const big = await http()
+        .get(`/v1/portal/stations/${id.own}/competition?radius=900000`)
+        .set('Authorization', `Bearer ${gestor.accessToken}`)
+        .expect(200);
+      expect((big.body as StationCompetition).radiusMeters).toBe(5000);
+    });
+  });
+
+  describe('histórico de preços', () => {
+    it('lista posto e consumidores, com apelido estável e o informe em vigor', async () => {
+      const res = await http()
+        .get(`/v1/portal/stations/${id.history}/price-history`)
+        .set('Authorization', `Bearer ${gestor.accessToken}`)
+        .expect(200);
+      const body = res.body as PriceHistory;
+      expect(body.days).toBe(30);
+      // O informe de 40 dias atrás fica fora do período padrão.
+      expect(body.entries.map((e) => e.price)).toEqual([6.2, 6.15, 4.3, 6.1]);
+
+      const [posto, b, aEtanol, aGasolina] = body.entries;
+      expect(posto).toMatchObject({
+        source: 'posto',
+        reporter: 'Posto (Gestor)',
+        current: true,
+      });
+      expect(b.current).toBe(false);
+      expect(aEtanol.current).toBe(true); // único preço de etanol
+      expect(aEtanol.reporter).toMatch(/^Consumidor [0-9A-F]{4}$/);
+      expect(aGasolina.reporter).toBe(aEtanol.reporter);
+      expect(b.reporter).not.toBe(aEtanol.reporter);
+      expect(JSON.stringify(body)).not.toContain('Motorista Portal');
+    });
+
+    it('filtra por combustível e limita o período', async () => {
+      const res = await http()
+        .get(
+          `/v1/portal/stations/${id.history}/price-history?fuel=etanol&days=90`,
+        )
+        .set('Authorization', `Bearer ${gestor.accessToken}`)
+        .expect(200);
+      expect((res.body as PriceHistory).entries.map((e) => e.price)).toEqual([
+        4.3,
+      ]);
+
+      await http()
+        .get(`/v1/portal/stations/${id.history}/price-history?days=91`)
+        .set('Authorization', `Bearer ${gestor.accessToken}`)
+        .expect(400);
+    });
+
+    it('só para quem gerencia o posto', async () => {
+      await http()
+        .get(`/v1/portal/stations/${id.history}/price-history`)
+        .set('Authorization', `Bearer ${motorista.accessToken}`)
+        .expect(403);
+    });
+  });
+
+  describe('outra cidade', () => {
+    it('menor preço, média, mediana e a posição que o posto teria lá', async () => {
+      const res = await http()
+        .get(
+          `/v1/portal/stations/${id.own}/city-comparison?municipality=${OTHER_CITY}`,
+        )
+        .set('Authorization', `Bearer ${gestor.accessToken}`)
+        .expect(200);
+      const body = res.body as CityComparison;
+      expect(body.municipality.name).toBe('Outra Cidade Portal');
+      expect(body.fuels[0]).toEqual({
+        fuelType: 'gasolina_comum',
+        ownPrice: 6.3,
+        stations: 3,
+        min: 5.8,
+        average: 6.067,
+        median: 6.0,
+        positionThere: { position: 3, total: 4 },
+      });
+      expect(body.fuels[1]).toMatchObject({
+        fuelType: 'etanol',
+        ownPrice: null,
+        stations: 0,
+        median: null,
+        positionThere: null,
+      });
+    });
+
+    it('município inexistente', async () => {
+      await http()
+        .get(
+          `/v1/portal/stations/${id.own}/city-comparison?municipality=1799999`,
+        )
+        .set('Authorization', `Bearer ${gestor.accessToken}`)
+        .expect(404);
     });
   });
 

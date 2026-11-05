@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { Link } from 'react-router';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Link, useLocation } from 'react-router';
 import { useAuth } from '../auth/AuthProvider';
 import { useTheme, type ThemePreference } from '../theme';
 
@@ -49,14 +49,55 @@ function ThemeIcon({ preference }: { preference: ThemePreference }) {
   );
 }
 
-/** Cabeçalho com o logo (variante do tema), tema e conta. */
-export function Layout({ children }: { children: ReactNode }) {
+/**
+ * Cabeçalho com o logo (variante do tema), tema e conta. Com `sidebar`, mostra
+ * o menu lateral: fixo no computador, gaveta (botão ☰) no celular.
+ */
+export function Layout({
+  children,
+  sidebar,
+}: {
+  children: ReactNode;
+  sidebar?: ReactNode;
+}) {
   const { state, signOut } = useAuth();
   const { preference, scheme, setPreference } = useTheme();
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
+
+  // Escolher um item fecha a gaveta.
+  useEffect(() => setOpen(false), [location.pathname]);
 
   return (
     <>
       <header className="app-header">
+        {sidebar && (
+          <button
+            type="button"
+            className="button ghost menu-toggle"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            aria-controls="sidebar"
+            aria-label={open ? 'Fechar menu' : 'Abrir menu'}
+          >
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              aria-hidden
+            >
+              {open ? (
+                <path d="M6 6l12 12M18 6L6 18" />
+              ) : (
+                <path d="M4 7h16M4 12h16M4 17h16" />
+              )}
+            </svg>
+          </button>
+        )}
         <Link to="/" aria-label="Tankei: início do portal">
           <img
             className="logo"
@@ -68,7 +109,7 @@ export function Layout({ children }: { children: ReactNode }) {
             alt="Tankei"
           />
         </Link>
-        <span className="muted">Portal do posto</span>
+        <span className="muted header-label">Portal do posto</span>
         <span className="spacer" />
         <button
           type="button"
@@ -89,7 +130,27 @@ export function Layout({ children }: { children: ReactNode }) {
           </button>
         )}
       </header>
-      <main className="page">{children}</main>
+      {sidebar ? (
+        <div className="shell">
+          <nav
+            id="sidebar"
+            className={`sidebar${open ? ' open' : ''}`}
+            aria-label="Menu do posto"
+          >
+            {sidebar}
+          </nav>
+          {open && (
+            <div
+              className="sidebar-backdrop"
+              onClick={() => setOpen(false)}
+              aria-hidden
+            />
+          )}
+          <main className="page">{children}</main>
+        </div>
+      ) : (
+        <main className="page">{children}</main>
+      )}
     </>
   );
 }

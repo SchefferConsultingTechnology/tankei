@@ -14,14 +14,15 @@ import { PriceTag } from '../components/PriceTag';
  * sugestão de preço.
  */
 export function CompetitionTab({ stationId }: { stationId: string }) {
-  const competition = useCompetition(stationId);
+  const [radius, setRadius] = useState<number | undefined>(undefined);
+  const competition = useCompetition(stationId, radius);
   const [chosen, setChosen] = useState<FuelType | null>(null);
 
   if (competition.isPending) return <p className="muted">Carregando…</p>;
   if (competition.isError) {
     return <p className="error">{competition.error.message}</p>;
   }
-  const { fuels, radiusMeters } = competition.data;
+  const { fuels, radiusMeters, maxRadiusMeters } = competition.data;
   if (fuels.length === 0) {
     return <p className="card muted">Sem combustíveis informados.</p>;
   }
@@ -30,6 +31,25 @@ export function CompetitionTab({ stationId }: { stationId: string }) {
 
   return (
     <div className="stack">
+      <div className="row" style={{ flexWrap: 'wrap' }}>
+        <h2 className="section-title grow">Concorrência na região</h2>
+        <label className="row" style={{ gap: 8 }}>
+          <span className="muted">Raio</span>
+          <select
+            className="input"
+            style={{ width: 'auto' }}
+            value={radiusMeters}
+            onChange={(event) => setRadius(Number(event.target.value))}
+          >
+            {radiusOptions(maxRadiusMeters).map((r) => (
+              <option key={r} value={r}>
+                até {formatDistance(r)}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
       <div className="fuel-chips" role="group" aria-label="Combustível">
         {fuels.map((f) => (
           <button
@@ -137,4 +157,10 @@ function mergeOwn(fuel: Current) {
   const index = rows.findIndex((r) => r.price.price > fuel.price!.price);
   rows.splice(index === -1 ? rows.length : index, 0, own);
   return rows;
+}
+
+/** Opções de raio até o máximo do parâmetro (o máximo sempre aparece). */
+function radiusOptions(max: number): number[] {
+  const steps = [1000, 2000, 3000, 5000, 10_000, 20_000, 50_000];
+  return [...new Set([...steps.filter((r) => r < max), max])];
 }

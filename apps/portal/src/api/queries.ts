@@ -1,6 +1,14 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import {
+  cityComparisonSchema,
+  cityWithStationsSchema,
   claimableStationSchema,
+  priceHistorySchema,
   claimSchema,
   priceReportResponseSchema,
   stationCompetitionSchema,
@@ -20,13 +28,60 @@ export function useStation(id: string) {
   });
 }
 
-export function useCompetition(id: string) {
+/** Sem raio: o máximo permitido (parâmetro). */
+export function useCompetition(id: string, radius?: number) {
   return useQuery({
-    queryKey: ['portal', id, 'competition'],
+    queryKey: ['portal', id, 'competition', radius ?? 'max'],
     queryFn: () =>
       authorizedRequest(
-        `/portal/stations/${id}/competition`,
+        `/portal/stations/${id}/competition${radius ? `?radius=${radius}` : ''}`,
         stationCompetitionSchema,
+      ),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function usePriceHistory(
+  id: string,
+  fuel: FuelType | null,
+  days: number,
+) {
+  return useQuery({
+    queryKey: ['portal', id, 'history', fuel ?? 'todos', days],
+    queryFn: () => {
+      const params = new URLSearchParams({ days: String(days) });
+      if (fuel) params.set('fuel', fuel);
+      return authorizedRequest(
+        `/portal/stations/${id}/price-history?${params.toString()}`,
+        priceHistorySchema,
+      );
+    },
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** Cidades da UF com postos (rota pública do app). */
+export function useCities(state: string) {
+  return useQuery({
+    queryKey: ['cities', state],
+    enabled: state !== '',
+    queryFn: () =>
+      apiRequest(
+        `/stations/cities?state=${state}`,
+        z.array(cityWithStationsSchema),
+      ),
+    staleTime: 60 * 60_000,
+  });
+}
+
+export function useCityComparison(id: string, municipality: string) {
+  return useQuery({
+    queryKey: ['portal', id, 'city', municipality],
+    enabled: municipality !== '',
+    queryFn: () =>
+      authorizedRequest(
+        `/portal/stations/${id}/city-comparison?municipality=${municipality}`,
+        cityComparisonSchema,
       ),
   });
 }

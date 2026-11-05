@@ -32,7 +32,7 @@ export function LoginPage() {
       <h1 className="page-title">Portal do posto</h1>
       <p className="muted">
         Atualize os preços do seu posto, acompanhe a concorrência da região e
-        veja como os motoristas avaliam o atendimento.
+        veja como os consumidores avaliam o atendimento.
       </p>
       <GoogleButton onCredential={(token) => void handle(token)} />
       {busy && <p className="muted">Entrando…</p>}

@@ -1,7 +1,8 @@
 import { z } from 'zod';
-import { FUEL_TYPES } from './fuel';
+import { FUEL_TYPES, PRICE_SOURCES } from './fuel';
 import { IQP_DIMENSIONS, stationIqpSchema } from './iqp';
-import { currentPriceSchema } from './price';
+import { currentPriceSchema, PRICE_REPORT_STATUSES } from './price';
+import { municipalitySchema } from './station';
 import { nullable } from './validation';
 
 /**
@@ -53,8 +54,25 @@ export const fuelCompetitionSchema = z.object({
 });
 export type FuelCompetition = z.infer<typeof fuelCompetitionSchema>;
 
+/** Parâmetros de GET /v1/portal/stations/:id/competition. */
+export const competitionQuerySchema = z.object({
+  radius: z
+    .string()
+    .regex(/^\d+$/, 'Raio inválido.')
+    .transform(Number)
+    .optional()
+    .describe(
+      'Raio em metros. Limitado ao máximo do parâmetro portal.competition_radius_m.',
+    ),
+});
+export type CompetitionQuery = z.output<typeof competitionQuerySchema>;
+
 export const stationCompetitionSchema = z.object({
-  radiusMeters: z.number().int().describe('Raio da concorrência local.'),
+  radiusMeters: z.number().int().describe('Raio usado na consulta.'),
+  maxRadiusMeters: z
+    .number()
+    .int()
+    .describe('Maior raio permitido (parâmetro portal.competition_radius_m).'),
   fuels: z
     .array(fuelCompetitionSchema)
     .describe('Combustíveis que o posto vende, na ordem padrão.'),
@@ -84,3 +102,82 @@ export const stationReputationSchema = z.object({
   }),
 });
 export type StationReputation = z.infer<typeof stationReputationSchema>;
+
+/** Parâmetros de GET /v1/portal/stations/:id/price-history. */
+export const priceHistoryQuerySchema = z.object({
+  fuel: z.enum(FUEL_TYPES, { error: 'Combustível inválido.' }).optional(),
+  days: z
+    .string()
+    .regex(/^\d+$/, 'Período inválido.')
+    .transform(Number)
+    .pipe(z.number().int().min(1).max(90, 'Período máximo de 90 dias.'))
+    .default(30)
+    .describe('Dias para trás (1 a 90). Padrão: 30.'),
+});
+export type PriceHistoryQuery = z.output<typeof priceHistoryQuerySchema>;
+
+export const priceHistoryEntrySchema = z.object({
+  id: z.uuid(),
+  fuelType: z.enum(FUEL_TYPES),
+  price: z.number(),
+  source: z.enum(PRICE_SOURCES),
+  status: z.enum(PRICE_REPORT_STATUSES),
+  reportedAt: z.iso.datetime(),
+  reporter: z
+    .string()
+    .describe(
+      'Quem informou: o nome de quem atualizou pelo posto, ou "Consumidor" com um apelido estável por posto (sem dados pessoais).',
+    ),
+  promotion: nullable(
+    z.object({
+      label: z.string(),
+      startsAt: z.iso.datetime(),
+      endsAt: z.iso.datetime(),
+    }),
+    'Período e nome, quando é preço promocional.',
+  ),
+  current: z
+    .boolean()
+    .describe('Se é o informe que define o preço exibido agora no app.'),
+});
+export type PriceHistoryEntry = z.infer<typeof priceHistoryEntrySchema>;
+
+export const priceHistorySchema = z.object({
+  days: z.number().int(),
+  entries: z
+    .array(priceHistoryEntrySchema)
+    .describe('Informes do período, do mais recente ao mais antigo.'),
+});
+export type PriceHistory = z.infer<typeof priceHistorySchema>;
+
+/** Parâmetros de GET /v1/portal/stations/:id/city-comparison. */
+export const cityComparisonQuerySchema = z.object({
+  municipality: z
+    .string({ error: 'Informe o município.' })
+    .regex(/^\d{7}$/, 'Município inválido.')
+    .describe('Código IBGE da cidade a comparar.'),
+});
+export type CityComparisonQuery = z.output<typeof cityComparisonQuerySchema>;
+
+export const cityFuelStatsSchema = z.object({
+  fuelType: z.enum(FUEL_TYPES),
+  ownPrice: nullable(z.number(), 'Preço vigente do posto.'),
+  stations: z
+    .number()
+    .int()
+    .describe('Postos da cidade com preço vigente deste combustível.'),
+  min: nullable(z.number(), 'Menor preço da cidade.'),
+  average: nullable(z.number(), 'Média dos preços da cidade (3 casas).'),
+  median: nullable(z.number(), 'Mediana dos preços da cidade.'),
+  positionThere: nullable(
+    z.object({ position: z.number().int(), total: z.number().int() }),
+    'Posição que o preço do posto teria nessa cidade, contando o próprio posto no total (1 = mais barato).',
+  ),
+});
+export type CityFuelStats = z.infer<typeof cityFuelStatsSchema>;
+
+export const cityComparisonSchema = z.object({
+  municipality: municipalitySchema,
+  fuels: z.array(cityFuelStatsSchema),
+});
+export type CityComparison = z.infer<typeof cityComparisonSchema>;

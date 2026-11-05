@@ -145,7 +145,7 @@ function IqpDetail({ iqp }: { iqp: StationIqp }) {
         </View>
       ))}
       <Text style={styles.muted}>
-        O IQP mede a experiência relatada por motoristas. Preço e anúncios não
+        O IQP mede a experiência relatada por consumidores. Preço e anúncios não
         alteram a nota.
       </Text>
     </View>
