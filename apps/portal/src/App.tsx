@@ -1,19 +1,54 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes, useParams } from 'react-router';
 import { useAuth } from './auth/AuthProvider';
 import { Layout } from './components/Layout';
-import { CitiesPage } from './pages/CitiesPage';
-import { ClaimsPage } from './pages/ClaimsPage';
-import { CompetitionTab } from './pages/CompetitionTab';
-import { CompetitorPromotionsPage } from './pages/CompetitorPromotionsPage';
-import { LoginPage } from './pages/LoginPage';
-import { PriceHistoryPage } from './pages/PriceHistoryPage';
-import { PricesTab } from './pages/PricesTab';
-import { ReputationTab } from './pages/ReputationTab';
-import { NetworkOverviewPage } from './pages/NetworkOverviewPage';
+import { PageLoading } from './components/PageLoading';
 import { PortalShell } from './pages/PortalShell';
 import { useCan, useStationContext } from './pages/station-context';
-import { TeamPage } from './pages/TeamPage';
-import { StationsPage } from './pages/StationsPage';
+
+/**
+ * Cada tela é carregada só quando é aberta: o celular baixa menos na
+ * entrada. A moldura (cabeçalho e menu) fica no pacote principal.
+ */
+const LoginPage = lazy(() =>
+  import('./pages/LoginPage').then((m) => ({ default: m.LoginPage })),
+);
+const StationsPage = lazy(() =>
+  import('./pages/StationsPage').then((m) => ({ default: m.StationsPage })),
+);
+const ClaimsPage = lazy(() =>
+  import('./pages/ClaimsPage').then((m) => ({ default: m.ClaimsPage })),
+);
+const NetworkOverviewPage = lazy(() =>
+  import('./pages/NetworkOverviewPage').then((m) => ({
+    default: m.NetworkOverviewPage,
+  })),
+);
+const TeamPage = lazy(() =>
+  import('./pages/TeamPage').then((m) => ({ default: m.TeamPage })),
+);
+const PricesTab = lazy(() =>
+  import('./pages/PricesTab').then((m) => ({ default: m.PricesTab })),
+);
+const PriceHistoryPage = lazy(() =>
+  import('./pages/PriceHistoryPage').then((m) => ({
+    default: m.PriceHistoryPage,
+  })),
+);
+const CompetitionTab = lazy(() =>
+  import('./pages/CompetitionTab').then((m) => ({ default: m.CompetitionTab })),
+);
+const CitiesPage = lazy(() =>
+  import('./pages/CitiesPage').then((m) => ({ default: m.CitiesPage })),
+);
+const CompetitorPromotionsPage = lazy(() =>
+  import('./pages/CompetitorPromotionsPage').then((m) => ({
+    default: m.CompetitorPromotionsPage,
+  })),
+);
+const ReputationTab = lazy(() =>
+  import('./pages/ReputationTab').then((m) => ({ default: m.ReputationTab })),
+);
 
 /** Telas que recebem o posto da moldura (StationShell). */
 function PricesRoute() {
@@ -42,14 +77,16 @@ export function App() {
   if (state.status === 'loading') {
     return (
       <Layout>
-        <p className="muted">Carregando…</p>
+        <PageLoading />
       </Layout>
     );
   }
   if (state.status === 'signedOut') {
     return (
       <Layout>
-        <LoginPage />
+        <Suspense fallback={<PageLoading />}>
+          <LoginPage />
+        </Suspense>
       </Layout>
     );
   }
@@ -60,7 +97,9 @@ export function App() {
         path="/"
         element={
           <Layout>
-            <StationsPage user={user} />
+            <Suspense fallback={<PageLoading />}>
+              <StationsPage user={user} />
+            </Suspense>
           </Layout>
         }
       />
@@ -68,7 +107,9 @@ export function App() {
         path="/acesso"
         element={
           <Layout>
-            <ClaimsPage user={user} />
+            <Suspense fallback={<PageLoading />}>
+              <ClaimsPage user={user} />
+            </Suspense>
           </Layout>
         }
       />

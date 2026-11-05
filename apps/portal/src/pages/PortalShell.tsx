@@ -10,6 +10,7 @@ import NearMeOutlined from '@mui/icons-material/NearMeOutlined';
 import StarBorderOutlined from '@mui/icons-material/StarBorderOutlined';
 import StorefrontOutlined from '@mui/icons-material/StorefrontOutlined';
 import SwapHorizOutlined from '@mui/icons-material/SwapHorizOutlined';
+import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
@@ -20,7 +21,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import type { ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
 import {
   Link,
   Navigate,
@@ -32,6 +33,7 @@ import {
 import { useStation } from '../api/queries';
 import { Layout } from '../components/Layout';
 import { NavItem } from '../components/NavItem';
+import { PageLoading } from '../components/PageLoading';
 import type { PortalContext } from './station-context';
 
 /** Telas de uma unidade, na ordem do menu (o caminho é relativo a /postos/:id). */
@@ -253,14 +255,18 @@ export function PortalShell({ user }: { user: Me }) {
 
   return (
     <Layout sidebar={sidebar}>
-      {stationId && station.isPending && <p className="muted">Carregando…</p>}
+      {stationId && station.isPending && (
+        <Typography color="text.secondary">Carregando…</Typography>
+      )}
       {stationId && station.isError && (
-        <p className="error">{station.error.message}</p>
+        <Alert severity="error">{station.error.message}</Alert>
       )}
       {stationId && station.data && (
-        <div>
-          <h1 className="page-title">{station.data.name}</h1>
-          <p className="muted" style={{ margin: '4px 0 0' }}>
+        <Box>
+          <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
+            {station.data.name}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             {station.data.brand} ·{' '}
             {[
               station.data.address,
@@ -269,10 +275,14 @@ export function PortalShell({ user }: { user: Me }) {
             ]
               .filter(Boolean)
               .join(' · ')}
-          </p>
-        </div>
+          </Typography>
+        </Box>
       )}
-      {(!stationId || station.data) && <Outlet context={context} />}
+      {(!stationId || station.data) && (
+        <Suspense fallback={<PageLoading />}>
+          <Outlet context={context} />
+        </Suspense>
+      )}
     </Layout>
   );
 }

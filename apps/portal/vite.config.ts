@@ -15,4 +15,23 @@ export default defineConfig({
       ),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Bibliotecas que mudam pouco em arquivos próprios: o navegador as
+        // guarda entre versões e baixa de novo só as telas que mudaram.
+        // Por pasta (e não por pacote): entra só o que as telas usam.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          // O MUI fica com o empacotador: cada tela leva os componentes que
+          // usa, e a entrada só os do cabeçalho e do menu.
+          if (/[\\/](react|react-dom|react-router|scheduler)[\\/]/.test(id)) {
+            return 'react';
+          }
+          if (/[\\/](@tanstack|zod)[\\/]/.test(id)) return 'data';
+          return undefined;
+        },
+      },
+    },
+  },
 });

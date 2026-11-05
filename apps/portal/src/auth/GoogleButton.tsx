@@ -1,3 +1,5 @@
+import Alert from '@mui/material/Alert';
+import Stack from '@mui/material/Stack';
 import { useEffect, useRef, useState } from 'react';
 import { useTheme } from '../theme';
 
@@ -91,9 +93,9 @@ export function GoogleButton({ onCredential }: Props) {
   }, [scheme]);
 
   return (
-    <div className="stack" style={{ justifyItems: 'center' }}>
+    <Stack spacing={1.5} sx={{ alignItems: 'center' }}>
       <div ref={container} style={{ minHeight: 44 }} />
-      {error && <p className="error">{error}</p>}
-    </div>
+      {error && <Alert severity="error">{error}</Alert>}
+    </Stack>
   );
 }

@@ -1,4 +1,13 @@
 import { ORG_ROLE_LABELS, roleCan, type Me } from '@tankei/shared';
+import ChevronRight from '@mui/icons-material/ChevronRight';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import List from '@mui/material/List';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemText from '@mui/material/ListItemText';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 import { Link, Navigate } from 'react-router';
 import { useMyInvitations } from '../api/queries';
 import { InvitationsBanner } from '../components/InvitationsBanner';
@@ -14,16 +23,22 @@ export function StationsPage({ user }: { user: Me }) {
   const pending = invitations.data?.length ?? 0;
   const orgs = user.organizations;
 
-  if (invitations.isPending) return <p className="muted">Carregando…</p>;
+  if (invitations.isPending) {
+    return <Typography color="text.secondary">Carregando…</Typography>;
+  }
 
   if (orgs.length === 0) {
     // Com convite pendente, ele é o caminho; pedir acesso fica como opção.
     if (pending > 0) {
       return (
-        <section className="stack">
+        <Stack spacing={2}>
           <InvitationsBanner />
-          <Link to="/acesso">Ou peça acesso a outro posto</Link>
-        </section>
+          <Box>
+            <Button component={Link} to="/acesso">
+              Ou peça acesso a outro posto
+            </Button>
+          </Box>
+        </Stack>
       );
     }
     return <ClaimsPage user={user} />;
@@ -41,25 +56,36 @@ export function StationsPage({ user }: { user: Me }) {
   }
 
   return (
-    <section className="stack">
+    <Stack spacing={2}>
       <InvitationsBanner />
-      <h1 className="page-title">Suas redes</h1>
-      <ul className="list card">
-        {orgs.map((org) => (
-          <li key={org.id} className="row">
-            <div className="grow">
-              <Link to={`/redes/${org.id}`}>
-                <strong>{org.name}</strong>
-              </Link>
-              <div className="muted">
-                {ORG_ROLE_LABELS[org.role]} · {org.stations.length}{' '}
-                {org.stations.length === 1 ? 'unidade' : 'unidades'}
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
-      <Link to="/acesso">Pedir acesso a outro posto</Link>
-    </section>
+      <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
+        Suas redes
+      </Typography>
+      <Paper variant="outlined">
+        <List disablePadding aria-label="Suas redes">
+          {orgs.map((org, index) => (
+            <ListItemButton
+              key={org.id}
+              component={Link}
+              to={`/redes/${org.id}`}
+              divider={index < orgs.length - 1}
+              sx={{ py: 1.5 }}
+            >
+              <ListItemText
+                primary={org.name}
+                secondary={`${ORG_ROLE_LABELS[org.role]} · ${org.stations.length} ${org.stations.length === 1 ? 'unidade' : 'unidades'}`}
+                slotProps={{ primary: { sx: { fontWeight: 600 } } }}
+              />
+              <ChevronRight color="action" />
+            </ListItemButton>
+          ))}
+        </List>
+      </Paper>
+      <Box>
+        <Button component={Link} to="/acesso">
+          Pedir acesso a outro posto
+        </Button>
+      </Box>
+    </Stack>
   );
 }

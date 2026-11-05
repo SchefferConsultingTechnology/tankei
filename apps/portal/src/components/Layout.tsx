@@ -22,6 +22,18 @@ import { Link, useLocation } from 'react-router';
 import { useAuth } from '../auth/AuthProvider';
 import { useTheme, type ThemePreference } from '../theme';
 
+/** Área do conteúdo: uma coluna que não passa da tela (textos longos não alargam). */
+const PAGE = {
+  width: '100%',
+  mx: 'auto',
+  p: { xs: 2, md: 3 },
+  display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1fr)',
+  alignContent: 'start',
+  gap: 2,
+  minWidth: 0,
+} as const;
+
 /** Largura do menu lateral. */
 const SIDEBAR_WIDTH = 272;
 
@@ -151,15 +163,14 @@ export function Layout({
               {sidebar}
             </Box>
           </Drawer>
-          <main
-            className="page"
-            style={{ maxWidth: 1120, flex: 1, minWidth: 0 }}
-          >
+          <Box component="main" sx={{ ...PAGE, maxWidth: 1120, flex: 1 }}>
             {children}
-          </main>
+          </Box>
         </Box>
       ) : (
-        <main className="page">{children}</main>
+        <Box component="main" sx={{ ...PAGE, maxWidth: 880 }}>
+          {children}
+        </Box>
       )}
     </Box>
   );
