@@ -91,6 +91,8 @@ cd android && EXPO_PUBLIC_API_URL=https://tankei-api.onrender.com/v1 NODE_ENV=pr
 adb install -r app/build/outputs/apk/release/app-release.apk
 ```
 
+Ambiente de testes (Render, ADR 0016): API em https://tankei-api.onrender.com/v1, portal em https://tankei-portal.onrender.com e admin em https://tankei-admin.onrender.com.
+
 | App    | Endereço                           |
 |--------|------------------------------------|
 | API    | http://localhost:3333/v1/health    |

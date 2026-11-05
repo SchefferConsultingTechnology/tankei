@@ -46,3 +46,70 @@ services:
       # Não são segredos (ADR 0015).
       - key: GOOGLE_CLIENT_IDS
         value: 881187129858-3elfcgukc2u988u5gc5sqfvjqv0hd334.apps.googleusercontent.com
+
+  # Portal do posto (ADR 0018) e administração (ADR 0019): sites estáticos.
+  # As rotas são do navegador (React Router): tudo volta para o index.html.
+  # Os endereços abaixo precisam estar nas "Authorized JavaScript origins" do
+  # cliente OAuth Web do Google (ADR 0015).
+  - type: web
+    name: tankei-portal
+    runtime: static
+    branch: development
+    rootDir: .
+    buildCommand: >-
+      npx --yes pnpm@10.18.3 install --frozen-lockfile &&
+      npx --yes pnpm@10.18.3 --filter "@tankei/portal..." run build
+    staticPublishPath: ./apps/portal/dist
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - apps/portal/**
+        - packages/shared/**
+        - pnpm-lock.yaml
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      # Arquivos com hash no nome: podem ficar guardados no navegador.
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: VITE_API_URL
+        value: https://tankei-api.onrender.com/v1
+      - key: VITE_GOOGLE_CLIENT_ID
+        value: 881187129858-3elfcgukc2u988u5gc5sqfvjqv0hd334.apps.googleusercontent.com
+
+  - type: web
+    name: tankei-admin
+    runtime: static
+    branch: development
+    rootDir: .
+    buildCommand: >-
+      npx --yes pnpm@10.18.3 install --frozen-lockfile &&
+      npx --yes pnpm@10.18.3 --filter "@tankei/admin..." run build
+    staticPublishPath: ./apps/admin/dist
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - apps/admin/**
+        - packages/shared/**
+        - pnpm-lock.yaml
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: VITE_API_URL
+        value: https://tankei-api.onrender.com/v1
+      - key: VITE_GOOGLE_CLIENT_ID
+        value: 881187129858-3elfcgukc2u988u5gc5sqfvjqv0hd334.apps.googleusercontent.com

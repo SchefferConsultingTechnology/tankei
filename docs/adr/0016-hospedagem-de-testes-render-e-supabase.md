@@ -19,6 +19,7 @@ O app no celular depende do computador de desenvolvimento (cabo e `adb reverse`)
   - As migrations rodam na subida do serviço (`drizzle-kit migrate`, que só aplica as que faltam): o plano gratuito não tem etapa de pré-deploy.
   - `TRUST_PROXY=1`: o IP de cada pessoa vem do proxy do Render, para que o limite de requisições por IP funcione.
   - `JWT_SECRET` é gerado pelo Render; `DATABASE_URL` é preenchida no painel. Nenhum segredo fica no repositório.
+- **Portal e admin: sites estáticos no Render** (gratuitos, sem "dormir"), definidos no mesmo `render.yaml`: `tankei-portal` e `tankei-admin`, com deploy a cada push na `development` que mude o próprio app, o `@tankei/shared` ou as dependências. Todas as rotas voltam para o `index.html` (rotas do navegador). Os endereços públicos ficam nas "Authorized JavaScript origins" do cliente OAuth Web do Google (ADR 0015).
 - **Cargas iniciais** (municípios do IBGE, postos e referências da ANP) rodam do computador de desenvolvimento, com `DATABASE_URL` apontando para o Supabase.
 
 ## Consequências
