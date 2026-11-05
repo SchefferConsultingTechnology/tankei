@@ -1,4 +1,34 @@
+import CloseIcon from '@mui/icons-material/Close';
+import EditOutlined from '@mui/icons-material/EditOutlined';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import InputAdornment from '@mui/material/InputAdornment';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import MenuItem from '@mui/material/MenuItem';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import Tab from '@mui/material/Tab';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Tabs from '@mui/material/Tabs';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import {
+  describePrice,
   formatAge,
   formatPrice,
   FUEL_LABELS,
@@ -8,106 +38,72 @@ import {
   type OrganizationOverview,
 } from '@tankei/shared';
 import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { ApiError } from '../api/client';
 import { useBulkPrice, useOverview } from '../api/queries';
 import { PriceTag } from '../components/PriceTag';
 import { usePortalContext } from './station-context';
 
-/** Visão da rede (ADR 0021): preço de cada unidade por combustível. */
+type Unit = OrganizationOverview['stations'][number];
+type Result = BulkPriceResult['results'][number];
+
+/**
+ * Visão da rede (ADR 0021). Um combustível por vez: a lista das unidades com
+ * o preço de cada uma, que também serve para atualizar várias de uma vez.
+ * No computador, a tabela de todos os combustíveis fica numa segunda aba.
+ */
 export function NetworkOverviewPage() {
   const { org } = usePortalContext();
   const overview = useOverview(org.id);
+  const theme = useTheme();
+  const desktop = useMediaQuery(theme.breakpoints.up('md'));
+  const [tab, setTab] = useState<'combustivel' | 'todos'>('combustivel');
+  const [fuel, setFuel] = useState<FuelType | null>(null);
 
-  if (overview.isPending) return <p className="muted">Carregando…</p>;
-  if (overview.isError)
-    return <p className="error">{overview.error.message}</p>;
+  if (overview.isPending) {
+    return <Typography color="text.secondary">Carregando…</Typography>;
+  }
+  if (overview.isError) {
+    return <Alert severity="error">{overview.error.message}</Alert>;
+  }
   const data = overview.data;
-  const staleCount = data.stations.filter((s) =>
-    s.prices.some((p) => p.stale),
-  ).length;
+  const current = fuel ?? data.fuels[0];
 
   return (
-    <div className="stack">
-      <div>
-        <h1 className="page-title">{data.name}</h1>
-        <p className="muted" style={{ margin: '4px 0 0' }}>
+    <Stack spacing={2}>
+      <Box>
+        <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
+          {data.name}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
           {data.stations.length}{' '}
           {data.stations.length === 1 ? 'unidade' : 'unidades'}
-          {staleCount > 0 && ` · ${staleCount} com preço desatualizado`}
-        </p>
-      </div>
+        </Typography>
+      </Box>
 
-      {data.stations.length === 0 ? (
-        <p className="card muted">Nenhuma unidade no seu escopo.</p>
+      {data.stations.length === 0 || !current ? (
+        <Alert severity="info">Nenhuma unidade no seu escopo.</Alert>
       ) : (
-        <section className="card table-scroll">
-          <table className="grid-table">
-            <thead>
-              <tr>
-                <th scope="col">Unidade</th>
-                {data.fuels.map((fuel) => (
-                  <th key={fuel} scope="col">
-                    {FUEL_LABELS[fuel]}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {data.stations.map((s) => (
-                <tr key={s.id}>
-                  <th scope="row">
-                    <Link to={`/postos/${s.id}/precos`}>{s.name}</Link>
-                    <div className="muted">
-                      {s.city}/{s.state}
-                    </div>
-                  </th>
-                  {data.fuels.map((fuel) => {
-                    if (!s.fuels.includes(fuel)) {
-                      return (
-                        <td key={fuel} className="muted" title="Não vende">
-                          ·
-                        </td>
-                      );
-                    }
-                    const price = s.prices.find((p) => p.fuelType === fuel);
-                    return (
-                      <td key={fuel}>
-                        <PriceTag price={price} />
-                        {price && (
-                          <div className="muted small">
-                            {formatAge(price.updatedAt)}
-                          </div>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+        <>
+          {desktop && (
+            <Tabs
+              value={tab}
+              onChange={(_, value: typeof tab) => setTab(value)}
+              aria-label="Forma de ver"
+            >
+              <Tab value="combustivel" label="Por combustível" />
+              <Tab value="todos" label="Todos os combustíveis" />
+            </Tabs>
+          )}
+          {desktop && tab === 'todos' ? (
+            <AllFuelsTable data={data} />
+          ) : (
+            <FuelList data={data} fuel={current} onFuel={setFuel} />
+          )}
+        </>
       )}
-
-      {roleCan(data.role, 'update_price') && data.stations.length > 1 && (
-        <BulkPriceForm overview={data} />
-      )}
-    </div>
+    </Stack>
   );
-}
-
-/** Publicado, mas a promoção vigente continua valendo até acabar. */
-function promotionNote(
-  overview: OrganizationOverview,
-  stationId: string,
-  fuel: FuelType,
-): string {
-  const current = overview.stations
-    .find((s) => s.id === stationId)
-    ?.prices.find((p) => p.fuelType === fuel);
-  return current?.promotion
-    ? `Publicado · vale depois da promoção “${current.promotion.label}”`
-    : 'Publicado';
 }
 
 function parsePrice(text: string): number | null {
@@ -115,31 +111,44 @@ function parsePrice(text: string): number | null {
   return Number.isFinite(value) && value > 0 ? value : null;
 }
 
-/** Mesmo preço em várias unidades; cada uma segue as regras de um informe. */
-function BulkPriceForm({ overview }: { overview: OrganizationOverview }) {
-  const bulk = useBulkPrice(overview.id);
-  const [fuel, setFuel] = useState<FuelType>(overview.fuels[0]);
-  const [text, setText] = useState('');
+/** Lista das unidades no combustível escolhido, com seleção para atualizar. */
+function FuelList({
+  data,
+  fuel,
+  onFuel,
+}: {
+  data: OrganizationOverview;
+  fuel: FuelType;
+  onFuel: (fuel: FuelType) => void;
+}) {
+  const navigate = useNavigate();
+  const bulk = useBulkPrice(data.id);
+  const canUpdate = roleCan(data.role, 'update_price');
+  const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [result, setResult] = useState<BulkPriceResult | null>(null);
+  const [text, setText] = useState('');
+  const [results, setResults] = useState<Map<string, Result>>(new Map());
   const price = parsePrice(text);
-  const eligible = overview.stations.filter((s) => s.fuels.includes(fuel));
-  const chosen = eligible.filter((s) => selected.has(s.id)).map((s) => s.id);
-  const needConfirm =
-    result?.results.filter((r) => r.code === 'CONFIRMATION_REQUIRED') ?? [];
 
-  function send(stationIds: string[], confirmed: boolean) {
-    if (price === null || stationIds.length === 0) return;
-    bulk.mutate(
-      { fuelType: fuel, price, stationIds, confirmed },
-      { onSuccess: setResult },
-    );
+  const units = data.stations.filter((s) => s.fuels.includes(fuel));
+  const notSelling = data.stations.length - units.length;
+  const priceOf = (unit: Unit) => unit.prices.find((p) => p.fuelType === fuel);
+  const stale = units.filter((u) => priceOf(u)?.stale).length;
+  const missing = units.filter((u) => !priceOf(u)).length;
+  const needConfirm = [...results.values()].filter(
+    (r) => r.code === 'CONFIRMATION_REQUIRED',
+  );
+
+  function changeFuel(next: FuelType) {
+    onFuel(next);
+    setSelected(new Set());
+    setResults(new Map());
   }
 
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    setResult(null);
-    send(chosen, false);
+  function stopSelecting() {
+    setSelecting(false);
+    setSelected(new Set());
+    setText('');
   }
 
   function toggle(id: string) {
@@ -149,158 +158,365 @@ function BulkPriceForm({ overview }: { overview: OrganizationOverview }) {
     setSelected(next);
   }
 
-  return (
-    <form className="card stack" onSubmit={submit}>
-      <div>
-        <strong>Atualizar preço em várias unidades</strong>
-        <div className="muted">
-          Cada unidade passa pelas mesmas regras de um preço informado
-          individualmente.
-        </div>
-      </div>
-      <div className="row" style={{ flexWrap: 'wrap' }}>
-        <div className="field grow">
-          <label htmlFor="bulk-fuel">Combustível</label>
-          <select
-            id="bulk-fuel"
-            className="input"
-            value={fuel}
-            onChange={(event) => {
-              setFuel(event.target.value as FuelType);
-              setResult(null);
-            }}
-          >
-            {overview.fuels.map((f) => (
-              <option key={f} value={f}>
-                {FUEL_LABELS[f]}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="field grow">
-          <label htmlFor="bulk-price">Novo preço (R$)</label>
-          <input
-            id="bulk-price"
-            className="input"
-            inputMode="decimal"
-            placeholder="6,29"
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-          />
-        </div>
-      </div>
-
-      <fieldset className="checklist">
-        <legend className="muted">Unidades</legend>
-        <label className="row" style={{ gap: 8 }}>
-          <input
-            type="checkbox"
-            checked={chosen.length === eligible.length && eligible.length > 0}
-            onChange={(event) =>
-              setSelected(
-                event.target.checked
-                  ? new Set(eligible.map((s) => s.id))
-                  : new Set(),
-              )
-            }
-          />
-          <strong>Todas que vendem {FUEL_LABELS[fuel].toLowerCase()}</strong>
-        </label>
-        {eligible.map((s) => {
-          const current = s.prices.find((p) => p.fuelType === fuel);
-          return (
-            <label key={s.id} className="row" style={{ gap: 8 }}>
-              <input
-                type="checkbox"
-                checked={selected.has(s.id)}
-                onChange={() => toggle(s.id)}
-              />
-              <span className="grow truncate">{s.name}</span>
-              <span className="muted">
-                {current
-                  ? `hoje R$ ${formatPrice(current.price)}`
-                  : 'sem preço'}
-              </span>
-            </label>
+  function send(stationIds: string[], confirmed: boolean) {
+    if (price === null || stationIds.length === 0) return;
+    bulk.mutate(
+      { fuelType: fuel, price, stationIds, confirmed },
+      {
+        onSuccess: (response) => {
+          const next = new Map(results);
+          for (const r of response.results) next.set(r.stationId, r);
+          setResults(next);
+          // Só ficam selecionadas as que ainda pedem ação (confirmar).
+          setSelected(
+            new Set(
+              response.results
+                .filter((r) => r.code === 'CONFIRMATION_REQUIRED')
+                .map((r) => r.stationId),
+            ),
           );
-        })}
-      </fieldset>
+        },
+      },
+    );
+  }
 
-      <button
-        type="submit"
-        className="button"
-        disabled={price === null || chosen.length === 0 || bulk.isPending}
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    setResults(new Map());
+    send([...selected], false);
+  }
+
+  return (
+    <Stack spacing={2}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1}
+        sx={{ alignItems: { xs: 'stretch', sm: 'center' } }}
       >
-        {bulk.isPending
-          ? 'Publicando…'
-          : `Publicar em ${chosen.length} ${chosen.length === 1 ? 'unidade' : 'unidades'}`}
-      </button>
+        <TextField
+          select
+          size="small"
+          label="Combustível"
+          value={fuel}
+          onChange={(event) => changeFuel(event.target.value as FuelType)}
+          sx={{ flex: 1, maxWidth: { sm: 360 } }}
+        >
+          {data.fuels.map((f) => (
+            <MenuItem key={f} value={f}>
+              {FUEL_LABELS[f]}
+            </MenuItem>
+          ))}
+        </TextField>
+        {canUpdate && units.length > 1 && !selecting && (
+          <Button
+            variant="outlined"
+            startIcon={<EditOutlined />}
+            onClick={() => setSelecting(true)}
+          >
+            Atualizar várias
+          </Button>
+        )}
+      </Stack>
 
+      {(stale > 0 || missing > 0) && (
+        <Alert severity="warning">
+          {[
+            stale > 0 &&
+              `${stale} ${stale === 1 ? 'unidade com preço desatualizado' : 'unidades com preço desatualizado'}`,
+            missing > 0 && `${missing} sem preço informado`,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </Alert>
+      )}
+
+      <Paper variant="outlined">
+        <List disablePadding>
+          {selecting && (
+            <ListItem divider>
+              <ListItemIcon>
+                <Checkbox
+                  edge="start"
+                  checked={selected.size === units.length && units.length > 0}
+                  indeterminate={
+                    selected.size > 0 && selected.size < units.length
+                  }
+                  onChange={(event) =>
+                    setSelected(
+                      event.target.checked
+                        ? new Set(units.map((u) => u.id))
+                        : new Set(),
+                    )
+                  }
+                  slotProps={{ input: { 'aria-label': 'Selecionar todas' } }}
+                />
+              </ListItemIcon>
+              <ListItemText
+                primary={`Todas que vendem ${FUEL_LABELS[fuel].toLowerCase()}`}
+                slotProps={{ primary: { sx: { fontWeight: 600 } } }}
+              />
+            </ListItem>
+          )}
+          {units.map((unit, index) => {
+            const p = priceOf(unit);
+            const result = results.get(unit.id);
+            return (
+              <ListItem
+                key={unit.id}
+                disablePadding
+                divider={index < units.length - 1}
+              >
+                <ListItemButton
+                  onClick={() =>
+                    selecting
+                      ? toggle(unit.id)
+                      : navigate(`/postos/${unit.id}/precos`)
+                  }
+                  sx={{ gap: 1.5, alignItems: 'flex-start' }}
+                >
+                  {selecting && (
+                    <ListItemIcon>
+                      <Checkbox
+                        edge="start"
+                        tabIndex={-1}
+                        checked={selected.has(unit.id)}
+                        slotProps={{ input: { 'aria-label': unit.name } }}
+                      />
+                    </ListItemIcon>
+                  )}
+                  <ListItemText
+                    primary={unit.name}
+                    secondary={
+                      <>
+                        {p ? describePrice(p) : 'Sem preço informado'}
+                        {result && (
+                          <Box>
+                            <ResultChip
+                              result={result}
+                              unit={unit}
+                              fuel={fuel}
+                            />
+                          </Box>
+                        )}
+                      </>
+                    }
+                    sx={{ minWidth: 0 }}
+                    slotProps={{
+                      primary: { noWrap: true, sx: { fontWeight: 600 } },
+                      secondary: { component: 'div' },
+                    }}
+                  />
+                  <Box sx={{ flexShrink: 0, pt: 0.5 }}>
+                    <PriceTag price={p} />
+                  </Box>
+                </ListItemButton>
+              </ListItem>
+            );
+          })}
+        </List>
+      </Paper>
+
+      {notSelling > 0 && (
+        <Typography variant="body2" color="text.secondary">
+          {notSelling}{' '}
+          {notSelling === 1 ? 'unidade não vende' : 'unidades não vendem'}{' '}
+          {FUEL_LABELS[fuel].toLowerCase()}.
+        </Typography>
+      )}
+
+      {needConfirm.length > 0 && (
+        <Alert
+          severity="warning"
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              disabled={bulk.isPending}
+              onClick={() =>
+                send(
+                  needConfirm.map((r) => r.stationId),
+                  true,
+                )
+              }
+            >
+              Está correto
+            </Button>
+          }
+        >
+          R$ {price !== null ? formatPrice(price) : ''} é muito diferente do
+          preço atual em {needConfirm.map((r) => r.name).join(', ')}.
+        </Alert>
+      )}
       {bulk.error && (
-        <p className="error">
+        <Alert severity="error">
           {bulk.error instanceof ApiError
             ? bulk.error.message
             : 'Não foi possível publicar.'}
-        </p>
+        </Alert>
       )}
 
-      {result && (
-        <ul className="list" aria-live="polite">
-          {result.results.map((r) => (
-            <li key={r.stationId} className="row">
-              <span className="grow truncate">{r.name}</span>
-              <span
-                className="status wrap-ok"
-                style={{
-                  color: r.ok
-                    ? 'var(--success)'
-                    : r.code === 'CONFIRMATION_REQUIRED'
-                      ? 'var(--badge-informado_motorista)'
-                      : 'var(--danger)',
-                }}
-                title={r.message}
-              >
-                {r.ok
-                  ? promotionNote(overview, r.stationId, fuel)
-                  : r.code === 'CONFIRMATION_REQUIRED'
-                    ? 'Confirmar valor'
-                    : 'Não publicado'}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-      {result?.results.some(
-        (r) => !r.ok && r.code !== 'CONFIRMATION_REQUIRED',
-      ) && (
-        <p className="muted">
-          {result.results
-            .filter((r) => !r.ok && r.code !== 'CONFIRMATION_REQUIRED')
-            .map((r) => `${r.name}: ${r.message}`)
-            .join(' · ')}
-        </p>
-      )}
-      {needConfirm.length > 0 && (
-        <div className="card stack" role="alert">
-          <strong>Confira o valor</strong>
-          <p style={{ margin: 0 }}>
-            R$ {price !== null ? formatPrice(price) : ''} é muito diferente do
-            preço atual em {needConfirm.map((r) => r.name).join(', ')}.
-          </p>
-          <button
-            type="button"
-            className="button"
-            onClick={() =>
-              send(
-                needConfirm.map((r) => r.stationId),
-                true,
-              )
-            }
+      {selecting && (
+        <Paper
+          component="form"
+          onSubmit={submit}
+          elevation={8}
+          sx={{
+            position: 'sticky',
+            bottom: 0,
+            p: 1.5,
+            pb: 'calc(12px + env(safe-area-inset-bottom))',
+            display: 'flex',
+            gap: 1,
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            zIndex: 2,
+          }}
+        >
+          <IconButton aria-label="Cancelar seleção" onClick={stopSelecting}>
+            <CloseIcon />
+          </IconButton>
+          <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 96 }}>
+            {selected.size}{' '}
+            {selected.size === 1 ? 'selecionada' : 'selecionadas'}
+          </Typography>
+          <TextField
+            size="small"
+            label="Novo preço"
+            placeholder="6,29"
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            sx={{ flex: 1, minWidth: 120 }}
+            slotProps={{
+              htmlInput: { inputMode: 'decimal', autoComplete: 'off' },
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">R$</InputAdornment>
+                ),
+              },
+            }}
+          />
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={price === null || selected.size === 0 || bulk.isPending}
           >
-            Está correto, publicar nessas unidades
-          </button>
-        </div>
+            {bulk.isPending ? 'Publicando…' : 'Publicar'}
+          </Button>
+        </Paper>
       )}
-    </form>
+    </Stack>
+  );
+}
+
+/** Resultado da publicação na linha da unidade. */
+function ResultChip({
+  result,
+  unit,
+  fuel,
+}: {
+  result: Result;
+  unit: Unit;
+  fuel: FuelType;
+}) {
+  if (result.ok) {
+    const promo = unit.prices.find((p) => p.fuelType === fuel)?.promotion;
+    return (
+      <Chip
+        size="small"
+        color="success"
+        variant="outlined"
+        label={
+          promo
+            ? `Publicado · vale depois da promoção “${promo.label}”`
+            : 'Publicado'
+        }
+        sx={{ mt: 0.5, maxWidth: '100%' }}
+      />
+    );
+  }
+  if (result.code === 'CONFIRMATION_REQUIRED') {
+    return (
+      <Chip
+        size="small"
+        color="warning"
+        variant="outlined"
+        label="Confirmar valor"
+        sx={{ mt: 0.5 }}
+      />
+    );
+  }
+  return (
+    <Chip
+      size="small"
+      color="error"
+      variant="outlined"
+      label={`Não publicado: ${result.message}`}
+      sx={{ mt: 0.5, maxWidth: '100%' }}
+    />
+  );
+}
+
+/** Tabela unidades × combustíveis (computador). */
+function AllFuelsTable({ data }: { data: OrganizationOverview }) {
+  return (
+    <TableContainer component={Paper} variant="outlined">
+      <Table size="small" aria-label="Preços por unidade e combustível">
+        <TableHead>
+          <TableRow>
+            <TableCell>Unidade</TableCell>
+            {data.fuels.map((fuel) => (
+              <TableCell key={fuel}>{FUEL_LABELS[fuel]}</TableCell>
+            ))}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {data.stations.map((s) => (
+            <TableRow key={s.id} hover>
+              <TableCell component="th" scope="row">
+                <Typography
+                  component={Link}
+                  to={`/postos/${s.id}/precos`}
+                  variant="body2"
+                  sx={{ fontWeight: 600, color: 'text.primary' }}
+                >
+                  {s.name}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  component="div"
+                >
+                  {s.city}/{s.state}
+                </Typography>
+              </TableCell>
+              {data.fuels.map((fuel) => {
+                if (!s.fuels.includes(fuel)) {
+                  return (
+                    <TableCell key={fuel} sx={{ color: 'text.disabled' }}>
+                      não vende
+                    </TableCell>
+                  );
+                }
+                const price = s.prices.find((p) => p.fuelType === fuel);
+                return (
+                  <TableCell key={fuel}>
+                    <PriceTag price={price} />
+                    {price && (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        component="div"
+                      >
+                        {formatAge(price.updatedAt)}
+                      </Typography>
+                    )}
+                  </TableCell>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }
