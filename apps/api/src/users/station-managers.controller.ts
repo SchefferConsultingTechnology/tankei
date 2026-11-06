@@ -37,7 +37,7 @@ export class StationManagersController {
     @Body() body: AddStationManagerDto,
     @CurrentUser() admin: AuthenticatedUser,
   ): Promise<void> {
-    return this.users.addStationManager(stationId, body.userId, admin.id);
+    return this.users.addStationManager(stationId, body, admin.id);
   }
 
   @Delete(':userId')

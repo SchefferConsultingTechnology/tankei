@@ -85,8 +85,3 @@ export type Me = z.infer<typeof meSchema>;
 
 export const loginResponseSchema = authTokensSchema.extend({ user: meSchema });
 export type LoginResponse = z.infer<typeof loginResponseSchema>;
-
-export const addStationManagerSchema = z.object({
-  userId: z.uuid({ error: 'Usuário inválido.' }),
-});
-export type AddStationManager = z.output<typeof addStationManagerSchema>;

@@ -176,7 +176,7 @@ export const teamSchema = z.object({
 });
 export type Team = z.infer<typeof teamSchema>;
 
-const scopeFields = {
+export const scopeFields = {
   role: z.enum(ORG_ROLES, { error: 'Escolha o papel.' }),
   scope: z.enum(ORG_SCOPES, { error: 'Escolha o escopo.' }),
   stationIds: z
@@ -185,7 +185,8 @@ const scopeFields = {
     .describe('Obrigatório com escopo "selecionadas".'),
 };
 
-function scopeRule<T extends { role: OrgRole; scope: OrgScope; stationIds: string[] }>(
+/** Proprietário vê todas as unidades; escopo "selecionadas" exige unidades. */
+export function scopeRule<T extends { role: OrgRole; scope: OrgScope; stationIds: string[] }>(
   value: T,
   ctx: z.RefinementCtx,
 ) {

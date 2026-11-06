@@ -4,8 +4,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { Me } from '@tankei/shared';
-import { and, eq, isNull } from 'drizzle-orm';
+import type { AddStationManager, Me } from '@tankei/shared';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { DRIZZLE, type Database } from '../database/database.module';
 import {
   organizationMembers,
@@ -99,7 +99,7 @@ export class UsersService {
    */
   async addStationManager(
     stationId: string,
-    userId: string,
+    account: AddStationManager,
     createdByUserId: string,
   ): Promise<void> {
     const [station] = await this.db
@@ -111,8 +111,22 @@ export class UsersService {
     const [user] = await this.db
       .select({ id: users.id })
       .from(users)
-      .where(and(eq(users.id, userId), isNull(users.deletedAt)));
-    if (!user) throw new NotFoundException('Usuário não encontrado.');
+      .where(
+        and(
+          account.userId
+            ? eq(users.id, account.userId)
+            : sql`lower(${users.email}) = ${account.email}`,
+          isNull(users.deletedAt),
+        ),
+      );
+    if (!user) {
+      throw new NotFoundException(
+        account.userId
+          ? 'Usuário não encontrado.'
+          : 'Nenhuma conta com esse e-mail. A pessoa precisa entrar no portal ou no app uma vez antes.',
+      );
+    }
+    const userId = user.id;
 
     await this.db.transaction(async (tx) => {
       const inserted = await tx

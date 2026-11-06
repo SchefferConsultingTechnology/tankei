@@ -3,6 +3,7 @@ import { APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ZodSerializerInterceptor } from 'nestjs-zod';
+import { AdminModule } from './admin/admin.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ZodValidationPipe } from './app.setup';
@@ -33,6 +34,7 @@ import { UsersModule } from './users/users.module';
     AuthModule,
     PortalModule,
     ClaimsModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [

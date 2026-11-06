@@ -14,17 +14,9 @@ import type {
   ClaimStatus,
   CreateClaim,
 } from '@tankei/shared';
-import {
-  and,
-  count,
-  desc,
-  eq,
-  inArray,
-  isNull,
-  sql,
-  type SQL,
-} from 'drizzle-orm';
+import { and, count, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { DRIZZLE, type Database } from '../database/database.module';
+import { normalized } from '../database/normalized';
 import {
   stationClaimDecisions,
   stationClaims,
@@ -38,22 +30,11 @@ import { ParametersService } from '../parameters/parameters.service';
 import {
   brandDisplayName,
   cityDisplayName,
+  formatCnpj,
   stationDisplayName,
 } from '../stations/display-name';
 
 const SEARCH_LIMIT = 20;
-
-/** Minúsculas e sem acento, no SQL (sem depender da extensão unaccent). */
-function normalized(value: SQL | string): SQL {
-  return sql`translate(lower(${value}), 'áàâãäéèêëíìîïóòôõöúùûüç', 'aaaaaeeeeiiiiooooouuuuc')`;
-}
-
-function formatCnpj(cnpj: string): string {
-  return cnpj.replace(
-    /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
-    '$1.$2.$3/$4-$5',
-  );
-}
 
 const stationColumns = {
   id: stations.id,

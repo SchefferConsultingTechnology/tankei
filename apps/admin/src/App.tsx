@@ -1,9 +1,13 @@
 import HowToRegOutlined from '@mui/icons-material/HowToRegOutlined';
+import HubOutlined from '@mui/icons-material/HubOutlined';
+import LocalGasStationOutlined from '@mui/icons-material/LocalGasStationOutlined';
 import LockOutlined from '@mui/icons-material/LockOutlined';
+import TuneOutlined from '@mui/icons-material/TuneOutlined';
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 import List from '@mui/material/List';
 import ListSubheader from '@mui/material/ListSubheader';
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import { useAuth } from './auth/AuthProvider';
 import { Layout } from './components/Layout';
@@ -12,16 +16,58 @@ import { PageLoading } from './components/PageLoading';
 import { ClaimsQueuePage } from './pages/ClaimsQueuePage';
 import { LoginPage } from './pages/LoginPage';
 
-/** Menu da administração (cresce com moderação e parâmetros). */
+// Cada tela é carregada quando aberta (ADR 0022).
+const StationsPage = lazy(() =>
+  import('./pages/StationsPage').then((m) => ({ default: m.StationsPage })),
+);
+const StationDetailPage = lazy(() =>
+  import('./pages/StationDetailPage').then((m) => ({
+    default: m.StationDetailPage,
+  })),
+);
+const NetworksPage = lazy(() =>
+  import('./pages/NetworksPage').then((m) => ({ default: m.NetworksPage })),
+);
+const NetworkDetailPage = lazy(() =>
+  import('./pages/NetworkDetailPage').then((m) => ({
+    default: m.NetworkDetailPage,
+  })),
+);
+const ParametersPage = lazy(() =>
+  import('./pages/ParametersPage').then((m) => ({
+    default: m.ParametersPage,
+  })),
+);
+
+/** Menu da administração (a moderação entra com a fase 2, ADR 0020). */
 const sidebar = (
-  <List dense subheader={<ListSubheader>Postos</ListSubheader>}>
-    <NavItem
-      to="/"
-      end
-      label="Pedidos de acesso"
-      icon={<HowToRegOutlined fontSize="small" />}
-    />
-  </List>
+  <>
+    <List dense subheader={<ListSubheader>Postos</ListSubheader>}>
+      <NavItem
+        to="/"
+        end
+        label="Pedidos de acesso"
+        icon={<HowToRegOutlined fontSize="small" />}
+      />
+      <NavItem
+        to="/postos"
+        label="Postos"
+        icon={<LocalGasStationOutlined fontSize="small" />}
+      />
+      <NavItem
+        to="/redes"
+        label="Redes"
+        icon={<HubOutlined fontSize="small" />}
+      />
+    </List>
+    <List dense subheader={<ListSubheader>Sistema</ListSubheader>}>
+      <NavItem
+        to="/parametros"
+        label="Parâmetros"
+        icon={<TuneOutlined fontSize="small" />}
+      />
+    </List>
+  </>
 );
 
 /** Só administradores (ADR 0007); a API também recusa os demais. */
@@ -60,10 +106,17 @@ export function App() {
   }
   return (
     <Layout sidebar={sidebar}>
-      <Routes>
-        <Route path="/" element={<ClaimsQueuePage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <Suspense fallback={<PageLoading />}>
+        <Routes>
+          <Route path="/" element={<ClaimsQueuePage />} />
+          <Route path="/postos" element={<StationsPage />} />
+          <Route path="/postos/:stationId" element={<StationDetailPage />} />
+          <Route path="/redes" element={<NetworksPage />} />
+          <Route path="/redes/:networkId" element={<NetworkDetailPage />} />
+          <Route path="/parametros" element={<ParametersPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </Layout>
   );
 }

@@ -26,6 +26,7 @@ import {
   organizationMemberStations,
   organizations,
   organizationStations,
+  stationManagers,
   stations,
   users,
 } from '../database/schema';
@@ -235,6 +236,11 @@ export class OrganizationsService {
 
   async team(user: AuthenticatedUser, organizationId: string): Promise<Team> {
     await this.assertOwner(user, organizationId);
+    return this.teamOf(organizationId);
+  }
+
+  /** Equipe, convites recentes e unidades, sem checar quem pede (admin). */
+  async teamOf(organizationId: string): Promise<Team> {
     const [members, chosen, invitations, units] = await Promise.all([
       this.db
         .select({
@@ -385,6 +391,33 @@ export class OrganizationsService {
     body: UpdateMember,
   ): Promise<void> {
     await this.assertOwner(user, organizationId);
+    await this.changeMember(user.id, organizationId, memberId, body, {});
+  }
+
+  /**
+   * Ajuste pelo administrador (suporte, ADR 0023): por exemplo, promover
+   * alguém a proprietário numa rede que ficou sem dono. Motivo no registro.
+   */
+  async adminUpdateMember(
+    adminId: string,
+    organizationId: string,
+    memberId: string,
+    { reason, ...body }: UpdateMember & { reason: string },
+  ): Promise<void> {
+    await this.assertExists(organizationId);
+    await this.changeMember(adminId, organizationId, memberId, body, {
+      motivo: 'administrador',
+      reason,
+    });
+  }
+
+  private async changeMember(
+    actorId: string,
+    organizationId: string,
+    memberId: string,
+    body: UpdateMember,
+    extra: Record<string, unknown>,
+  ): Promise<void> {
     const currentRole = await this.memberRole(memberId, organizationId).catch(
       () => {
         throw new NotFoundException('Pessoa não encontrada na equipe.');
@@ -409,11 +442,12 @@ export class OrganizationsService {
           ),
         );
       await this.setMemberStations(tx, organizationId, memberId, body);
-      await this.event(tx, organizationId, user.id, 'membro_alterado', {
+      await this.event(tx, organizationId, actorId, 'membro_alterado', {
         userId: memberId,
         role: body.role,
         scope: body.scope,
         stationIds: body.scope === 'todas' ? [] : body.stationIds,
+        ...extra,
       });
     });
   }
@@ -424,12 +458,7 @@ export class OrganizationsService {
     memberId: string,
   ): Promise<void> {
     await this.assertOwner(user, organizationId);
-    const role = await this.memberRole(memberId, organizationId).catch(() => {
-      throw new NotFoundException('Pessoa não encontrada na equipe.');
-    });
-    if (role === 'proprietario') {
-      await this.assertAnotherOwner(organizationId, memberId);
-    }
+    const role = await this.assertRemovable(organizationId, memberId);
     await this.db.transaction(async (tx) => {
       await this.removeMembership(tx, organizationId, memberId);
       await this.event(tx, organizationId, user.id, 'membro_removido', {
@@ -437,6 +466,77 @@ export class OrganizationsService {
         role,
       });
     });
+  }
+
+  /**
+   * Retirada pelo administrador (ex.: acesso indevido): sai da equipe e perde
+   * a verificação de responsável nas unidades da rede (ADR 0011).
+   */
+  async adminRemoveMember(
+    adminId: string,
+    organizationId: string,
+    memberId: string,
+    reason: string,
+  ): Promise<void> {
+    await this.assertExists(organizationId);
+    const role = await this.assertRemovable(organizationId, memberId);
+    await this.db.transaction(async (tx) => {
+      await this.removeMembership(tx, organizationId, memberId);
+      const units = await this.unitsOf([organizationId], tx);
+      if (units.length > 0) {
+        await tx.delete(stationManagers).where(
+          and(
+            eq(stationManagers.userId, memberId),
+            inArray(
+              stationManagers.stationId,
+              units.map((u) => u.id),
+            ),
+          ),
+        );
+      }
+      await this.event(tx, organizationId, adminId, 'membro_removido', {
+        userId: memberId,
+        role,
+        motivo: 'administrador',
+        reason,
+      });
+    });
+  }
+
+  async adminRename(adminId: string, organizationId: string, name: string) {
+    await this.assertExists(organizationId);
+    await this.db.transaction(async (tx) => {
+      await tx
+        .update(organizations)
+        .set({ name })
+        .where(eq(organizations.id, organizationId));
+      await this.event(tx, organizationId, adminId, 'rede_renomeada', {
+        name,
+        motivo: 'administrador',
+      });
+    });
+  }
+
+  private async assertExists(organizationId: string) {
+    const [row] = await this.db
+      .select({ id: organizations.id })
+      .from(organizations)
+      .where(eq(organizations.id, organizationId));
+    if (!row) throw new NotFoundException('Rede não encontrada.');
+  }
+
+  /** Papel da pessoa; erro se não estiver na equipe ou for a última dona. */
+  private async assertRemovable(
+    organizationId: string,
+    memberId: string,
+  ): Promise<OrgRole> {
+    const role = await this.memberRole(memberId, organizationId).catch(() => {
+      throw new NotFoundException('Pessoa não encontrada na equipe.');
+    });
+    if (role === 'proprietario') {
+      await this.assertAnotherOwner(organizationId, memberId);
+    }
+    return role;
   }
 
   /** Na exclusão da conta (ADR 0009): sai de todas as redes, com registro. */
