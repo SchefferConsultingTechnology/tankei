@@ -46,9 +46,6 @@ services:
       # domínio scheffer.solutions. Sem ela, a API não envia (só registra).
       - key: RESEND_API_KEY
         sync: false
-      # Endereço de resposta dos e-mails (opcional). Vazio: sem resposta.
-      - key: MAIL_REPLY_TO
-        sync: false
       # Imagens (ADR 0026): Supabase Storage pela API S3 (Storage > S3
       # Connection). Endpoint https://<projeto>.supabase.co/storage/v1/s3;
       # URL pública https://<projeto>.supabase.co/storage/v1/object/public/tankei-imagens.
@@ -72,6 +69,9 @@ services:
       # Remetente e links dos e-mails (ADR 0025).
       - key: MAIL_FROM
         value: Tankei <nao-responda@scheffer.solutions>
+      # Respostas aos e-mails vão para a equipe Tankei.
+      - key: MAIL_REPLY_TO
+        value: scheffer.consulting.technology@gmail.com
       - key: PORTAL_URL
         value: https://tankei-portal.onrender.com
       - key: ADMIN_URL

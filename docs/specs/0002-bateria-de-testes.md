@@ -37,7 +37,7 @@ Conferir de ponta a ponta, no ambiente publicado (Render e Supabase) e no celula
   - a decisão chega ao proprietário e ao gestor, e o operador não recebe.
 - [ ] **Leitura:** HTML e texto legíveis no Gmail (web e celular), sem cair no spam. Conferir o SPF e o DKIM do domínio no Resend.
 - [ ] **Falhas:** com uma chave inválida, a ação (ex.: convite) continua funcionando e o erro aparece no log do Render.
-- [ ] **Decidir `MAIL_REPLY_TO`:** que endereço recebe as respostas dos e-mails.
+- [ ] **Resposta:** responder a um e-mail do Tankei chega a `scheffer.consulting.technology@gmail.com` (`MAIL_REPLY_TO`).
 
 ### 2. Fase 2: confiança dos preços (ADR 0020 e 0024)
 

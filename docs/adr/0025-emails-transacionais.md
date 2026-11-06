@@ -12,7 +12,7 @@ Convites, decisões de pedido de acesso, divergências de preço e decisões da 
 
 - **Provedor:** Resend, com a mesma conta e chave dos outros projetos.
 - **Remetente:** `Tankei <nao-responda@scheffer.solutions>`, configurável em `MAIL_FROM`.
-- **Resposta:** endereço de resposta opcional em `MAIL_REPLY_TO`. Com ele, o aviso ao proprietário diz "responda a este e-mail".
+- **Resposta:** as respostas aos e-mails vão para a equipe Tankei, em `scheffer.consulting.technology@gmail.com` (`MAIL_REPLY_TO`, no `render.yaml`).
 - **Links:** apontam para o portal e o admin publicados (`PORTAL_URL`, `ADMIN_URL`).
 - **E-mails:**
 
