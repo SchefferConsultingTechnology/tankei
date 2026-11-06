@@ -281,7 +281,7 @@ describe('Informes de preço (e2e)', () => {
       });
     });
 
-    it('um motorista sozinho não substitui o preço do posto; confirmado, substitui', async () => {
+    it('um motorista sozinho não substitui o preço do posto; confirmado, abre divergência', async () => {
       await report(ana, station.s2, {
         fuelType: 'gasolina_comum',
         price: 6.25,
@@ -295,9 +295,11 @@ describe('Informes de preço (e2e)', () => {
         fuelType: 'gasolina_comum',
         price: 6.25,
       }).expect(201);
+      // ADR 0020: o posto tem um prazo para reconfirmar ou contestar.
       expect(await currentPrice(station.s2, 'gasolina_comum')).toMatchObject({
-        price: 6.25,
-        badge: 'confirmado_motoristas',
+        price: 6.19,
+        badge: 'atualizado_posto',
+        divergence: { price: 6.25 },
       });
     });
 

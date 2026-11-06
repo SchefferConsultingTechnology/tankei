@@ -13,8 +13,9 @@ import {
   type StationReputation,
 } from '@tankei/shared';
 import { and, desc, eq, gt } from 'drizzle-orm';
-import { createHash } from 'node:crypto';
 import type { AuthenticatedUser } from '../auth/tokens.service';
+import { casesOfReports } from '../moderation/moderation-store';
+import { pseudonym } from '../prices/pseudonym';
 import { DRIZZLE, type Database } from '../database/database.module';
 import {
   municipalities,
@@ -176,6 +177,7 @@ export class PortalService {
           reportedAt: priceReports.reportedAt,
           reporterUserId: priceReports.reporterUserId,
           reporterName: users.name,
+          atStation: priceReports.atStation,
           promotionLabel: priceReports.promotionLabel,
           promotionStartsAt: priceReports.promotionStartsAt,
           promotionEndsAt: priceReports.promotionEndsAt,
@@ -194,6 +196,10 @@ export class PortalService {
       this.priceReports.currentPrices([stationId], now),
     ]);
     const displayed = current.get(stationId) ?? [];
+    const cases = await casesOfReports(
+      this.db,
+      rows.map((r) => r.id),
+    );
 
     return {
       days: query.days,
@@ -224,6 +230,13 @@ export class PortalService {
             !!shown &&
             shown.updatedAt === row.reportedAt.toISOString() &&
             shown.price === row.price,
+          atStation: row.source === 'usuario' ? row.atStation : null,
+          moderation: cases.get(row.id) ?? null,
+          // Só informes de consumidores, ainda sem caso (ADR 0020).
+          contestable:
+            row.source === 'usuario' &&
+            row.status !== 'rejeitado' &&
+            !cases.has(row.id),
         };
       }),
     };
@@ -313,14 +326,6 @@ export class PortalService {
 const HISTORY_LIMIT = 500;
 
 /** Apelido estável do consumidor neste posto: o mesmo em todo o histórico. */
-function pseudonym(userId: string | null, stationId: string): string {
-  if (!userId) return 'anônimo';
-  return createHash('sha256')
-    .update(`${stationId}:${userId}`)
-    .digest('hex')
-    .slice(0, 4)
-    .toUpperCase();
-}
 
 function median(sorted: number[]): number | null {
   if (sorted.length === 0) return null;

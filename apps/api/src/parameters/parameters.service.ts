@@ -142,10 +142,14 @@ export class ParametersService implements OnApplicationBootstrap {
     const parameterKey = this.assertKey(key);
     const definition = PARAMETER_DEFINITIONS[parameterKey];
     if (!definition.schema.safeParse(body.value).success) {
+      if (definition.unit === 'percent') {
+        throw new BadRequestException('Use um valor entre 0 e 100.');
+      }
+      const min = [0, 1, 2].find((v) => definition.schema.safeParse(v).success);
       throw new BadRequestException(
-        definition.unit === 'percent'
-          ? 'Use um valor entre 0 e 100.'
-          : 'Use um número inteiro maior que zero.',
+        min === 1
+          ? 'Use um número inteiro maior que zero.'
+          : `Use um número inteiro a partir de ${min ?? 0}.`,
       );
     }
     this.cache = undefined;

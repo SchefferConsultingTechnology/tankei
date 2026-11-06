@@ -44,6 +44,15 @@ export const priceReportRequestSchema = z.object({
     .describe(
       'Envie true depois que a pessoa confirmar um valor muito diferente do preço atual.',
     ),
+  position: z
+    .object({
+      latitude: z.number().min(-90).max(90),
+      longitude: z.number().min(-180).max(180),
+    })
+    .optional()
+    .describe(
+      'Posição de quem informa, para saber se estava no posto (ADR 0020). A API guarda só sim ou não, nunca a posição.',
+    ),
   promotion: z
     .object({
       label: z
@@ -84,5 +93,19 @@ export const currentPriceSchema = z.object({
     z.object({ label: z.string(), endsAt: z.iso.datetime() }),
     'Promoção vigente, quando o preço é promocional.',
   ),
+  divergence: nullable(
+    z.object({
+      price: z.number().describe('Valor confirmado por consumidores.'),
+      reportedAt: z.iso.datetime(),
+      respondBy: z.iso.datetime().describe(
+        'Até quando o posto pode reconfirmar ou contestar; depois, vale o valor dos consumidores.',
+      ),
+    }),
+    'Consumidores confirmaram um valor diferente do preço do posto (ADR 0020).',
+  ).default(null),
+  otherValueReported: z
+    .boolean()
+    .default(false)
+    .describe('Consumidores informaram também outro valor recentemente.'),
 });
 export type CurrentPrice = z.infer<typeof currentPriceSchema>;

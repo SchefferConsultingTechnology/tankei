@@ -7,6 +7,7 @@ const positiveInt = z.number().int().positive();
 /** Unidade do valor, para exibir e validar no admin. */
 export const PARAMETER_UNITS = [
   'percent',
+  'minutes',
   'hours',
   'days',
   'meters',
@@ -16,6 +17,7 @@ export type ParameterUnit = (typeof PARAMETER_UNITS)[number];
 
 export const PARAMETER_UNIT_LABELS: Record<ParameterUnit, string> = {
   percent: '%',
+  minutes: 'minutos',
   hours: 'horas',
   days: 'dias',
   meters: 'm',
@@ -102,6 +104,55 @@ export const PARAMETER_DEFINITIONS = {
     label: 'Duração máxima da promoção',
     description:
       'Duração máxima (dias) de um preço promocional informado pelo posto.',
+  },
+  'price.divergence_response_hours': {
+    schema: positiveInt,
+    unit: 'hours',
+    label: 'Prazo para o posto responder',
+    description:
+      'Horas que o posto tem para reconfirmar ou contestar quando consumidores confirmam outro valor. Depois, vale o valor dos consumidores.',
+  },
+  'price.trusted_min_account_days': {
+    schema: z.number().int().min(0),
+    unit: 'days',
+    label: 'Idade mínima da conta para confirmar',
+    description:
+      'Dias de conta para o informe contar como confirmação do informe de outra pessoa.',
+  },
+  'price.trusted_min_accepted_reports': {
+    schema: z.number().int().min(0),
+    unit: 'count',
+    label: 'Informes aceitos para confirmar',
+    description:
+      'Informes anteriores aceitos (válidos e não anulados) para a conta confirmar o informe de outra pessoa.',
+  },
+  'price.near_station_m': {
+    schema: positiveInt,
+    unit: 'meters',
+    label: 'Distância para "estava no posto"',
+    description:
+      'Distância máxima (metros) entre a pessoa e o posto para o informe contar como feito no posto.',
+  },
+  'price.away_weight_pct': {
+    schema: percent,
+    unit: 'percent',
+    label: 'Peso de quem informa à distância',
+    description:
+      'Peso (%) na confirmação do informe feito longe do posto ou sem localização. No posto, o peso é 100%.',
+  },
+  'price.burst_window_minutes': {
+    schema: positiveInt,
+    unit: 'minutes',
+    label: 'Janela da rajada',
+    description:
+      'Minutos em que informes iguais, de contas novas ou longe do posto, contam como rajada.',
+  },
+  'price.burst_min_reports': {
+    schema: z.number().int().min(2),
+    unit: 'count',
+    label: 'Informes para rajada',
+    description:
+      'Informes iguais e destoantes na janela que mandam o caso para a moderação em vez de mudar o preço.',
   },
   'portal.competition_radius_m': {
     schema: positiveInt,

@@ -1,6 +1,8 @@
 import {
   classifyReport,
   computeCurrentPrice,
+  distanceMeters,
+  reportWeight,
   type DisplayParams,
   type ReportForDisplay,
 } from './price-rules';
@@ -44,6 +46,7 @@ describe('computeCurrentPrice', () => {
     confirmationsRequired: 2,
     staleAfterDays: 7,
     hideAfterDays: 30,
+    divergenceResponseHours: 24,
   };
   const now = new Date('2026-11-03T12:00:00Z');
   const hoursAgo = (h: number) => new Date(now.getTime() - h * 3_600_000);
@@ -53,6 +56,7 @@ describe('computeCurrentPrice', () => {
     hours: number,
     user: string,
     status: ReportForDisplay['status'] = 'valido',
+    weight = 1,
   ): ReportForDisplay {
     return {
       price,
@@ -60,6 +64,7 @@ describe('computeCurrentPrice', () => {
       status,
       reporterUserId: user,
       reportedAt: hoursAgo(hours),
+      weight,
       promotion: null,
     };
   }
@@ -75,6 +80,7 @@ describe('computeCurrentPrice', () => {
       status,
       reporterUserId: 'gestor',
       reportedAt: hoursAgo(hours),
+      weight: 1,
       promotion: null,
     };
   }
@@ -140,14 +146,65 @@ describe('computeCurrentPrice', () => {
     });
   });
 
-  it('motoristas confirmados depois do posto substituem o preço do posto', () => {
+  it('consumidores confirmados depois do posto abrem divergência no prazo', () => {
     expect(
       compute([
         driver(6.49, 1, 'ana'),
         driver(6.49, 2, 'bia'),
         station(6.29, 5),
       ]),
-    ).toMatchObject({ price: 6.49, badge: 'confirmado_motoristas' });
+    ).toMatchObject({
+      price: 6.29,
+      badge: 'atualizado_posto',
+      divergence: { price: 6.49, respondBy: hoursAgo(1 - 24) },
+    });
+  });
+
+  it('sem resposta do posto no prazo, vale o valor dos consumidores', () => {
+    expect(
+      compute([
+        driver(6.49, 30, 'ana'),
+        driver(6.49, 31, 'bia'),
+        station(6.29, 40),
+      ]),
+    ).toMatchObject({
+      price: 6.49,
+      badge: 'confirmado_motoristas',
+      divergence: null,
+    });
+  });
+
+  it('o posto reconfirma: a divergência se encerra', () => {
+    expect(
+      compute([
+        station(6.29, 0.5),
+        driver(6.49, 1, 'ana'),
+        driver(6.49, 2, 'bia'),
+        station(6.29, 5),
+      ]),
+    ).toMatchObject({
+      price: 6.29,
+      badge: 'atualizado_posto',
+      divergence: null,
+    });
+  });
+
+  it('consumidores confirmam o mesmo valor do posto: "Confirmado"', () => {
+    expect(
+      compute([
+        driver(6.29, 1, 'ana'),
+        driver(6.29, 2, 'bia'),
+        station(6.29, 5),
+      ]),
+    ).toMatchObject({ price: 6.29, badge: 'confirmado_motoristas' });
+  });
+
+  it('informe isolado diferente do posto: indica outro valor', () => {
+    expect(compute([driver(6.49, 1, 'ana'), station(6.29, 5)])).toMatchObject({
+      price: 6.29,
+      divergence: null,
+      otherValueReported: true,
+    });
   });
 
   it('confirmação anterior ao preço do posto não o substitui', () => {
@@ -157,17 +214,95 @@ describe('computeCurrentPrice', () => {
         driver(6.49, 3, 'ana'),
         driver(6.49, 4, 'bia'),
       ]),
-    ).toMatchObject({ price: 6.29, badge: 'atualizado_posto' });
+    ).toMatchObject({
+      price: 6.29,
+      badge: 'atualizado_posto',
+      divergence: null,
+    });
   });
 
-  it('sem posto, vale o mais recente entre confirmado e informe isolado', () => {
-    expect(
-      compute([
-        driver(6.59, 1, 'caio'),
-        driver(6.49, 5, 'ana'),
-        driver(6.49, 6, 'bia'),
-      ]),
-    ).toMatchObject({ price: 6.59, badge: 'informado_motorista' });
+  describe('desempate e peso (ADR 0024)', () => {
+    it('vence o valor com mais pessoas, mesmo que outro seja mais recente', () => {
+      expect(
+        compute([
+          driver(6.59, 1, 'caio'),
+          driver(6.49, 5, 'ana'),
+          driver(6.49, 6, 'bia'),
+        ]),
+      ).toMatchObject({
+        price: 6.49,
+        badge: 'confirmado_motoristas',
+        otherValueReported: true,
+      });
+    });
+
+    it('empate: vale o mais recente', () => {
+      expect(
+        compute([driver(6.59, 1, 'caio'), driver(6.49, 5, 'ana')]),
+      ).toMatchObject({
+        price: 6.59,
+        badge: 'informado_motorista',
+        otherValueReported: true,
+      });
+    });
+
+    it('fora da janela, o informe novo vale sozinho', () => {
+      expect(
+        compute([
+          driver(6.59, 1, 'caio'),
+          driver(6.49, 60, 'ana'),
+          driver(6.49, 61, 'bia'),
+        ]),
+      ).toMatchObject({ price: 6.59, otherValueReported: false });
+    });
+
+    it('conta nova (peso 0) informa, mas não confirma', () => {
+      expect(
+        compute([driver(6.49, 1, 'nova', 'valido', 0), driver(6.49, 2, 'ana')]),
+      ).toMatchObject({ price: 6.49, badge: 'informado_motorista' });
+    });
+
+    it('à distância vale metade: duas pessoas longe não confirmam', () => {
+      expect(
+        compute([
+          driver(6.49, 1, 'ana', 'valido', 0.5),
+          driver(6.49, 2, 'bia', 'valido', 0.5),
+        ]),
+      ).toMatchObject({ badge: 'informado_motorista' });
+      expect(
+        compute([
+          driver(6.49, 1, 'ana', 'valido', 0.5),
+          driver(6.49, 2, 'bia', 'valido', 0.5),
+          driver(6.49, 3, 'caio'),
+        ]),
+      ).toMatchObject({ badge: 'confirmado_motoristas' });
+    });
+
+    it('mais pessoas de contas novas não vencem menos pessoas confiáveis', () => {
+      expect(
+        compute([
+          driver(7.99, 1, 'n1', 'valido', 0),
+          driver(7.99, 2, 'n2', 'valido', 0),
+          driver(7.99, 3, 'n3', 'valido', 0),
+          driver(6.49, 4, 'ana'),
+        ]),
+      ).toMatchObject({ price: 6.49 });
+    });
+  });
+
+  describe('peso de cada informe', () => {
+    it('conta não confiável: 0; no posto: 1; longe ou sem localização: o parâmetro', () => {
+      expect(reportWeight(false, true, 50)).toBe(0);
+      expect(reportWeight(true, true, 50)).toBe(1);
+      expect(reportWeight(true, false, 50)).toBe(0.5);
+      expect(reportWeight(true, null, 50)).toBe(0.5);
+    });
+
+    it('distância entre pontos (haversine)', () => {
+      const centro = { latitude: -27.2838, longitude: -50.5826 };
+      const perto = { latitude: -27.2848, longitude: -50.5826 };
+      expect(Math.round(distanceMeters(centro, perto))).toBe(111);
+    });
   });
 
   it('marca como desatualizado depois do prazo', () => {

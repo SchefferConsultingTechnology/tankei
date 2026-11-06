@@ -18,16 +18,42 @@ import {
   type PriceReportResponse,
   roleCan,
 } from '@tankei/shared';
-import { and, count, eq, gt, inArray, ne, or } from 'drizzle-orm';
+import {
+  and,
+  count,
+  eq,
+  gt,
+  inArray,
+  isNull,
+  ne,
+  notInArray,
+  or,
+  sql,
+} from 'drizzle-orm';
 import type { AuthenticatedUser } from '../auth/tokens.service';
 import { DRIZZLE, type Database } from '../database/database.module';
-import { priceReports, stationFuels, stations } from '../database/schema';
+import {
+  priceModerationCaseReports,
+  priceModerationDecisions,
+  priceReports,
+  stationFuels,
+  stations,
+  users,
+} from '../database/schema';
+import {
+  casesOfReports,
+  excludedReportIds,
+  openCase,
+} from '../moderation/moderation-store';
 import { ParametersService } from '../parameters/parameters.service';
 import { AccessService } from '../organizations/access.service';
 import { PriceReferencesService } from './price-references.service';
 import {
   classifyReport,
   computeCurrentPrice,
+  distanceMeters,
+  reportWeight,
+  samePrice,
   type DisplayParams,
   type ReportForDisplay,
 } from './price-rules';
@@ -69,7 +95,12 @@ export class PriceReportsService {
     now = new Date(),
   ): Promise<PriceReportResponse> {
     const [station] = await this.db
-      .select({ id: stations.id, state: stations.state })
+      .select({
+        id: stations.id,
+        state: stations.state,
+        latitude: sql<number | null>`ST_Y(${stations.location})`,
+        longitude: sql<number | null>`ST_X(${stations.location})`,
+      })
       .from(stations)
       .where(and(eq(stations.id, stationId), eq(stations.active, true)));
     if (!station) throw new NotFoundException('Posto não encontrado.');
@@ -126,6 +157,11 @@ export class PriceReportsService {
       },
     );
 
+    // Sinais do consumidor na entrada (ADR 0024): só sim ou não, nunca a posição.
+    const signals = isManager
+      ? null
+      : await this.reporterSignals(user.id, station, request.position, now);
+
     // Rejeitados também ficam registrados, para auditoria e moderação.
     const [saved] = await this.db
       .insert(priceReports)
@@ -138,6 +174,9 @@ export class PriceReportsService {
         reporterUserId: user.id,
         referenceId: reference?.id,
         referenceDeviationPct: classification.deviationPct,
+        atStation: signals?.atStation ?? null,
+        reporterTrusted: signals?.trusted ?? null,
+        confirmationWeight: signals?.weight ?? null,
         promotionLabel: request.promotion?.label,
         promotionStartsAt: request.promotion?.startsAt,
         promotionEndsAt: request.promotion?.endsAt,
@@ -150,6 +189,10 @@ export class PriceReportsService {
         .insert(stationFuels)
         .values({ stationId, fuelType: request.fuelType })
         .onConflictDoNothing();
+    }
+
+    if (!isManager && classification.status !== 'rejeitado') {
+      await this.detectBurst(stationId, request.fuelType, now);
     }
 
     if (classification.status === 'rejeitado') {
@@ -171,9 +214,12 @@ export class PriceReportsService {
   async currentPrices(
     stationIds: string[],
     now = new Date(),
+    alsoExclude: Set<string> = new Set(),
   ): Promise<Map<string, CurrentPrice[]>> {
     const result = new Map<string, CurrentPrice[]>();
     if (stationIds.length === 0) return result;
+    // Em moderação ou anulados não contam (ADR 0020).
+    const excluded = await excludedReportIds(this.db, stationIds);
 
     const params = await this.displayParams();
     const since = new Date(now.getTime() - params.hideAfterDays * DAY_MS);
@@ -193,6 +239,7 @@ export class PriceReportsService {
 
     const groups = new Map<string, ReportForDisplay[]>();
     for (const row of rows) {
+      if (excluded.has(row.id) || alsoExclude.has(row.id)) continue;
       const key = `${row.stationId}|${row.fuelType}`;
       groups.set(key, [...(groups.get(key) ?? []), toDisplay(row)]);
     }
@@ -213,6 +260,12 @@ export class PriceReportsService {
             label: current.promotion.label,
             endsAt: current.promotion.endsAt.toISOString(),
           },
+          divergence: current.divergence && {
+            price: current.divergence.price,
+            reportedAt: current.divergence.reportedAt.toISOString(),
+            respondBy: current.divergence.respondBy.toISOString(),
+          },
+          otherValueReported: current.otherValueReported,
         });
       }
       result.set(stationId, prices);
@@ -345,7 +398,155 @@ export class PriceReportsService {
       ),
       staleAfterDays: await this.parameters.get('price.stale_after_days'),
       hideAfterDays: await this.parameters.get('price.hide_after_days'),
+      divergenceResponseHours: await this.parameters.get(
+        'price.divergence_response_hours',
+      ),
     };
+  }
+
+  /**
+   * Se o consumidor estava no posto, se a conta já é confiável e o peso do
+   * informe na confirmação (ADR 0024).
+   */
+  private async reporterSignals(
+    userId: string,
+    station: { latitude: number | null; longitude: number | null },
+    position: PriceReportRequest['position'],
+    now: Date,
+  ): Promise<{ atStation: boolean | null; trusted: boolean; weight: number }> {
+    let atStation: boolean | null = null;
+    if (position && station.latitude !== null && station.longitude !== null) {
+      const meters = distanceMeters(position, {
+        latitude: station.latitude,
+        longitude: station.longitude,
+      });
+      atStation = meters <= (await this.parameters.get('price.near_station_m'));
+    }
+
+    const minDays = await this.parameters.get('price.trusted_min_account_days');
+    const minAccepted = await this.parameters.get(
+      'price.trusted_min_accepted_reports',
+    );
+    const [account] = await this.db
+      .select({ createdAt: users.createdAt })
+      .from(users)
+      .where(eq(users.id, userId));
+    const ageDays = account
+      ? (now.getTime() - account.createdAt.getTime()) / DAY_MS
+      : 0;
+    let trusted = ageDays >= minDays;
+    if (trusted && minAccepted > 0) {
+      const annulled = this.db
+        .select({ id: priceModerationCaseReports.reportId })
+        .from(priceModerationCaseReports)
+        .innerJoin(
+          priceModerationDecisions,
+          eq(
+            priceModerationDecisions.caseId,
+            priceModerationCaseReports.caseId,
+          ),
+        )
+        .where(eq(priceModerationDecisions.decision, 'anulado'));
+      const [{ total }] = await this.db
+        .select({ total: count() })
+        .from(priceReports)
+        .where(
+          and(
+            eq(priceReports.reporterUserId, userId),
+            eq(priceReports.source, 'usuario'),
+            eq(priceReports.status, 'valido'),
+            notInArray(priceReports.id, annulled),
+          ),
+        );
+      trusted = total >= minAccepted;
+    }
+
+    const awayWeight = await this.parameters.get('price.away_weight_pct');
+    return {
+      atStation,
+      trusted,
+      weight: reportWeight(trusted, atStation, awayWeight),
+    };
+  }
+
+  /**
+   * Rajada (ADR 0020 e 0024): vários informes iguais e destoantes do preço
+   * exibido, de contas não confiáveis ou longe do posto, em pouco tempo. Em
+   * vez de mudar o preço, vão para a fila da equipe Tankei.
+   */
+  private async detectBurst(
+    stationId: string,
+    fuelType: FuelType,
+    now: Date,
+  ): Promise<void> {
+    const windowMinutes = await this.parameters.get(
+      'price.burst_window_minutes',
+    );
+    const minReports = await this.parameters.get('price.burst_min_reports');
+    const recent = await this.db
+      .select({
+        id: priceReports.id,
+        price: priceReports.price,
+        reporterUserId: priceReports.reporterUserId,
+        reporterTrusted: priceReports.reporterTrusted,
+        atStation: priceReports.atStation,
+      })
+      .from(priceReports)
+      .where(
+        and(
+          eq(priceReports.stationId, stationId),
+          eq(priceReports.fuelType, fuelType),
+          eq(priceReports.source, 'usuario'),
+          ne(priceReports.status, 'rejeitado'),
+          isNull(priceReports.promotionLabel),
+          gt(
+            priceReports.reportedAt,
+            new Date(now.getTime() - windowMinutes * 60_000),
+          ),
+        ),
+      );
+    const inCase = await casesOfReports(
+      this.db,
+      recent.map((r) => r.id),
+    );
+    const weak = recent.filter(
+      (r) =>
+        !inCase.has(r.id) &&
+        (r.reporterTrusted === false || r.atStation !== true),
+    );
+
+    const groups = new Map<number, typeof weak>();
+    for (const r of weak) {
+      const key = Math.round(r.price * 1000);
+      groups.set(key, [...(groups.get(key) ?? []), r]);
+    }
+    for (const group of groups.values()) {
+      const people = new Set(group.map((r) => r.reporterUserId));
+      if (people.size < minReports) continue;
+
+      // Compara com o preço que valeria sem esses informes.
+      const ids = new Set(group.map((r) => r.id));
+      const baseline = (await this.currentPrices([stationId], now, ids))
+        .get(stationId)
+        ?.find((p) => p.fuelType === fuelType);
+      if (!baseline || samePrice(baseline.price, group[0].price)) continue;
+      const variationPct =
+        (Math.abs(group[0].price - baseline.price) / baseline.price) * 100;
+      if (
+        variationPct <=
+        (await this.parameters.get('price.variation_confirm_pct'))
+      ) {
+        continue;
+      }
+      await openCase(this.db, {
+        kind: 'rajada',
+        stationId,
+        fuelType,
+        openedByUserId: null,
+        reason: `${people.size} informes de ${money.format(group[0].price)} em até ${windowMinutes} minutos, de contas novas ou longe do posto (preço exibido: ${money.format(baseline.price)}).`,
+        reportIds: [...ids],
+      });
+    }
   }
 }
 
@@ -356,6 +557,8 @@ function toDisplay(row: typeof priceReports.$inferSelect): ReportForDisplay {
     status: row.status,
     reporterUserId: row.reporterUserId,
     reportedAt: row.reportedAt,
+    // Informes anteriores à regra de peso (ADR 0024) valem 1.
+    weight: row.confirmationWeight ?? 1,
     promotion:
       row.promotionLabel && row.promotionStartsAt && row.promotionEndsAt
         ? {

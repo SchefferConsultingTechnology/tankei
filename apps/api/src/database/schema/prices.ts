@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  boolean,
   check,
   index,
   numeric,
@@ -40,6 +41,14 @@ export const priceReports = pgTable(
       scale: 2,
       mode: 'number',
     }),
+    // Gravados na entrada (ADR 0024), para explicar a decisão mesmo depois de
+    // os parâmetros mudarem. A posição em si nunca é guardada (ADR 0009).
+    // Nulo: sem localização, ou informe anterior à regra.
+    atStation: boolean(),
+    // Conta já confiável ao informar (idade e informes aceitos). Nulo: anterior.
+    reporterTrusted: boolean(),
+    // Peso do informe na confirmação (0 a 1). Nulo: anterior à regra, vale 1.
+    confirmationWeight: numeric({ precision: 3, scale: 2, mode: 'number' }),
     promotionLabel: text(),
     promotionStartsAt: timestamp({ withTimezone: true }),
     promotionEndsAt: timestamp({ withTimezone: true }),

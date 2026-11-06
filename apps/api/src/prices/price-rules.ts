@@ -49,6 +49,8 @@ export interface ReportForDisplay {
   status: PriceReportStatus;
   reporterUserId: string | null;
   reportedAt: Date;
+  /** Peso na confirmação (0 a 1, ADR 0024). Informes anteriores à regra: 1. */
+  weight: number;
   promotion: { label: string; startsAt: Date; endsAt: Date } | null;
 }
 
@@ -57,6 +59,7 @@ export interface DisplayParams {
   confirmationsRequired: number;
   staleAfterDays: number;
   hideAfterDays: number;
+  divergenceResponseHours: number;
 }
 
 export interface DisplayedPrice {
@@ -65,19 +68,25 @@ export interface DisplayedPrice {
   stale: boolean;
   updatedAt: Date;
   promotion: { label: string; endsAt: Date } | null;
+  /** Consumidores confirmaram outro valor; o posto ainda pode responder. */
+  divergence: { price: number; reportedAt: Date; respondBy: Date } | null;
+  /** Consumidores informaram também outro valor recentemente. */
+  otherValueReported: boolean;
 }
 
 /**
- * Preço exibido para um combustível de um posto (ADR 0003 e 0006), a partir
- * dos informes desse combustível:
+ * Preço exibido para um combustível de um posto (ADR 0003, 0006, 0020 e 0024),
+ * a partir dos informes desse combustível. Informes em moderação ou anulados
+ * já chegam fora da lista.
  *
  * 1. Promoção vigente do posto vale sobre tudo.
- * 2. Com preço do posto, um valor de motoristas só o substitui se for
- *    posterior e confirmado por pessoas diferentes.
- * 3. Sem preço do posto, vale o mais recente entre o valor confirmado e o
- *    último informe válido de um motorista.
+ * 2. Com preço do posto, um valor confirmado por consumidores depois dele
+ *    abre uma divergência: o posto tem um prazo para reconfirmar (novo preço
+ *    do posto) ou contestar; sem resposta, vale o valor dos consumidores.
+ * 3. Sem preço do posto, entre os consumidores vence o valor com mais pessoas
+ *    diferentes (contadas com o peso de cada informe); empate, o mais recente.
  *
- * Informes suspeitos de motoristas só aparecem quando confirmados; os do
+ * Informes suspeitos de consumidores só aparecem quando confirmados; os do
  * posto aparecem. Rejeitados nunca aparecem.
  */
 export function computeCurrentPrice(
@@ -103,6 +112,8 @@ export function computeCurrentPrice(
         label: promotion.promotion.label,
         endsAt: promotion.promotion.endsAt,
       },
+      divergence: null,
+      otherValueReported: false,
     };
   }
 
@@ -112,28 +123,62 @@ export function computeCurrentPrice(
       now.getTime() - r.reportedAt.getTime() <= params.hideAfterDays * DAY_MS,
   );
   const fromStation = regular.find((r) => r.source === 'posto');
-  const fromDrivers = regular.filter((r) => r.source === 'usuario');
-  const confirmed = latestConfirmed(fromDrivers, params);
-  const single = fromDrivers.find((r) => r.status === 'valido');
+  const consumers = regular.filter((r) => r.source === 'usuario');
 
   let chosen: { price: number; badge: PriceBadge; at: Date } | null = null;
+  let divergence: DisplayedPrice['divergence'] = null;
+  let otherValueReported = false;
+
   if (fromStation) {
-    chosen =
-      confirmed && confirmed.at > fromStation.reportedAt
-        ? { ...confirmed, badge: 'confirmado_motoristas' }
-        : {
-            price: fromStation.price,
-            badge: 'atualizado_posto',
-            at: fromStation.reportedAt,
-          };
-  } else if (confirmed && (!single || confirmed.at >= single.reportedAt)) {
-    chosen = { ...confirmed, badge: 'confirmado_motoristas' };
-  } else if (single) {
-    chosen = {
-      price: single.price,
-      badge: 'informado_motorista',
-      at: single.reportedAt,
+    const after = consumers.filter(
+      (r) => r.reportedAt > fromStation.reportedAt,
+    );
+    const pick = pickConsumerValue(after, params);
+    const stationPrice = {
+      price: fromStation.price,
+      badge: 'atualizado_posto' as const,
+      at: fromStation.reportedAt,
     };
+    if (pick?.confirmedAt && samePrice(pick.price, fromStation.price)) {
+      chosen = {
+        price: pick.price,
+        badge: 'confirmado_motoristas',
+        at: pick.at,
+      };
+    } else if (pick?.confirmedAt) {
+      const respondBy = new Date(
+        pick.confirmedAt.getTime() + params.divergenceResponseHours * HOUR_MS,
+      );
+      if (now < respondBy) {
+        chosen = stationPrice;
+        divergence = { price: pick.price, reportedAt: pick.at, respondBy };
+      } else {
+        chosen = {
+          price: pick.price,
+          badge: 'confirmado_motoristas',
+          at: pick.at,
+        };
+      }
+    } else {
+      chosen = stationPrice;
+    }
+    otherValueReported =
+      !divergence &&
+      after.some(
+        (r) => r.status === 'valido' && !samePrice(r.price, chosen!.price),
+      );
+  } else {
+    const pick = pickConsumerValue(consumers, params);
+    if (pick) {
+      chosen = {
+        price: pick.price,
+        badge: pick.confirmedAt
+          ? 'confirmado_motoristas'
+          : 'informado_motorista',
+        at: pick.at,
+      };
+      otherValueReported = pick.otherValues;
+    }
   }
   if (!chosen) return null;
 
@@ -143,36 +188,135 @@ export function computeCurrentPrice(
     stale: now.getTime() - chosen.at.getTime() > params.staleAfterDays * DAY_MS,
     updatedAt: chosen.at,
     promotion: null,
+    divergence,
+    otherValueReported,
   };
 }
 
+interface ConsumerPick {
+  price: number;
+  /** Informe mais recente do valor na janela. */
+  at: Date;
+  /** Quando a soma dos pesos atingiu o necessário; nulo se não confirmado. */
+  confirmedAt: Date | null;
+  /** Havia outro valor na mesma janela. */
+  otherValues: boolean;
+}
+
 /**
- * Valor mais recente informado por pessoas diferentes dentro da janela de
- * confirmação. `at` é o momento do informe mais recente do grupo.
+ * Valor dos consumidores (ADR 0020 e 0024). Partindo do informe mais recente,
+ * olha a janela de confirmação até ele e agrupa por valor. Um valor concorre
+ * se foi confirmado (soma dos pesos de pessoas diferentes) ou tem um informe
+ * válido. Vence o de maior soma; empate, o mais recente. Sem candidato, a
+ * janela recua para o informe anterior.
  */
-function latestConfirmed(
-  drivers: ReportForDisplay[],
-  params: DisplayParams,
-): { price: number; at: Date } | null {
+export function pickConsumerValue(
+  consumers: ReportForDisplay[],
+  params: Pick<
+    DisplayParams,
+    'confirmationWindowHours' | 'confirmationsRequired'
+  >,
+): ConsumerPick | null {
   const windowMs = params.confirmationWindowHours * HOUR_MS;
-  for (const anchor of drivers) {
-    const reporters = new Set(
-      drivers
-        .filter(
-          (r) =>
-            samePrice(r.price, anchor.price) &&
-            r.reportedAt <= anchor.reportedAt &&
-            anchor.reportedAt.getTime() - r.reportedAt.getTime() <= windowMs,
-        )
-        .map((r) => r.reporterUserId),
+  const sorted = [...consumers].sort(
+    (a, b) => b.reportedAt.getTime() - a.reportedAt.getTime(),
+  );
+  for (const anchor of sorted) {
+    const window = sorted.filter(
+      (r) =>
+        r.reportedAt <= anchor.reportedAt &&
+        anchor.reportedAt.getTime() - r.reportedAt.getTime() <= windowMs,
     );
-    if (reporters.size >= params.confirmationsRequired) {
-      return { price: anchor.price, at: anchor.reportedAt };
+    const groups = new Map<number, ReportForDisplay[]>();
+    for (const r of window) {
+      const key = Math.round(r.price * 1000);
+      groups.set(key, [...(groups.get(key) ?? []), r]);
+    }
+    const candidates = [...groups.values()].map((group) => {
+      const confirmedAt = confirmationTime(group, params.confirmationsRequired);
+      return {
+        price: group[0].price,
+        at: group[0].reportedAt,
+        score: weightedReporters(group),
+        confirmedAt,
+        eligible:
+          confirmedAt !== null || group.some((r) => r.status === 'valido'),
+      };
+    });
+    const eligible = candidates
+      .filter((c) => c.eligible)
+      .sort((a, b) => b.score - a.score || b.at.getTime() - a.at.getTime());
+    if (eligible.length > 0) {
+      const [winner] = eligible;
+      return {
+        price: winner.price,
+        at: winner.at,
+        confirmedAt: winner.confirmedAt,
+        otherValues: candidates.length > 1,
+      };
     }
   }
   return null;
 }
 
-function samePrice(a: number, b: number): boolean {
+/** Soma dos pesos de pessoas diferentes (cada pessoa conta pelo maior peso). */
+export function weightedReporters(reports: ReportForDisplay[]): number {
+  const byPerson = new Map<string, number>();
+  reports.forEach((r, index) => {
+    const who = r.reporterUserId ?? `anonimo-${index}`;
+    byPerson.set(who, Math.max(byPerson.get(who) ?? 0, r.weight));
+  });
+  let total = 0;
+  for (const weight of byPerson.values()) total += weight;
+  return Math.round(total * 100) / 100;
+}
+
+/** Momento em que a soma dos pesos atingiu o necessário (informes em ordem). */
+function confirmationTime(
+  group: ReportForDisplay[],
+  required: number,
+): Date | null {
+  const ascending = [...group].sort(
+    (a, b) => a.reportedAt.getTime() - b.reportedAt.getTime(),
+  );
+  for (let i = 0; i < ascending.length; i++) {
+    if (weightedReporters(ascending.slice(0, i + 1)) >= required) {
+      return ascending[i].reportedAt;
+    }
+  }
+  return null;
+}
+
+export function samePrice(a: number, b: number): boolean {
   return Math.round(a * 1000) === Math.round(b * 1000);
+}
+
+/**
+ * Peso do informe de um consumidor na confirmação (ADR 0024): conta ainda
+ * não confiável não confirma o informe de outra pessoa (0); no posto vale 1;
+ * longe do posto ou sem localização, o peso configurado.
+ */
+export function reportWeight(
+  trusted: boolean,
+  atStation: boolean | null,
+  awayWeightPct: number,
+): number {
+  if (!trusted) return 0;
+  return atStation ? 1 : awayWeightPct / 100;
+}
+
+/** Distância em metros entre dois pontos (haversine). */
+export function distanceMeters(
+  a: { latitude: number; longitude: number },
+  b: { latitude: number; longitude: number },
+): number {
+  const rad = (deg: number) => (deg * Math.PI) / 180;
+  const dLat = rad(b.latitude - a.latitude);
+  const dLng = rad(b.longitude - a.longitude);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(rad(a.latitude)) *
+      Math.cos(rad(b.latitude)) *
+      Math.sin(dLng / 2) ** 2;
+  return 2 * 6_371_000 * Math.asin(Math.sqrt(h));
 }

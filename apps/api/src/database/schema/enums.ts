@@ -5,6 +5,8 @@ import {
   FUEL_TYPES,
   IQP_CONFIDENCE_LEVELS,
   MANAGER_ROLES,
+  MODERATION_DECISIONS,
+  MODERATION_KINDS,
   ORG_ROLES,
   ORG_SCOPES,
   PRICE_SOURCES,
@@ -60,3 +62,11 @@ export const orgRoleEnum = pgEnum('org_role', ORG_ROLES);
 
 /** Escopo do membro: todas as unidades da rede ou as escolhidas. */
 export const orgScopeEnum = pgEnum('org_scope', ORG_SCOPES);
+
+/** Moderação de informes de preço (ADR 0020 e 0024). */
+export const moderationKindEnum = pgEnum('moderation_kind', MODERATION_KINDS);
+
+export const moderationDecisionEnum = pgEnum(
+  'moderation_decision',
+  MODERATION_DECISIONS,
+);

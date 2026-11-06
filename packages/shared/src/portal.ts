@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { MODERATION_KINDS, MODERATION_STATUSES } from './moderation';
 import { FUEL_TYPES, PRICE_SOURCES } from './fuel';
 import { IQP_DIMENSIONS, stationIqpSchema } from './iqp';
 import { currentPriceSchema, PRICE_REPORT_STATUSES } from './price';
@@ -139,6 +140,21 @@ export const priceHistoryEntrySchema = z.object({
   current: z
     .boolean()
     .describe('Se é o informe que define o preço exibido agora no app.'),
+  atStation: nullable(
+    z.boolean(),
+    'Consumidor: se estava perto do posto ao informar (nulo sem localização).',
+  ),
+  moderation: nullable(
+    z.object({
+      caseId: z.uuid(),
+      kind: z.enum(MODERATION_KINDS),
+      status: z.enum(MODERATION_STATUSES),
+    }),
+    'Caso de moderação do informe, se houver (ADR 0020).',
+  ),
+  contestable: z
+    .boolean()
+    .describe('Se o posto ainda pode contestar este informe.'),
 });
 export type PriceHistoryEntry = z.infer<typeof priceHistoryEntrySchema>;
 
