@@ -27,11 +27,19 @@ interface Props {
   station: ListedStation;
   fuel: FuelType;
   onPress: () => void;
+  /** Posto sem preço: atalho para ser o primeiro a informar. */
+  onReport?: () => void;
   style?: StyleProp<ViewStyle>;
 }
 
 /** Resumo do posto (nome, bandeira, preço e IQP): na lista e no mapa. */
-export function StationCard({ station, fuel, onPress, style }: Props) {
+export function StationCard({
+  station,
+  fuel,
+  onPress,
+  onReport,
+  style,
+}: Props) {
   const styles = useStyles();
   const { colors } = useTheme();
   const price = priceFor(station, fuel);
@@ -79,10 +87,20 @@ export function StationCard({ station, fuel, onPress, style }: Props) {
               ? 'Preço promocional'
               : price
                 ? describePrice(price)
-                : 'Sem preço informado'}
+                : 'Ainda sem preço no Tankei'}
         </Text>
         <IqpPill iqp={station.iqp} />
       </View>
+      {!price && station.mode !== 'precos_ocultos' && onReport && (
+        <Pressable
+          style={styles.reportButton}
+          onPress={onReport}
+          accessibilityRole="button"
+          accessibilityLabel={`Informar o preço de ${station.name}`}
+        >
+          <Text style={styles.reportText}>Informar preço</Text>
+        </Pressable>
+      )}
       {price && priceNote(price) && (
         <Text style={styles.note} numberOfLines={1}>
           {priceNote(price)}
@@ -127,6 +145,15 @@ const useStyles = createStyles((colors, badgeColors) => ({
   name: { color: colors.text, fontSize: fontSize.lg, fontWeight: '600' },
   muted: { color: colors.textMuted, fontSize: fontSize.sm },
   note: { color: colors.warning, fontSize: fontSize.sm, fontWeight: '600' },
+  reportButton: {
+    alignSelf: 'flex-start',
+    borderColor: colors.primary,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+  },
+  reportText: { color: colors.primary, fontSize: fontSize.sm, fontWeight: '700' },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',

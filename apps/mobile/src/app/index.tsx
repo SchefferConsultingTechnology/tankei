@@ -97,6 +97,8 @@ export default function HomeScreen() {
 
   const open = (station: ListedStation) =>
     router.push({ pathname: '/station/[id]', params: { id: station.id } });
+  const report = (station: ListedStation) =>
+    router.push({ pathname: '/station/[id]/preco', params: { id: station.id } });
 
   function renderContent() {
     if (query.isPending || !center) {
@@ -136,6 +138,7 @@ export default function HomeScreen() {
                 station={selected}
                 fuel={fuel}
                 onPress={() => open(selected)}
+                onReport={() => report(selected)}
                 style={styles.mapCardShadow}
               />
             </View>
@@ -156,7 +159,14 @@ export default function HomeScreen() {
         </Centered>
       );
     }
-    return <StationList stations={stations} fuel={fuel} onSelect={open} />;
+    return (
+      <StationList
+        stations={stations}
+        fuel={fuel}
+        onSelect={open}
+        onReport={report}
+      />
+    );
   }
 
   const total = cityStations.data?.total ?? 0;

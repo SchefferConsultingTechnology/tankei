@@ -10,10 +10,12 @@ interface Props {
   stations: ListedStation[];
   fuel: FuelType;
   onSelect: (station: ListedStation) => void;
+  /** Posto sem preço: atalho para informar. */
+  onReport?: (station: ListedStation) => void;
 }
 
 /** Postos do menor para o maior preço do combustível escolhido. */
-export function StationList({ stations, fuel, onSelect }: Props) {
+export function StationList({ stations, fuel, onSelect, onReport }: Props) {
   const styles = useStyles();
   const bottomPadding = useBottomPadding();
   return (
@@ -27,6 +29,7 @@ export function StationList({ stations, fuel, onSelect }: Props) {
           station={item}
           fuel={fuel}
           onPress={() => onSelect(item)}
+          onReport={onReport && (() => onReport(item))}
         />
       )}
     />
