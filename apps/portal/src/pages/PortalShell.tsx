@@ -1,6 +1,8 @@
 import { ORG_ROLE_LABELS, roleCan, type Me } from '@tankei/shared';
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
+import CampaignOutlined from '@mui/icons-material/CampaignOutlined';
 import GavelOutlined from '@mui/icons-material/GavelOutlined';
+import PhotoLibraryOutlined from '@mui/icons-material/PhotoLibraryOutlined';
 import GroupOutlined from '@mui/icons-material/GroupOutlined';
 import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
 import HowToRegOutlined from '@mui/icons-material/HowToRegOutlined';
@@ -60,6 +62,21 @@ const UNIT_MENU: {
         label: 'Contestações',
         to: 'precos/contestacoes',
         icon: <GavelOutlined fontSize="small" />,
+      },
+    ],
+  },
+  {
+    label: 'Divulgação',
+    items: [
+      {
+        label: 'Minhas promoções',
+        to: 'divulgacao/promocoes',
+        icon: <CampaignOutlined fontSize="small" />,
+      },
+      {
+        label: 'Fotos do posto',
+        to: 'divulgacao/fotos',
+        icon: <PhotoLibraryOutlined fontSize="small" />,
       },
     ],
   },

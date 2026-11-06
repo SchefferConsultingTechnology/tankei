@@ -38,6 +38,14 @@ const PriceHistoryPage = lazy(() =>
 const ContestsPage = lazy(() =>
   import('./pages/ContestsPage').then((m) => ({ default: m.ContestsPage })),
 );
+const PromotionsPage = lazy(() =>
+  import('./pages/PromotionsPage').then((m) => ({
+    default: m.PromotionsPage,
+  })),
+);
+const PhotosPage = lazy(() =>
+  import('./pages/PhotosPage').then((m) => ({ default: m.PhotosPage })),
+);
 const CompetitionTab = lazy(() =>
   import('./pages/CompetitionTab').then((m) => ({ default: m.CompetitionTab })),
 );
@@ -131,6 +139,8 @@ export function App() {
         <Route path="precos" element={<PricesRoute />} />
         <Route path="precos/historico" element={<PriceHistoryPage />} />
         <Route path="precos/contestacoes" element={<ContestsPage />} />
+        <Route path="divulgacao/promocoes" element={<PromotionsPage />} />
+        <Route path="divulgacao/fotos" element={<PhotosPage />} />
         <Route path="concorrencia" element={<RegionRoute />} />
         <Route path="concorrencia/cidades" element={<CitiesPage />} />
         <Route

@@ -20,6 +20,10 @@ import {
   stationReputationSchema,
   stationSchema,
   stationModerationCaseSchema,
+  promotionSchema,
+  stationPhotoSchema,
+  stationPhotosSchema,
+  stationPromotionSchema,
   type BulkPrice,
   type CreateClaim,
   type CreateInvitation,
@@ -299,5 +303,119 @@ export function useContest(stationId: string) {
         queryClient.invalidateQueries({ queryKey: ['stations', stationId] }),
         queryClient.invalidateQueries({ queryKey: ['portal', stationId] }),
       ]),
+  });
+}
+
+// ---------- Vitrine: promoções e fotos (ADR 0026) ----------
+
+export function useStationPromotions(stationId: string) {
+  return useQuery({
+    queryKey: ['portal', stationId, 'promotions'],
+    queryFn: () =>
+      authorizedRequest(
+        `/portal/stations/${stationId}/promotions`,
+        z.array(stationPromotionSchema),
+      ),
+  });
+}
+
+export interface NewPromotion {
+  title: string;
+  description?: string;
+  startsAt: string;
+  endsAt: string;
+  prices: { fuelType: FuelType; price: number }[];
+  confirmed?: boolean;
+}
+
+function useInvalidateStation(stationId: string) {
+  const queryClient = useQueryClient();
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['stations', stationId] }),
+      queryClient.invalidateQueries({ queryKey: ['portal', stationId] }),
+    ]);
+}
+
+export function useCreatePromotion(stationId: string) {
+  const invalidate = useInvalidateStation(stationId);
+  return useMutation({
+    mutationFn: (body: NewPromotion) =>
+      authorizedRequest(
+        `/portal/stations/${stationId}/promotions`,
+        promotionSchema,
+        { method: 'POST', body },
+      ),
+    onSuccess: invalidate,
+  });
+}
+
+export function usePromotionImage(stationId: string) {
+  const invalidate = useInvalidateStation(stationId);
+  return useMutation({
+    mutationFn: ({ promotionId, file }: { promotionId: string; file: File }) => {
+      const form = new FormData();
+      form.append('file', file);
+      return authorizedRequest(
+        `/portal/stations/${stationId}/promotions/${promotionId}/image`,
+        promotionSchema,
+        { method: 'PUT', body: form },
+      );
+    },
+    onSuccess: invalidate,
+  });
+}
+
+export function useEndPromotion(stationId: string) {
+  const invalidate = useInvalidateStation(stationId);
+  return useMutation({
+    mutationFn: (promotionId: string) =>
+      authorizedRequest(
+        `/portal/stations/${stationId}/promotions/${promotionId}/end`,
+        promotionSchema,
+        { method: 'POST' },
+      ),
+    onSuccess: invalidate,
+  });
+}
+
+export function useStationPhotos(stationId: string) {
+  return useQuery({
+    queryKey: ['portal', stationId, 'photos'],
+    queryFn: () =>
+      authorizedRequest(
+        `/portal/stations/${stationId}/photos`,
+        stationPhotosSchema,
+      ),
+  });
+}
+
+export function useAddPhoto(stationId: string) {
+  const invalidate = useInvalidateStation(stationId);
+  return useMutation({
+    mutationFn: ({ file, caption }: { file: File; caption: string }) => {
+      const form = new FormData();
+      form.append('file', file);
+      if (caption.trim()) form.append('caption', caption.trim());
+      return authorizedRequest(
+        `/portal/stations/${stationId}/photos`,
+        stationPhotoSchema,
+        { method: 'POST', body: form },
+      );
+    },
+    onSuccess: invalidate,
+  });
+}
+
+export function useRemovePhoto(stationId: string) {
+  const invalidate = useInvalidateStation(stationId);
+  return useMutation({
+    mutationFn: (photoId: string) =>
+      authorizedRequest(
+        `/portal/stations/${stationId}/photos/${photoId}`,
+        z.undefined(),
+        { method: 'DELETE' },
+      ),
+    onSuccess: invalidate,
   });
 }

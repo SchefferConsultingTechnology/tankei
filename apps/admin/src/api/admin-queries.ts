@@ -5,6 +5,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import {
+  adminMediaSchema,
   adminModerationCaseSchema,
   adminNetworkSchema,
   adminNetworkSummarySchema,
@@ -203,5 +204,41 @@ export function useDecideModeration() {
       ),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['moderation'] }),
+  });
+}
+
+// ---------- Imagens (ADR 0026) ----------
+
+export function useMedia(days: number) {
+  return useQuery({
+    queryKey: ['media', days],
+    queryFn: () =>
+      authorizedRequest(
+        `/admin/media?days=${days}`,
+        z.array(adminMediaSchema),
+      ),
+  });
+}
+
+export function useRemoveMedia() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      kind,
+      id,
+      reason,
+    }: {
+      kind: 'foto' | 'arte';
+      id: string;
+      reason: string;
+    }) =>
+      authorizedRequest(
+        kind === 'foto'
+          ? `/admin/media/photos/${id}/remove`
+          : `/admin/media/promotions/${id}/remove-image`,
+        empty,
+        { method: 'POST', body: { reason } },
+      ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['media'] }),
   });
 }

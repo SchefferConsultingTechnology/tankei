@@ -8,14 +8,12 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import InputAdornment from '@mui/material/InputAdornment';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import Paper from '@mui/material/Paper';
 import Snackbar from '@mui/material/Snackbar';
 import Stack from '@mui/material/Stack';
-import Switch from '@mui/material/Switch';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -286,12 +284,6 @@ function parsePrice(text: string): number | null {
   return Number.isFinite(value) && value > 0 ? value : null;
 }
 
-/** Valor para <input type="datetime-local"> no fuso do navegador. */
-function toLocalInput(date: Date): string {
-  const offset = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-}
-
 /** Novo preço (e promoção) de um combustível. Tela cheia no celular. */
 function PriceDialog({
   stationId,
@@ -310,11 +302,6 @@ function PriceDialog({
   const mobile = useMediaQuery(theme.breakpoints.down('sm'));
   const report = useReportPrice(stationId);
   const [text, setText] = useState(current ? formatPrice(current.price) : '');
-  const [isPromotion, setIsPromotion] = useState(false);
-  const [label, setLabel] = useState('');
-  const [endsAt, setEndsAt] = useState(() =>
-    toLocalInput(new Date(Date.now() + 2 * 86_400_000)),
-  );
   const [confirming, setConfirming] = useState<string | null>(null);
   const price = parsePrice(text);
   const invalidText = text.trim() !== '' && price === null;
@@ -322,13 +309,6 @@ function PriceDialog({
   function send(confirmed: boolean) {
     if (price === null) return;
     const body: PriceUpdate = { fuelType: fuel, price, confirmed };
-    if (isPromotion) {
-      body.promotion = {
-        label: label.trim(),
-        startsAt: new Date().toISOString(),
-        endsAt: new Date(endsAt).toISOString(),
-      };
-    }
     setConfirming(null);
     report.mutate(body, {
       onSuccess: (result) => onDone(result.message),
@@ -354,10 +334,7 @@ function PriceDialog({
         ? report.error.message
         : 'Não foi possível enviar. Tente de novo.'
       : null;
-  const canSend =
-    price !== null &&
-    !report.isPending &&
-    (!isPromotion || label.trim() !== '');
+  const canSend = price !== null && !report.isPending;
 
   return (
     <Dialog
@@ -399,36 +376,9 @@ function PriceDialog({
             }}
           />
 
-          <FormControlLabel
-            control={
-              <Switch
-                checked={isPromotion}
-                onChange={(event) => setIsPromotion(event.target.checked)}
-              />
-            }
-            label="Preço promocional"
-          />
-
-          {isPromotion && (
-            <>
-              <TextField
-                label="Nome da promoção"
-                placeholder="Semana do motorista"
-                value={label}
-                onChange={(event) => setLabel(event.target.value)}
-                fullWidth
-                slotProps={{ htmlInput: { maxLength: 60 } }}
-              />
-              <TextField
-                label="Válida até"
-                type="datetime-local"
-                value={endsAt}
-                onChange={(event) => setEndsAt(event.target.value)}
-                fullWidth
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
-            </>
-          )}
+          <Typography variant="body2" color="text.secondary">
+            Preço promocional com período e arte: Divulgação › Promoções.
+          </Typography>
 
           {confirming && (
             <Alert

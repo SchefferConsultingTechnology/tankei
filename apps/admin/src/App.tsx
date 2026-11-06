@@ -3,6 +3,7 @@ import HowToRegOutlined from '@mui/icons-material/HowToRegOutlined';
 import HubOutlined from '@mui/icons-material/HubOutlined';
 import LocalGasStationOutlined from '@mui/icons-material/LocalGasStationOutlined';
 import LockOutlined from '@mui/icons-material/LockOutlined';
+import PhotoLibraryOutlined from '@mui/icons-material/PhotoLibraryOutlined';
 import TuneOutlined from '@mui/icons-material/TuneOutlined';
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
@@ -39,6 +40,9 @@ const ModerationPage = lazy(() =>
     default: m.ModerationPage,
   })),
 );
+const MediaPage = lazy(() =>
+  import('./pages/MediaPage').then((m) => ({ default: m.MediaPage })),
+);
 const ParametersPage = lazy(() =>
   import('./pages/ParametersPage').then((m) => ({
     default: m.ParametersPage,
@@ -48,11 +52,16 @@ const ParametersPage = lazy(() =>
 /** Menu da administração. */
 const sidebar = (
   <>
-    <List dense subheader={<ListSubheader>Preços</ListSubheader>}>
+    <List dense subheader={<ListSubheader>Conteúdo</ListSubheader>}>
       <NavItem
         to="/moderacao"
         label="Moderação"
         icon={<GavelOutlined fontSize="small" />}
+      />
+      <NavItem
+        to="/imagens"
+        label="Imagens"
+        icon={<PhotoLibraryOutlined fontSize="small" />}
       />
     </List>
     <List dense subheader={<ListSubheader>Postos</ListSubheader>}>
@@ -128,6 +137,7 @@ export function App() {
           <Route path="/redes/:networkId" element={<NetworkDetailPage />} />
           <Route path="/parametros" element={<ParametersPage />} />
           <Route path="/moderacao" element={<ModerationPage />} />
+          <Route path="/imagens" element={<MediaPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

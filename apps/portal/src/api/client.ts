@@ -15,7 +15,7 @@ export class ApiError extends Error {
 }
 
 export interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   token?: string;
 }
@@ -31,8 +31,12 @@ export async function apiRequest<S extends z.ZodType>(
 ): Promise<z.output<S>> {
   if (!API_URL) throw new ApiError('VITE_API_URL não configurada.', 0);
 
+  // FormData (envio de imagem): o navegador define o Content-Type.
+  const isForm = body instanceof FormData;
   const headers: Record<string, string> = {};
-  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  if (body !== undefined && !isForm) {
+    headers['Content-Type'] = 'application/json';
+  }
   if (token) headers.Authorization = `Bearer ${token}`;
 
   let response: Response;
@@ -40,7 +44,12 @@ export async function apiRequest<S extends z.ZodType>(
     response = await fetch(`${API_URL}${path}`, {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body:
+        body === undefined
+          ? undefined
+          : isForm
+            ? body
+            : JSON.stringify(body),
     });
   } catch {
     throw new ApiError(
