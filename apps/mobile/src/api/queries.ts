@@ -6,6 +6,7 @@ import {
   stationIqpSchema,
   stationSchema,
   type FuelType,
+  stationShowcaseSchema,
 } from '@tankei/shared';
 import { z } from 'zod';
 import { apiGet } from './client';
@@ -41,6 +42,14 @@ export function useStation(id: string) {
   return useQuery({
     queryKey: ['stations', id],
     queryFn: () => apiGet(`/stations/${id}`, stationSchema),
+  });
+}
+
+/** Fotos e promoções vigentes do posto, para a ficha (ADR 0026). */
+export function useStationShowcase(id: string) {
+  return useQuery({
+    queryKey: ['stations', id, 'showcase'],
+    queryFn: () => apiGet(`/stations/${id}/showcase`, stationShowcaseSchema),
   });
 }
 

@@ -18,9 +18,17 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useStation, useStationIqp } from '@/api/queries';
+import {
+  useStation,
+  useStationIqp,
+  useStationShowcase,
+} from '@/api/queries';
 import { IqpGauge } from '@/components/IqpGauge';
 import { PriceTag } from '@/components/PriceTag';
+import {
+  StationPhotos,
+  StationPromotions,
+} from '@/components/StationShowcase';
 import { useBottomPadding } from '@/hooks/useBottomPadding';
 import { CONFIDENCE_LABELS, describePrice, priceNote } from '@/format';
 import { priceFor } from '@/stations';
@@ -33,6 +41,9 @@ export default function StationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const station = useStation(id);
   const iqp = useStationIqp(id);
+  const showcase = useStationShowcase(id);
+  const promotions = showcase.data?.promotions ?? [];
+  const photos = showcase.data?.photos ?? [];
   const bottomPadding = useBottomPadding();
 
   if (station.isPending) {
@@ -71,6 +82,15 @@ export default function StationScreen() {
         )}
       </View>
 
+      {promotions.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            {promotions.length === 1 ? 'Promoção' : 'Promoções'}
+          </Text>
+          <StationPromotions promotions={promotions} />
+        </View>
+      )}
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Preços</Text>
         {data.fuels.length === 0 && (
@@ -103,6 +123,13 @@ export default function StationScreen() {
           }
         />
       </View>
+
+      {photos.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Fotos</Text>
+          <StationPhotos photos={photos} />
+        </View>
+      )}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Qualidade (IQP)</Text>
