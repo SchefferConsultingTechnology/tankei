@@ -162,7 +162,14 @@ export const IQP_SCALE_MAX = 100;
  * "Como ler o IQP", igual no app e no portal. Sem números da metodologia
  * (versionada no backend): os pesos vêm da API em cada dimensão.
  */
+export const IQP_FULL_NAME = 'Índice de Qualidade do Posto';
+
+/** Uma frase: o que é o IQP (pílula, janela curta e ajuda). */
+export const IQP_SUMMARY =
+  'O IQP (Índice de Qualidade do Posto) resume, de 0 a 100, como os consumidores avaliam o atendimento, a limpeza, a transparência, os serviços e a segurança do posto.';
+
 export const IQP_EXPLANATION: readonly string[] = [
+  IQP_SUMMARY,
   'A nota vai de 0 a 100. Consumidores avaliam cada item de 1 a 5, e cada avaliação vira uma nota de 0 a 100 (5 vale 100).',
   'A nota final é a média das dimensões, cada uma com o seu peso.',
   'Com poucas avaliações, a nota é puxada para a média dos postos da cidade, e avaliações antigas pesam menos.',

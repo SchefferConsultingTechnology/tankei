@@ -178,7 +178,9 @@ export default function StationScreen() {
       )}
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Qualidade (IQP)</Text>
+        <Text style={styles.sectionTitle}>
+          Índice de Qualidade do Posto (IQP)
+        </Text>
         {iqp.data ? (
           <IqpDetail iqp={iqp.data} />
         ) : (

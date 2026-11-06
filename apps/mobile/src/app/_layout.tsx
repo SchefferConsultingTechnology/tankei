@@ -156,6 +156,10 @@ function App() {
             />
             <Stack.Screen name="favoritos" options={{ title: 'Favoritos' }} />
             <Stack.Screen
+              name="como-funciona"
+              options={{ title: 'Como funciona' }}
+            />
+            <Stack.Screen
               name="cidade"
               options={{ title: 'Escolher cidade', presentation: 'modal' }}
             />

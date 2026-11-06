@@ -71,6 +71,7 @@ export default function AccountScreen() {
         <View style={styles.appearance}>
           <CarProfileForm />
         </View>
+        <HowItWorksLink />
         <View style={styles.appearance}>
           <ThemeChooser />
         </View>
@@ -112,10 +113,24 @@ export default function AccountScreen() {
         <Text style={styles.buttonOutlineText}>Sair</Text>
       </Pressable>
       {error && <Text style={styles.error}>{error}</Text>}
+      <HowItWorksLink />
       <View style={styles.appearance}>
         <ThemeChooser />
       </View>
     </ScrollView>
+  );
+}
+
+function HowItWorksLink() {
+  const styles = useStyles();
+  return (
+    <Pressable
+      style={styles.link}
+      onPress={() => router.push('/como-funciona')}
+      accessibilityRole="button"
+    >
+      <Text style={styles.linkText}>Como funciona o Tankei</Text>
+    </Pressable>
   );
 }
 
