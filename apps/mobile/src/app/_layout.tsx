@@ -80,13 +80,14 @@ function HeaderLogo() {
   const styles = useStyles();
   const { scheme } = useTheme();
   return (
-    <Image
-      source={LOGO[scheme]}
-      style={styles.logo}
-      resizeMode="contain"
-      accessibilityRole="header"
-      accessibilityLabel="Tankei: postos e preços"
-    />
+    <Pressable
+      onPress={() => router.push('/sobre')}
+      hitSlop={spacing.sm}
+      accessibilityRole="button"
+      accessibilityLabel="Tankei: postos e preços. Sobre o app"
+    >
+      <Image source={LOGO[scheme]} style={styles.logo} resizeMode="contain" />
+    </Pressable>
   );
 }
 
@@ -155,6 +156,7 @@ function App() {
               options={{ title: 'Etanol ou gasolina?' }}
             />
             <Stack.Screen name="favoritos" options={{ title: 'Favoritos' }} />
+            <Stack.Screen name="sobre" options={{ title: 'Sobre o Tankei' }} />
             <Stack.Screen
               name="como-funciona"
               options={{ title: 'Como funciona' }}
