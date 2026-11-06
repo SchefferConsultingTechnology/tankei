@@ -32,6 +32,8 @@ export const PARAMETER_GROUP_LABELS: Record<string, string> = {
   portal: 'Portal do posto',
   claim: 'Pedidos de acesso',
   media: 'Fotos e promoções',
+  alert: 'Favoritos e alertas',
+  contributor: 'Contribuição',
   team: 'Equipe',
   review: 'Avaliações',
 };
@@ -176,6 +178,32 @@ export const PARAMETER_DEFINITIONS = {
     label: 'Tamanho máximo da imagem',
     description:
       'Tamanho máximo (MB) de uma foto ou arte enviada. A API reduz e converte para WebP.',
+  },
+  'alert.max_per_user': {
+    schema: positiveInt,
+    unit: 'count',
+    label: 'Alertas de preço por conta',
+    description: 'Máximo de alertas de preço ativos por conta.',
+  },
+  'alert.min_interval_hours': {
+    schema: positiveInt,
+    unit: 'hours',
+    label: 'Intervalo entre avisos',
+    description:
+      'Horas mínimas entre dois e-mails do mesmo alerta de preço, para não incomodar.',
+  },
+  'favorite.max_per_user': {
+    schema: positiveInt,
+    unit: 'count',
+    label: 'Favoritos por conta',
+    description: 'Máximo de postos favoritos por conta.',
+  },
+  'contributor.reliable_min_reports': {
+    schema: positiveInt,
+    unit: 'count',
+    label: 'Informes para "informante confiável"',
+    description:
+      'Informes aceitos para o selo "Informante confiável" (além de conta confiável e nenhum informe anulado nos últimos 90 dias).',
   },
   'claim.max_pending_per_user': {
     schema: positiveInt,

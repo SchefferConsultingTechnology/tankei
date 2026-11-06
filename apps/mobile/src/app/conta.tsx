@@ -1,13 +1,17 @@
 import { useState } from 'react';
+import { router } from 'expo-router';
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   Text,
   View,
 } from 'react-native';
 import { useAuth } from '@/auth/AuthProvider';
 import { googleErrorMessage } from '@/auth/google';
 import { Avatar } from '@/components/Avatar';
+import { CarProfileForm } from '@/components/CarProfileForm';
+import { ContributionCard } from '@/components/ContributionCard';
 import { ThemeChooser } from '@/components/ThemeChooser';
 import { createStyles, useTheme } from '@/appearance';
 import { fontSize, radius, spacing } from '@/theme';
@@ -42,7 +46,10 @@ export default function AccountScreen() {
 
   if (state.status === 'signedOut') {
     return (
-      <View style={styles.screen}>
+      <ScrollView
+        contentContainerStyle={styles.screen}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={styles.title}>Entre na sua conta</Text>
         <Text style={styles.muted}>
           Com a conta você informa preços e avalia os postos. Para consultar
@@ -62,15 +69,21 @@ export default function AccountScreen() {
         </Pressable>
         {error && <Text style={styles.error}>{error}</Text>}
         <View style={styles.appearance}>
+          <CarProfileForm />
+        </View>
+        <View style={styles.appearance}>
           <ThemeChooser />
         </View>
-      </View>
+      </ScrollView>
     );
   }
 
   const { user } = state;
   return (
-    <View style={styles.screen}>
+    <ScrollView
+      contentContainerStyle={styles.screen}
+      keyboardShouldPersistTaps="handled"
+    >
       <Avatar name={user.name} url={user.avatarUrl} size={72} />
       <Text style={styles.title}>{user.name ?? 'Sua conta'}</Text>
       {user.email && <Text style={styles.muted}>{user.email}</Text>}
@@ -79,6 +92,17 @@ export default function AccountScreen() {
           Gestor de: {user.managedStations.map((s) => s.name).join(', ')}
         </Text>
       )}
+      <ContributionCard />
+      <Pressable
+        style={styles.link}
+        onPress={() => router.push('/favoritos')}
+        accessibilityRole="button"
+      >
+        <Text style={styles.linkText}>Favoritos e alertas de preço</Text>
+      </Pressable>
+      <View style={styles.appearance}>
+        <CarProfileForm />
+      </View>
       <Pressable
         style={[styles.buttonOutline, busy && styles.disabled]}
         disabled={busy}
@@ -91,12 +115,14 @@ export default function AccountScreen() {
       <View style={styles.appearance}>
         <ThemeChooser />
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const useStyles = createStyles((colors) => ({
-  screen: { flex: 1, padding: spacing.xl, gap: spacing.md },
+  screen: { padding: spacing.xl, gap: spacing.md },
+  link: { paddingVertical: spacing.xs },
+  linkText: { color: colors.primary, fontSize: fontSize.md, fontWeight: '600' },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   title: { color: colors.text, fontSize: fontSize.xxl, fontWeight: '700' },
   muted: { color: colors.textMuted, fontSize: fontSize.md },

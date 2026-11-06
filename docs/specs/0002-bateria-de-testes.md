@@ -102,7 +102,19 @@ Conferir de ponta a ponta, no ambiente publicado (Render e Supabase) e no celula
 - [ ] **Oculto:** o posto some do mapa, da lista e da ficha. Voltar para Normal o traz de volta.
 - [ ] **Registro:** o histórico na ficha do admin mostra quem pediu, o motivo e quem decidiu.
 
-### 7. Portal e app em aparelhos reais
+### 7. Recursos do consumidor (ADR 0029)
+
+- [ ] **Calculadora:** abre preenchida, pela tela inicial e pela ficha; com e sem o consumo do carro; resultado coerente (etanol a 63% da gasolina: etanol).
+- [ ] **Meu carro:** tanque e consumo ficam salvos após fechar o app.
+- [ ] **Favoritos:** estrela na ficha, lista em Favoritos, em outro aparelho com a mesma conta.
+- [ ] **Alerta:**
+  - criar um alerta e baixar o preço (pelo portal) abaixo do valor; o e-mail chega;
+  - não repete no mesmo dia;
+  - apagar o alerta.
+- [ ] **Vale a pena:** aparece só com localização real; a conta faz sentido para um posto mais barato e mais longe.
+- [ ] **Sua contribuição:** os números batem com os preços informados; selo Iniciante numa conta nova.
+
+### 8. Portal e app em aparelhos reais
 
 - [ ] **Celulares:** portal no celular (Chrome Android e Safari iOS), em tema claro e escuro.
 - [ ] **App:**

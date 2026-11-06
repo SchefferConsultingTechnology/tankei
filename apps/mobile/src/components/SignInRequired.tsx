@@ -4,15 +4,18 @@ import { createStyles } from '@/appearance';
 import { fontSize, radius, spacing } from '@/theme';
 
 /** Tela de ação que exige conta: explica o motivo e leva ao login. */
-export function SignInRequired({ title }: { title: string }) {
+export function SignInRequired({
+  title,
+  message = 'Cada contribuição fica ligada a uma conta. Isso evita abusos e dá peso ao que é confirmado por mais de uma pessoa.',
+}: {
+  title: string;
+  message?: string;
+}) {
   const styles = useStyles();
   return (
     <View style={styles.screen}>
       <Text style={styles.title}>{title}</Text>
-      <Text style={styles.muted}>
-        Cada contribuição fica ligada a uma conta. Isso evita abusos e dá peso
-        ao que é confirmado por mais de uma pessoa.
-      </Text>
+      <Text style={styles.muted}>{message}</Text>
       <Pressable
         style={styles.button}
         onPress={() => router.push('/conta')}

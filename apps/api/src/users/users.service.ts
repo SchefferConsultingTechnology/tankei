@@ -8,9 +8,11 @@ import type { AddStationManager, Me } from '@tankei/shared';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import { DRIZZLE, type Database } from '../database/database.module';
 import {
+  favoriteStations,
   organizationMembers,
   organizationMemberStations,
   organizationStations,
+  priceAlerts,
   sessions,
   stationClaims,
   stationManagers,
@@ -77,6 +79,11 @@ export class UsersService {
         })
         .where(eq(users.id, userId));
       await tx.delete(userIdentities).where(eq(userIdentities.userId, userId));
+      // Favoritos e alertas (ADR 0029) são dados pessoais: saem com a conta.
+      await tx
+        .delete(favoriteStations)
+        .where(eq(favoriteStations.userId, userId));
+      await tx.delete(priceAlerts).where(eq(priceAlerts.userId, userId));
       await tx
         .delete(stationManagers)
         .where(eq(stationManagers.userId, userId));

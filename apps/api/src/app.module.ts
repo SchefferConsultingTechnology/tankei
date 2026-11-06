@@ -10,6 +10,7 @@ import { ZodValidationPipe } from './app.setup';
 import { AuthModule } from './auth/auth.module';
 import { ClaimsModule } from './claims/claims.module';
 import { DatabaseModule } from './database/database.module';
+import { EngagementModule } from './engagement/engagement.module';
 import { MailModule } from './mail/mail.module';
 import { ModerationModule } from './moderation/moderation.module';
 import { ParametersModule } from './parameters/parameters.module';
@@ -41,6 +42,7 @@ import { UsersModule } from './users/users.module';
     AdminModule,
     ModerationModule,
     ShowcaseModule,
+    EngagementModule,
   ],
   controllers: [AppController],
   providers: [

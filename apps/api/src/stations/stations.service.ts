@@ -145,6 +145,16 @@ export class StationsService {
     return station;
   }
 
+  /** Postos visíveis pelos ids, com preços e IQP, na ordem pedida. */
+  async findByIds(ids: string[]): Promise<Station[]> {
+    if (ids.length === 0) return [];
+    const rows = await this.selectStations()
+      .where(and(inArray(stations.id, ids), visibleStation()))
+      .groupBy(stations.id, municipalities.code);
+    const enriched = await this.enrich(rows);
+    return ids.flatMap((id) => enriched.filter((s) => s.id === id));
+  }
+
   /** Cidades da UF que têm postos ativos, em ordem alfabética (ADR 0014). */
   async findCities(state: string): Promise<CityWithStations[]> {
     const rows = await this.db

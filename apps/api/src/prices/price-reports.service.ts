@@ -216,6 +216,10 @@ export class PriceReportsService {
         .onConflictDoNothing();
     }
 
+    if (classification.status !== 'rejeitado') {
+      this.notifyPriceChange(stationId, request.fuelType);
+    }
+
     if (!isManager && classification.status !== 'rejeitado') {
       const stationName = stationDisplayName(
         station.tradeName,
@@ -594,6 +598,24 @@ export class PriceReportsService {
       atStation = meters <= (await this.parameters.get('price.near_station_m'));
     }
 
+    const { trusted } = await this.accountTrust(userId, now);
+
+    const awayWeight = await this.parameters.get('price.away_weight_pct');
+    return {
+      atStation,
+      trusted,
+      weight: reportWeight(trusted, atStation, awayWeight),
+    };
+  }
+
+  /**
+   * Confiança da conta (ADR 0024): idade e informes aceitos (válidos de
+   * consumidor e não anulados). Usado no peso e no selo de contribuição.
+   */
+  async accountTrust(
+    userId: string,
+    now = new Date(),
+  ): Promise<{ trusted: boolean; accepted: number; ageDays: number }> {
     const minDays = await this.parameters.get('price.trusted_min_account_days');
     const minAccepted = await this.parameters.get(
       'price.trusted_min_accepted_reports',
@@ -605,39 +627,51 @@ export class PriceReportsService {
     const ageDays = account
       ? (now.getTime() - account.createdAt.getTime()) / DAY_MS
       : 0;
-    let trusted = ageDays >= minDays;
-    if (trusted && minAccepted > 0) {
-      const annulled = this.db
-        .select({ id: priceModerationCaseReports.reportId })
-        .from(priceModerationCaseReports)
-        .innerJoin(
-          priceModerationDecisions,
-          eq(
-            priceModerationDecisions.caseId,
-            priceModerationCaseReports.caseId,
-          ),
-        )
-        .where(eq(priceModerationDecisions.decision, 'anulado'));
-      const [{ total }] = await this.db
-        .select({ total: count() })
-        .from(priceReports)
-        .where(
-          and(
-            eq(priceReports.reporterUserId, userId),
-            eq(priceReports.source, 'usuario'),
-            eq(priceReports.status, 'valido'),
-            notInArray(priceReports.id, annulled),
-          ),
-        );
-      trusted = total >= minAccepted;
-    }
-
-    const awayWeight = await this.parameters.get('price.away_weight_pct');
+    const annulled = this.db
+      .select({ id: priceModerationCaseReports.reportId })
+      .from(priceModerationCaseReports)
+      .innerJoin(
+        priceModerationDecisions,
+        eq(priceModerationDecisions.caseId, priceModerationCaseReports.caseId),
+      )
+      .where(eq(priceModerationDecisions.decision, 'anulado'));
+    const [{ total }] = await this.db
+      .select({ total: count() })
+      .from(priceReports)
+      .where(
+        and(
+          eq(priceReports.reporterUserId, userId),
+          eq(priceReports.source, 'usuario'),
+          eq(priceReports.status, 'valido'),
+          notInArray(priceReports.id, annulled),
+        ),
+      );
     return {
-      atStation,
-      trusted,
-      weight: reportWeight(trusted, atStation, awayWeight),
+      trusted: ageDays >= minDays && total >= minAccepted,
+      accepted: total,
+      ageDays,
     };
+  }
+
+  /** Quem quer saber quando o preço de um posto pode ter mudado (alertas). */
+  private readonly changeListeners: ((
+    stationId: string,
+    fuelType: FuelType,
+  ) => void)[] = [];
+
+  onPriceChange(listener: (stationId: string, fuelType: FuelType) => void) {
+    this.changeListeners.push(listener);
+  }
+
+  /** Avisa os interessados (em segundo plano; erro não afeta o informe). */
+  notifyPriceChange(stationId: string, fuelType: FuelType): void {
+    for (const listener of this.changeListeners) {
+      try {
+        listener(stationId, fuelType);
+      } catch {
+        // O ouvinte trata e registra os próprios erros.
+      }
+    }
   }
 
   /**

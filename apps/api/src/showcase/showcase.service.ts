@@ -224,6 +224,9 @@ export class ShowcaseService {
       );
       return row;
     });
+    for (const price of checked) {
+      this.prices.notifyPriceChange(stationId, price.fuelType);
+    }
     const [promotion] = await this.toPromotions([created], now);
     return promotion;
   }

@@ -1,4 +1,4 @@
-import { FUEL_TYPES } from '@tankei/shared';
+import { FUEL_TYPES, type FuelType } from '@tankei/shared';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useMemo, useState } from 'react';
@@ -82,6 +82,14 @@ export default function HomeScreen() {
     ? (cityStations.data?.center ?? PILOT_CITY_CENTER)
     : location.coords;
   const fuels = availableFuels(all, FUEL_TYPES);
+  /** Menor preço da região, para abrir a calculadora já preenchida. */
+  const cheapest = (fuelType: FuelType) => {
+    const prices = all.flatMap((s) => {
+      const p = s.prices.find((x) => x.fuelType === fuelType);
+      return p ? [p.price] : [];
+    });
+    return prices.length > 0 ? Math.min(...prices) : undefined;
+  };
   if (!fuels.includes(fuel)) fuels.unshift(fuel);
 
   // Some sozinho quando o posto sai da busca (outra cidade ou outro lugar).
@@ -169,29 +177,56 @@ export default function HomeScreen() {
           <FuelPicker fuels={fuels} selected={fuel} onSelect={setFuel} />
         </View>
         <ViewModeSwitch mode={mode} onChange={setMode} />
+        <View style={styles.chips}>
         {(promotionCount > 0 || onlyPromotions) && (
+            <Pressable
+              onPress={() => setOnlyPromotions((value) => !value)}
+              style={[styles.promoChip, onlyPromotions && styles.promoChipActive]}
+              accessibilityRole="switch"
+              accessibilityState={{ checked: onlyPromotions }}
+              accessibilityLabel={`Só postos com promoção (${promotionCount})`}
+            >
+              <SymbolView
+                name={{ ios: 'tag.fill', android: 'sell', web: 'sell' }}
+                size={16}
+                tintColor={onlyPromotions ? colors.surface : badgeColors.promocao}
+              />
+              <Text
+                style={[
+                  styles.promoChipText,
+                  onlyPromotions && styles.promoChipTextActive,
+                ]}
+              >
+                Só promoções ({promotionCount})
+              </Text>
+            </Pressable>
+          )}
           <Pressable
-            onPress={() => setOnlyPromotions((value) => !value)}
-            style={[styles.promoChip, onlyPromotions && styles.promoChipActive]}
-            accessibilityRole="switch"
-            accessibilityState={{ checked: onlyPromotions }}
-            accessibilityLabel={`Só postos com promoção (${promotionCount})`}
+            onPress={() =>
+              router.push({
+                pathname: '/calculadora',
+                params: {
+                  ...(cheapest('etanol') && {
+                    etanol: String(cheapest('etanol')),
+                  }),
+                  ...(cheapest('gasolina_comum') && {
+                    gasolina: String(cheapest('gasolina_comum')),
+                  }),
+                },
+              })
+            }
+            style={styles.toolChip}
+            accessibilityRole="button"
+            accessibilityLabel="Etanol ou gasolina? Abrir a calculadora"
           >
             <SymbolView
-              name={{ ios: 'tag.fill', android: 'sell', web: 'sell' }}
+              name={{ ios: 'function', android: 'calculate', web: 'calculate' }}
               size={16}
-              tintColor={onlyPromotions ? colors.surface : badgeColors.promocao}
+              tintColor={colors.primary}
             />
-            <Text
-              style={[
-                styles.promoChipText,
-                onlyPromotions && styles.promoChipTextActive,
-              ]}
-            >
-              Só promoções ({promotionCount})
-            </Text>
+            <Text style={styles.toolChipText}>Etanol ou gasolina?</Text>
           </Pressable>
-        )}
+        </View>
         {!city && location.status === 'denied' && (
           <Text style={styles.notice}>
             Não foi possível obter sua localização: mostrando o centro de
@@ -224,12 +259,32 @@ function Centered({ children }: { children: React.ReactNode }) {
 
 const useStyles = createStyles((colors, badgeColors) => ({
   screen: { flex: 1 },
+  chips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+  },
+  toolChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.pill,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  toolChipText: {
+    color: colors.primary,
+    fontSize: fontSize.sm,
+    fontWeight: '700',
+  },
   promoChip: {
     alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    marginHorizontal: spacing.lg,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs + 2,
     borderRadius: radius.pill,

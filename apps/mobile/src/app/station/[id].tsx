@@ -24,7 +24,11 @@ import {
   useStationIqp,
   useStationShowcase,
 } from '@/api/queries';
+import { useFavorites, useToggleFavorite } from '@/api/engagement';
+import { useAuth } from '@/auth/AuthProvider';
+import { DetourSavingsCard } from '@/components/DetourSavings';
 import { IqpGauge } from '@/components/IqpGauge';
+import { useFuelPreference } from '@/hooks/useFuelPreference';
 import { PriceTag } from '@/components/PriceTag';
 import {
   StationPhotos,
@@ -43,6 +47,7 @@ export default function StationScreen() {
   const station = useStation(id);
   const iqp = useStationIqp(id);
   const showcase = useStationShowcase(id);
+  const [fuel] = useFuelPreference();
   const promotions = showcase.data?.promotions ?? [];
   const photos = showcase.data?.photos ?? [];
   const bottomPadding = useBottomPadding();
@@ -65,7 +70,12 @@ export default function StationScreen() {
   const data = station.data;
   return (
     <ScrollView contentContainerStyle={[styles.content, bottomPadding]}>
-      <Stack.Screen options={{ title: data.name }} />
+      <Stack.Screen
+        options={{
+          title: data.name,
+          headerRight: () => <FavoriteButton stationId={data.id} />,
+        }}
+      />
 
       <View style={styles.section}>
         <Text style={styles.title}>{data.name}</Text>
@@ -123,12 +133,40 @@ export default function StationScreen() {
           );
         })}
         {data.mode !== 'precos_ocultos' && (
-          <SecondaryButton
-            label="Informar preço"
-            onPress={() =>
-              router.push({ pathname: '/station/[id]/preco', params: { id } })
-            }
-          />
+          <>
+            <DetourSavingsCard
+              station={data}
+              fuel={data.fuels.includes(fuel) ? fuel : (data.fuels[0] ?? fuel)}
+            />
+            <SecondaryButton
+              label="Informar preço"
+              onPress={() =>
+                router.push({ pathname: '/station/[id]/preco', params: { id } })
+              }
+            />
+            <View style={styles.actions}>
+              <LinkButton
+                label="Avisar quando baixar"
+                onPress={() =>
+                  router.push({ pathname: '/station/[id]/alerta', params: { id } })
+                }
+              />
+              {priceFor(data, 'etanol') && priceFor(data, 'gasolina_comum') && (
+                <LinkButton
+                  label="Etanol ou gasolina?"
+                  onPress={() =>
+                    router.push({
+                      pathname: '/calculadora',
+                      params: {
+                        etanol: String(priceFor(data, 'etanol')!.price),
+                        gasolina: String(priceFor(data, 'gasolina_comum')!.price),
+                      },
+                    })
+                  }
+                />
+              )}
+            </View>
+          </>
         )}
       </View>
 
@@ -301,6 +339,59 @@ function PrimaryButton({
   );
 }
 
+/** Estrela no cabeçalho: favorita ou desfavorita (com conta). */
+function FavoriteButton({ stationId }: { stationId: string }) {
+  const { colors } = useTheme();
+  const { state } = useAuth();
+  const favorites = useFavorites();
+  const toggle = useToggleFavorite();
+  const favorite = favorites.data?.some((s) => s.id === stationId) ?? false;
+  return (
+    <Pressable
+      onPress={() =>
+        state.status === 'signedIn'
+          ? toggle.mutate({ stationId, favorite: !favorite })
+          : router.push('/conta')
+      }
+      disabled={toggle.isPending}
+      hitSlop={10}
+      accessibilityRole="button"
+      accessibilityState={{ selected: favorite }}
+      accessibilityLabel={favorite ? 'Tirar dos favoritos' : 'Adicionar aos favoritos'}
+    >
+      <SymbolView
+        name={{
+          ios: favorite ? 'star.fill' : 'star',
+          android: favorite ? 'star' : 'star_outline',
+          web: favorite ? 'star' : 'star_outline',
+        }}
+        size={24}
+        tintColor={favorite ? colors.star : colors.text}
+      />
+    </Pressable>
+  );
+}
+
+function LinkButton({
+  label,
+  onPress,
+}: {
+  label: string;
+  onPress: () => void;
+}) {
+  const styles = useStyles();
+  return (
+    <Pressable
+      style={styles.link}
+      onPress={onPress}
+      accessibilityRole="button"
+      hitSlop={6}
+    >
+      <Text style={styles.linkText}>{label}</Text>
+    </Pressable>
+  );
+}
+
 function SecondaryButton({
   label,
   onPress,
@@ -353,6 +444,14 @@ const useStyles = createStyles((colors, badgeColors) => ({
     padding: spacing.sm,
   },
   note: { color: colors.warning, fontSize: fontSize.sm, fontWeight: '600' },
+  actions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  link: { paddingVertical: spacing.xs },
+  linkText: { color: colors.primary, fontSize: fontSize.md, fontWeight: '600' },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   priceInfo: { flex: 1, gap: 2 },
   scoreRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },

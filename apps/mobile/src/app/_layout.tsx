@@ -1,10 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { SymbolView } from 'expo-symbols';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, Text } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
 import { Avatar } from '@/components/Avatar';
 import { PlaceProvider } from '@/place';
@@ -14,6 +15,35 @@ import {
   useTheme,
 } from '@/appearance';
 import { fontSize, spacing } from '@/theme';
+
+function HeaderActions() {
+  const styles = useStyles();
+  return (
+    <View style={styles.headerActions}>
+      <FavoritesButton />
+      <AccountButton />
+    </View>
+  );
+}
+
+/** Favoritos e alertas (ADR 0029), ao lado da conta. */
+function FavoritesButton() {
+  const { colors } = useTheme();
+  return (
+    <Pressable
+      onPress={() => router.push('/favoritos')}
+      hitSlop={spacing.sm}
+      accessibilityRole="button"
+      accessibilityLabel="Favoritos e alertas"
+    >
+      <SymbolView
+        name={{ ios: 'star', android: 'star_outline', web: 'star_outline' }}
+        size={24}
+        tintColor={colors.primary}
+      />
+    </Pressable>
+  );
+}
 
 /** Atalho para a conta no cabeçalho: "Entrar", ou a foto e o primeiro nome. */
 function AccountButton() {
@@ -104,7 +134,7 @@ function App() {
               options={{
                 title: 'Postos e preços',
                 headerTitle: () => <HeaderLogo />,
-                headerRight: () => <AccountButton />,
+                headerRight: () => <HeaderActions />,
               }}
             />
             <Stack.Screen name="station/[id]" options={{ title: 'Posto' }} />
@@ -116,6 +146,15 @@ function App() {
               name="station/[id]/avaliar"
               options={{ title: 'Avaliar posto', presentation: 'modal' }}
             />
+            <Stack.Screen
+              name="station/[id]/alerta"
+              options={{ title: 'Alerta de preço', presentation: 'modal' }}
+            />
+            <Stack.Screen
+              name="calculadora"
+              options={{ title: 'Etanol ou gasolina?' }}
+            />
+            <Stack.Screen name="favoritos" options={{ title: 'Favoritos' }} />
             <Stack.Screen
               name="cidade"
               options={{ title: 'Escolher cidade', presentation: 'modal' }}
@@ -132,6 +171,7 @@ function App() {
 }
 
 const useStyles = createStyles((colors) => ({
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
   accountButton: {
     flexDirection: 'row',
     alignItems: 'center',

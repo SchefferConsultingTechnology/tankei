@@ -243,6 +243,34 @@ export function claimDecidedMail(input: {
   );
 }
 
+// ---------- Alertas do consumidor (ADR 0029) ----------
+
+export function priceAlertMail(input: {
+  stationName: string;
+  fuelLabel: string;
+  price: number;
+  maxPrice: number;
+  address: string;
+}): MailMessage {
+  return layout(
+    `${input.fuelLabel} a ${formatMoney(input.price)} em ${input.stationName}`,
+    [
+      p(
+        `${e(input.fuelLabel)} está a <strong>${e(formatMoney(input.price))}</strong> em <strong>${e(input.stationName)}</strong> (${e(input.address)}).`,
+        `${input.fuelLabel} está a ${formatMoney(input.price)} em ${input.stationName} (${input.address}).`,
+      ),
+      p(
+        `Você pediu para ser avisado quando o preço ficasse em até ${e(formatMoney(input.maxPrice))}. Os preços mudam ao longo do dia: confira no app antes de ir.`,
+        `Você pediu para ser avisado quando o preço ficasse em até ${formatMoney(input.maxPrice)}. Os preços mudam ao longo do dia: confira no app antes de ir.`,
+      ),
+      p(
+        'Para parar de receber, apague o alerta em Favoritos, no app.',
+        'Para parar de receber, apague o alerta em Favoritos, no app.',
+      ),
+    ],
+  );
+}
+
 // ---------- Preços (ADR 0020 e 0024) ----------
 
 export function divergenceMail(input: {

@@ -148,6 +148,13 @@
       "when": 1793992288568,
       "tag": "0020_station_display_mode",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793995424070,
+      "tag": "0021_favorites_and_alerts",
+      "breakpoints": true
     }
   ]
 }
