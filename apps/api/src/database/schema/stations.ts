@@ -10,7 +10,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { fuelTypeEnum, locationSourceEnum } from './enums';
+import { fuelTypeEnum, locationSourceEnum, stationModeEnum } from './enums';
 import { municipalities } from './municipalities';
 
 /**
@@ -40,6 +40,8 @@ export const stations = pgTable(
     locationSource: locationSourceEnum(),
     locationValidated: boolean().notNull().default(false),
     active: boolean().notNull().default(true),
+    // Modo de exibição atual (ADR 0028); o histórico fica em station_mode_changes.
+    displayMode: stationModeEnum().notNull().default('normal'),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true })
       .notNull()

@@ -33,7 +33,11 @@ import {
 } from '@tankei/shared';
 import { useState, type FormEvent } from 'react';
 import { Link as RouterLink } from 'react-router';
-import { useDecideModeration, useModeration } from '../api/admin-queries';
+import {
+  useDecideModeration,
+  useModeration,
+  useOfficialDivergences,
+} from '../api/admin-queries';
 import { errorText, formatDateTime, useMobile } from '../components/hooks';
 import { Notice } from '../components/Notice';
 import { PageHeader } from '../components/PageHeader';
@@ -62,6 +66,7 @@ function account(r: ModerationReport) {
 export function ModerationPage() {
   const [view, setView] = useState<View>('em_analise');
   const cases = useModeration(view);
+  const official = useOfficialDivergences();
   const open = useModeration('em_analise');
   const [deciding, setDeciding] = useState<{
     item: AdminModerationCase;
@@ -75,6 +80,28 @@ export function ModerationPage() {
         title="Moderação de preços"
         subtitle="Contestações dos postos e rajadas detectadas. Enquanto um caso está em análise, os informes não contam no preço do app."
       />
+      {official.data && official.data.length > 0 && (
+        <Alert severity="warning">
+          <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.5 }}>
+            Preço oficial com divergência há mais de um prazo de resposta
+          </Typography>
+          {official.data.map((d) => (
+            <Typography key={`${d.station.id}-${d.fuelType}`} variant="body2">
+              <Link component={RouterLink} to={`/postos/${d.station.id}`}>
+                {d.station.name}
+              </Link>{' '}
+              ({d.station.city}/{d.station.state}) · {FUEL_LABELS[d.fuelType]}:
+              posto R$ {formatPrice(d.stationPrice)}, consumidores R${' '}
+              {formatPrice(d.consumerPrice)} desde {formatDateTime(d.since)}
+            </Typography>
+          ))}
+          <Typography variant="caption" sx={{ display: 'block', mt: 0.5 }}>
+            Confira com o posto. Se ele informa preço falso, tire o modo
+            &quot;Preço oficial&quot; na ficha do posto.
+          </Typography>
+        </Alert>
+      )}
+
       <Tabs
         value={view}
         onChange={(_, value: View) => setView(value)}

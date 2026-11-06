@@ -112,6 +112,7 @@ export class PriceReportsService {
       .select({
         id: stations.id,
         state: stations.state,
+        displayMode: stations.displayMode,
         tradeName: stations.tradeName,
         legalName: stations.legalName,
         latitude: sql<number | null>`ST_Y(${stations.location})`,
@@ -119,7 +120,15 @@ export class PriceReportsService {
       })
       .from(stations)
       .where(and(eq(stations.id, stationId), eq(stations.active, true)));
-    if (!station) throw new NotFoundException('Posto não encontrado.');
+    if (!station || station.displayMode === 'oculto') {
+      throw new NotFoundException('Posto não encontrado.');
+    }
+    // Preços ocultos pela administração (ADR 0028): ninguém informa.
+    if (station.displayMode === 'precos_ocultos') {
+      throw new UnprocessableEntityException(
+        'Os preços deste posto não são exibidos no Tankei.',
+      );
+    }
 
     // Equipe do posto (ADR 0021): com permissão, o informe é "do posto";
     // sem ela (somente leitura), não informa, para não pesar como consumidor.
@@ -249,6 +258,15 @@ export class PriceReportsService {
     if (stationIds.length === 0) return result;
     // Em moderação ou anulados não contam (ADR 0020).
     const excluded = await excludedReportIds(this.db, stationIds);
+    // Modo de exibição de cada posto (ADR 0028).
+    const modes = new Map(
+      (
+        await this.db
+          .select({ id: stations.id, mode: stations.displayMode })
+          .from(stations)
+          .where(inArray(stations.id, stationIds))
+      ).map((m) => [m.id, m.mode]),
+    );
 
     const params = await this.displayParams();
     const since = new Date(now.getTime() - params.hideAfterDays * DAY_MS);
@@ -278,7 +296,13 @@ export class PriceReportsService {
       const prices: CurrentPrice[] = [];
       for (const fuelType of FUEL_TYPES) {
         const reports = groups.get(`${stationId}|${fuelType}`);
-        const current = reports && computeCurrentPrice(reports, now, params);
+        const mode = modes.get(stationId);
+        if (mode === 'precos_ocultos' || mode === 'oculto') continue;
+        const current =
+          reports &&
+          computeCurrentPrice(reports, now, params, {
+            officialPrice: mode === 'preco_oficial',
+          });
         if (!current) continue;
         prices.push({
           fuelType,

@@ -10,6 +10,7 @@ import {
   type NearbyQuery,
   type NearbyStation,
   type Station,
+  type StationMode,
 } from '@tankei/shared';
 import {
   and,
@@ -21,6 +22,7 @@ import {
   isNotNull,
   isNull,
   lte,
+  ne,
   or,
   sql,
 } from 'drizzle-orm';
@@ -54,11 +56,17 @@ const stationColumns = {
   municipalityName: municipalities.name,
   state: stations.state,
   location: stations.location,
+  displayMode: stations.displayMode,
   // text[] porque o driver pg não converte arrays de enum.
   fuels: sql<
     FuelType[]
   >`coalesce(array_agg(${stationFuels.fuelType}::text order by ${stationFuels.fuelType}) filter (where ${stationFuels.fuelType} is not null), '{}')`,
 };
+
+/** Ativo na ANP e não oculto pela administração (ADR 0028). */
+function visibleStation() {
+  return and(eq(stations.active, true), ne(stations.displayMode, 'oculto'));
+}
 
 interface StationRow {
   id: string;
@@ -71,6 +79,7 @@ interface StationRow {
   municipalityName: string | null;
   state: string;
   location: { x: number; y: number } | null;
+  displayMode: StationMode;
   fuels: FuelType[];
 }
 
@@ -101,7 +110,7 @@ export class StationsService {
       )
       .where(
         and(
-          eq(stations.active, true),
+          visibleStation(),
           isNotNull(stations.location),
           // ST_DWithin usa o índice stations_location_geography_idx.
           sql`ST_DWithin(${location}, ${origin}, ${query.radius})`,
@@ -128,7 +137,7 @@ export class StationsService {
   /** Posto ativo com preços vigentes e resumo do IQP. */
   async findById(id: string): Promise<Station> {
     const rows = await this.selectStations()
-      .where(and(eq(stations.id, id), eq(stations.active, true)))
+      .where(and(eq(stations.id, id), visibleStation()))
       .groupBy(stations.id, municipalities.code);
     if (rows.length === 0) throw new NotFoundException('Posto não encontrado.');
 
@@ -150,7 +159,7 @@ export class StationsService {
         stations,
         and(
           eq(stations.municipalityCode, municipalities.code),
-          eq(stations.active, true),
+          visibleStation(),
         ),
       )
       .where(eq(municipalities.state, state))
@@ -180,7 +189,7 @@ export class StationsService {
       .where(
         and(
           eq(stations.municipalityCode, query.municipality),
-          eq(stations.active, true),
+          visibleStation(),
         ),
       )
       .groupBy(stations.id, municipalities.code);
@@ -255,10 +264,15 @@ export class StationsService {
         ? { lat: row.location.y, lng: row.location.x }
         : null,
       fuels: row.fuels,
-      prices: prices.get(row.id) ?? [],
+      // Preços ocultos (ADR 0028): sem preços nem promoções no app.
+      prices:
+        row.displayMode === 'precos_ocultos' ? [] : (prices.get(row.id) ?? []),
+      mode: row.displayMode === 'oculto' ? 'normal' : row.displayMode,
       iqp: this.iqp.summary(iqpScores.get(row.id)),
       activePromotions: promotionRows
-        .filter((p) => p.stationId === row.id)
+        .filter(
+          (p) => p.stationId === row.id && row.displayMode !== 'precos_ocultos',
+        )
         .map((p) => ({
           id: p.id,
           title: p.title,

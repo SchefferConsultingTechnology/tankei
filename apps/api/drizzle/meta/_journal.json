@@ -141,6 +141,13 @@
       "when": 1793983722236,
       "tag": "0019_claim_disputes",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1793992288568,
+      "tag": "0020_station_display_mode",
+      "breakpoints": true
     }
   ]
 }

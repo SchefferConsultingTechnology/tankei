@@ -71,6 +71,19 @@ export function PricesTab({
       <Typography variant="h6" component="h2" sx={{ fontWeight: 700 }}>
         Preços atuais
       </Typography>
+      {station.mode === 'preco_oficial' && (
+        <Alert severity="info">
+          Seu posto está em <strong>preço oficial</strong>: o preço que você
+          informa sempre vale no app. Informes de consumidores diferentes
+          aparecem como aviso, e a equipe Tankei acompanha divergências
+          persistentes.
+        </Alert>
+      )}
+      {station.mode === 'precos_ocultos' && (
+        <Alert severity="warning">
+          A pedido, os preços deste posto não são exibidos no Tankei.
+        </Alert>
+      )}
 
       {fuels.flatMap((fuel) => {
         const price = priceOf(fuel);
@@ -87,10 +100,9 @@ export function PricesTab({
               {formatPrice(divergence.price)}
             </Typography>
             <Typography variant="body2">
-              O app continua mostrando o seu preço (R$ {formatPrice(price.price)}
-              ) com esse aviso. Reconfirme ou conteste{' '}
-              {formatUntil(divergence.respondBy)}; sem resposta, o valor dos
-              consumidores passa a valer.
+              {station.mode === 'preco_oficial'
+                ? `O app continua mostrando o seu preço (R$ ${formatPrice(price.price)}), que é oficial: o aviso dos consumidores aparece junto. Se o seu preço está certo, reconfirme; se não, corrija.`
+                : `O app continua mostrando o seu preço (R$ ${formatPrice(price.price)}) com esse aviso. Reconfirme ou conteste ${formatUntil(divergence.respondBy)}; sem resposta, o valor dos consumidores passa a valer.`}
             </Typography>
             {(canUpdate || canContest) && (
               <Stack

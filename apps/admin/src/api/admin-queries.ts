@@ -12,10 +12,12 @@ import {
   adminParameterSchema,
   adminStationSchema,
   adminStationSummarySchema,
+  officialDivergenceSchema,
   parameterChangeSchema,
   type AdminUpdateMember,
   type ModerationDecision,
   type ParameterKey,
+  type SetStationMode,
 } from '@tankei/shared';
 import { z } from 'zod';
 import { authorizedRequest } from './session';
@@ -257,5 +259,31 @@ export function useSetStationNetwork(stationId: string) {
         queryClient.invalidateQueries({ queryKey: ['stations'] }),
         queryClient.invalidateQueries({ queryKey: ['networks'] }),
       ]),
+  });
+}
+
+// ---------- Modo de exibição (ADR 0028) ----------
+
+export function useSetStationMode(stationId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: SetStationMode) =>
+      authorizedRequest(`/admin/stations/${stationId}/mode`, adminStationSchema, {
+        method: 'PATCH',
+        body,
+      }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['stations'] }),
+  });
+}
+
+export function useOfficialDivergences() {
+  return useQuery({
+    queryKey: ['official-divergences'],
+    queryFn: () =>
+      authorizedRequest(
+        '/admin/official-divergences',
+        z.array(officialDivergenceSchema),
+      ),
   });
 }

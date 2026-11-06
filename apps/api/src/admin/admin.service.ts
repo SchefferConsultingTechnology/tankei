@@ -1,11 +1,20 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  modeNeedsHideReason,
   ORG_ROLE_LABELS,
   type AdminNetwork,
   type AdminNetworkSummary,
   type AdminStation,
   type AdminStationSummary,
   type NetworkEvent,
+  type OfficialDivergence,
+  type SetStationMode,
+  type StationMode,
   type OrgRole,
 } from '@tankei/shared';
 import {
@@ -29,9 +38,11 @@ import {
   stationClaimDecisions,
   stationClaims,
   stationManagers,
+  stationModeChanges,
   stations,
   users,
 } from '../database/schema';
+import { PriceReportsService } from '../prices/price-reports.service';
 import { OrganizationsService } from '../organizations/organizations.service';
 import {
   brandDisplayName,
@@ -53,6 +64,7 @@ const summaryColumns = {
   city: stations.city,
   state: stations.state,
   active: stations.active,
+  mode: stations.displayMode,
   networkId: organizations.id,
   networkName: organizations.name,
 };
@@ -66,6 +78,7 @@ type SummaryRow = {
   city: string;
   state: string;
   active: boolean;
+  mode: StationMode;
   networkId: string | null;
   networkName: string | null;
 };
@@ -80,6 +93,7 @@ function toSummary(row: SummaryRow): AdminStationSummary {
     city: cityDisplayName(row.city),
     state: row.state,
     active: row.active,
+    mode: row.mode,
     network:
       row.networkId && row.networkName
         ? { id: row.networkId, name: row.networkName }
@@ -101,6 +115,7 @@ export class AdminService {
   constructor(
     @Inject(DRIZZLE) private readonly db: Database,
     private readonly organizations: OrganizationsService,
+    private readonly prices: PriceReportsService,
   ) {}
 
   // ---------- Postos ----------
@@ -185,7 +200,113 @@ export class AdminService {
         verifiedAt: m.verifiedAt?.toISOString() ?? null,
       })),
       pendingClaims: pending?.total ?? 0,
+      modeHistory: await this.modeHistory(stationId),
     };
+  }
+
+  // ---------- Modo de exibição (ADR 0028) ----------
+
+  /**
+   * Muda o modo de exibição do posto, a pedido dele, com registro. "Preço
+   * oficial" só para posto com rede (cliente).
+   */
+  async setStationMode(
+    adminId: string,
+    stationId: string,
+    body: SetStationMode,
+  ): Promise<AdminStation> {
+    const [row] = await this.stationQuery().where(eq(stations.id, stationId));
+    if (!row) throw new NotFoundException('Posto não encontrado.');
+    if (row.mode === body.mode) {
+      throw new BadRequestException('O posto já está neste modo.');
+    }
+    if (body.mode === 'preco_oficial' && !row.networkId) {
+      throw new BadRequestException(
+        'Preço oficial é só para posto com rede no portal (cliente).',
+      );
+    }
+    await this.db.transaction(async (tx) => {
+      await tx
+        .update(stations)
+        .set({ displayMode: body.mode })
+        .where(eq(stations.id, stationId));
+      await tx.insert(stationModeChanges).values({
+        stationId,
+        mode: body.mode,
+        hideReason: modeNeedsHideReason(body.mode) ? body.hideReason : null,
+        requestedBy: body.requestedBy,
+        reason: body.reason,
+        decidedByUserId: adminId,
+      });
+    });
+    return this.station(stationId);
+  }
+
+  /**
+   * Postos em "preço oficial" com divergência além do prazo: a equipe confere
+   * se o posto informa preço falso e, se for o caso, tira o modo.
+   */
+  async officialDivergences(now = new Date()): Promise<OfficialDivergence[]> {
+    const rows = await this.db
+      .select({
+        id: stations.id,
+        tradeName: stations.tradeName,
+        legalName: stations.legalName,
+        city: stations.city,
+        state: stations.state,
+      })
+      .from(stations)
+      .where(eq(stations.displayMode, 'preco_oficial'));
+    if (rows.length === 0) return [];
+    const prices = await this.prices.currentPrices(
+      rows.map((r) => r.id),
+      now,
+    );
+    return rows.flatMap((r) =>
+      (prices.get(r.id) ?? []).flatMap((p) =>
+        p.divergence && new Date(p.divergence.respondBy) <= now
+          ? [
+              {
+                station: {
+                  id: r.id,
+                  name: stationDisplayName(r.tradeName, r.legalName),
+                  city: cityDisplayName(r.city),
+                  state: r.state,
+                },
+                fuelType: p.fuelType,
+                stationPrice: p.price,
+                consumerPrice: p.divergence.price,
+                since: p.divergence.reportedAt,
+              },
+            ]
+          : [],
+      ),
+    );
+  }
+
+  private async modeHistory(stationId: string) {
+    const rows = await this.db
+      .select({
+        mode: stationModeChanges.mode,
+        hideReason: stationModeChanges.hideReason,
+        requestedBy: stationModeChanges.requestedBy,
+        reason: stationModeChanges.reason,
+        createdAt: stationModeChanges.createdAt,
+        name: users.name,
+        email: users.email,
+      })
+      .from(stationModeChanges)
+      .leftJoin(users, eq(users.id, stationModeChanges.decidedByUserId))
+      .where(eq(stationModeChanges.stationId, stationId))
+      .orderBy(desc(stationModeChanges.createdAt));
+    return rows.map((r) => ({
+      mode: r.mode,
+      hideReason: r.hideReason,
+      requestedBy: r.requestedBy,
+      reason: r.reason,
+      decidedBy: r.name ?? r.email,
+      createdAt: r.createdAt.toISOString(),
+    }));
   }
 
   // ---------- Redes ----------

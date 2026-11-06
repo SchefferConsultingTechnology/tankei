@@ -17,6 +17,9 @@ import {
   adminNetworkSummarySchema,
   adminRemoveMemberSchema,
   adminStationNetworkSchema,
+  officialDivergenceSchema,
+  setStationModeSchema,
+  type OfficialDivergence,
   adminStationSchema,
   adminStationSearchSchema,
   adminStationSummarySchema,
@@ -43,6 +46,8 @@ class AdminUpdateMemberDto extends createZodDto(adminUpdateMemberSchema) {}
 class AdminRemoveMemberDto extends createZodDto(adminRemoveMemberSchema) {}
 class RenameNetworkDto extends createZodDto(renameOrganizationSchema) {}
 class AdminStationNetworkDto extends createZodDto(adminStationNetworkSchema) {}
+class SetStationModeDto extends createZodDto(setStationModeSchema) {}
+class OfficialDivergenceDto extends createZodDto(officialDivergenceSchema) {}
 
 const uuid = (message: string) =>
   new ParseUUIDPipe({
@@ -85,6 +90,21 @@ export class AdminStationsController {
       body.networkId,
       body.reason,
     );
+  }
+
+  @Patch(':stationId/mode')
+  @ZodResponse({
+    status: 200,
+    type: AdminStationDto,
+    description:
+      'Muda como o posto aparece no app, a pedido dele, com registro (ADR 0028).',
+  })
+  setMode(
+    @Param('stationId', uuid('Posto inválido.')) stationId: string,
+    @Body() body: SetStationModeDto,
+    @CurrentUser() admin: AuthenticatedUser,
+  ): Promise<AdminStation> {
+    return this.admin.setStationMode(admin.id, stationId, body);
   }
 
   @Get(':stationId')
@@ -169,5 +189,20 @@ export class AdminNetworksController {
       userId,
       body.reason,
     );
+  }
+}
+
+/** Postos em "preço oficial" com divergência além do prazo (ADR 0028). */
+@ApiTags('Administração')
+@ApiBearerAuth()
+@Roles('admin')
+@Controller('admin/official-divergences')
+export class AdminOfficialDivergencesController {
+  constructor(private readonly admin: AdminService) {}
+
+  @Get()
+  @ZodResponse({ status: 200, type: [OfficialDivergenceDto] })
+  list(): Promise<OfficialDivergence[]> {
+    return this.admin.officialDivergences();
   }
 }

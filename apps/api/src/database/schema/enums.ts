@@ -5,11 +5,13 @@ import {
   FUEL_TYPES,
   IQP_CONFIDENCE_LEVELS,
   MANAGER_ROLES,
+  HIDE_REASONS,
   MODERATION_DECISIONS,
   MODERATION_KINDS,
   ORG_ROLES,
   ORG_SCOPES,
   PRICE_SOURCES,
+  STATION_MODES,
   USER_ROLES,
   VERIFICATION_METHODS,
 } from '@tankei/shared';
@@ -70,3 +72,8 @@ export const moderationDecisionEnum = pgEnum(
   'moderation_decision',
   MODERATION_DECISIONS,
 );
+
+/** Como o posto aparece no app (ADR 0028). */
+export const stationModeEnum = pgEnum('station_mode', STATION_MODES);
+
+export const hideReasonEnum = pgEnum('hide_reason', HIDE_REASONS);

@@ -17,6 +17,7 @@ import { Link, useSearchParams } from 'react-router';
 import { useStationSearch } from '../api/admin-queries';
 import { useDebounced } from '../components/hooks';
 import { PageHeader } from '../components/PageHeader';
+import { ModeChip } from '../components/StationModeSection';
 
 /** Busca de postos por CNPJ, nome ou cidade. A busca fica no endereço. */
 export function StationsPage() {
@@ -84,6 +85,7 @@ export function StationsPage() {
                       </Typography>
                     </Box>
                     <Stack direction="row" spacing={1}>
+                      {s.mode !== 'normal' && <ModeChip mode={s.mode} />}
                       {!s.active && (
                         <Chip size="small" color="warning" label="Inativo" />
                       )}

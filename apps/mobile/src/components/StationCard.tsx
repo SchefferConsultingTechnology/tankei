@@ -73,11 +73,13 @@ export function StationCard({ station, fuel, onPress, style }: Props) {
       <View style={styles.footer}>
         <Text style={[styles.muted, styles.footerText]}>
           {/* Com a faixa, o prazo já aparece em cima. */}
-          {price?.promotion && promotion
-            ? 'Preço promocional'
-            : price
-              ? describePrice(price)
-              : 'Sem preço informado'}
+          {station.mode === 'precos_ocultos'
+            ? 'Preços não exibidos'
+            : price?.promotion && promotion
+              ? 'Preço promocional'
+              : price
+                ? describePrice(price)
+                : 'Sem preço informado'}
         </Text>
         <IqpPill iqp={station.iqp} />
       </View>

@@ -89,7 +89,20 @@ Conferir de ponta a ponta, no ambiente publicado (Render e Supabase) e no celula
 - [ ] **Mover posto:** mover para outra rede e tirar da rede; conferir o acesso das duas equipes e o registro das duas redes.
 - [ ] **Rede sem dono:** excluir a única conta proprietária de uma rede envia o e-mail "Rede sem proprietário".
 
-### 6. Portal e app em aparelhos reais
+### 6. Modo de exibição do posto (ADR 0028)
+
+- [ ] **Não participa:** preços continuam, com o aviso na ficha do app.
+- [ ] **Preço oficial:**
+  - só aceito para posto com rede;
+  - consumidores não substituem o preço do posto nem depois de 24 h, e o aviso aparece;
+  - a divergência persistente aparece na Moderação do admin.
+- [ ] **Preços ocultos:**
+  - posto no mapa sem preços ("Preços não exibidos"), sem o botão "Informar preço";
+  - a API recusa informes.
+- [ ] **Oculto:** o posto some do mapa, da lista e da ficha. Voltar para Normal o traz de volta.
+- [ ] **Registro:** o histórico na ficha do admin mostra quem pediu, o motivo e quem decidiu.
+
+### 7. Portal e app em aparelhos reais
 
 - [ ] **Celulares:** portal no celular (Chrome Android e Safari iOS), em tema claro e escuro.
 - [ ] **App:**

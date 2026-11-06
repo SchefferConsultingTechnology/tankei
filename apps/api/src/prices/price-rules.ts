@@ -93,6 +93,11 @@ export function computeCurrentPrice(
   reports: ReportForDisplay[],
   now: Date,
   params: DisplayParams,
+  /**
+   * Preço oficial (ADR 0028): o preço do posto nunca é substituído por
+   * consumidores; a divergência continua visível como aviso.
+   */
+  options: { officialPrice?: boolean } = {},
 ): DisplayedPrice | null {
   const usable = reports
     .filter((r) => r.status !== 'rejeitado' && r.reportedAt <= now)
@@ -149,7 +154,7 @@ export function computeCurrentPrice(
       const respondBy = new Date(
         pick.confirmedAt.getTime() + params.divergenceResponseHours * HOUR_MS,
       );
-      if (now < respondBy) {
+      if (now < respondBy || options.officialPrice) {
         chosen = stationPrice;
         divergence = { price: pick.price, reportedAt: pick.at, respondBy };
       } else {

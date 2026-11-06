@@ -72,6 +72,12 @@ export const stationSchema = z.object({
     .array(currentPriceSchema)
     .describe('Preço vigente de cada combustível que tem preço exibível.'),
   iqp: iqpSummarySchema,
+  mode: z
+    .enum(['normal', 'nao_participa', 'preco_oficial', 'precos_ocultos'])
+    .default('normal')
+    .describe(
+      'Como o posto aparece (ADR 0028). Postos ocultos não são retornados.',
+    ),
   activePromotions: z
     .array(
       z.object({

@@ -174,6 +174,21 @@ describe('computeCurrentPrice', () => {
     });
   });
 
+  it('preço oficial (ADR 0028): consumidores nunca substituem, o aviso fica', () => {
+    expect(
+      computeCurrentPrice(
+        [driver(6.49, 30, 'ana'), driver(6.49, 31, 'bia'), station(6.29, 40)],
+        now,
+        params,
+        { officialPrice: true },
+      ),
+    ).toMatchObject({
+      price: 6.29,
+      badge: 'atualizado_posto',
+      divergence: { price: 6.49 },
+    });
+  });
+
   it('o posto reconfirma: a divergência se encerra', () => {
     expect(
       compute([

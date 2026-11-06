@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { VERIFICATION_METHODS } from './claim';
+import { STATION_MODES, stationModeChangeSchema } from './station-mode';
 import {
   invitationSchema,
   ORG_ROLES,
@@ -38,6 +39,7 @@ export const adminStationSummarySchema = z.object({
   state: z.string(),
   active: z.boolean(),
   network: nullable(networkRef, 'Rede do posto, se tiver.'),
+  mode: z.enum(STATION_MODES).describe('Modo de exibição (ADR 0028).'),
 });
 export type AdminStationSummary = z.infer<typeof adminStationSummarySchema>;
 
@@ -54,6 +56,10 @@ export const verifiedManagerSchema = z.object({
 export type VerifiedManager = z.infer<typeof verifiedManagerSchema>;
 
 export const adminStationSchema = adminStationSummarySchema.extend({
+  mode: z.enum(STATION_MODES),
+  modeHistory: z
+    .array(stationModeChangeSchema)
+    .describe('Mudanças de modo, as mais recentes primeiro (ADR 0028).'),
   address: z.string(),
   district: nullable(z.string(), 'Bairro.'),
   verifiedManagers: z

@@ -32,6 +32,7 @@ import { errorText, formatDateTime, useMobile } from '../components/hooks';
 import { Notice } from '../components/Notice';
 import { PageHeader } from '../components/PageHeader';
 import { PageLoading } from '../components/PageLoading';
+import { StationModeSection } from '../components/StationModeSection';
 
 function Section({
   title,
@@ -218,6 +219,8 @@ export function StationDetailPage() {
           }}
         />
       )}
+      <StationModeSection station={s} onNotice={setNotice} />
+
       {adding && (
         <AddManagerDialog
           station={s}

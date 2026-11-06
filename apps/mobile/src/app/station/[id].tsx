@@ -2,6 +2,7 @@ import {
   FUEL_LABELS,
   IQP_EXPLANATION,
   IQP_SCALE_MAX,
+  STATION_MODE_NOTICES,
   type Station,
   type StationIqp,
 } from '@tankei/shared';
@@ -93,6 +94,11 @@ export default function StationScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Preços</Text>
+        {STATION_MODE_NOTICES[data.mode] && (
+          <Text style={styles.modeNotice}>
+            {STATION_MODE_NOTICES[data.mode]}
+          </Text>
+        )}
         {data.fuels.length === 0 && (
           <Text style={styles.muted}>Combustíveis ainda não informados.</Text>
         )}
@@ -116,12 +122,14 @@ export default function StationScreen() {
             </View>
           );
         })}
-        <SecondaryButton
-          label="Informar preço"
-          onPress={() =>
-            router.push({ pathname: '/station/[id]/preco', params: { id } })
-          }
-        />
+        {data.mode !== 'precos_ocultos' && (
+          <SecondaryButton
+            label="Informar preço"
+            onPress={() =>
+              router.push({ pathname: '/station/[id]/preco', params: { id } })
+            }
+          />
+        )}
       </View>
 
       {photos.length > 0 && (
@@ -336,6 +344,13 @@ const useStyles = createStyles((colors, badgeColors) => ({
     color: badgeColors.promocao,
     fontSize: fontSize.sm,
     fontWeight: '600',
+  },
+  modeNotice: {
+    color: colors.textMuted,
+    fontSize: fontSize.sm,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.sm,
+    padding: spacing.sm,
   },
   note: { color: colors.warning, fontSize: fontSize.sm, fontWeight: '600' },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },

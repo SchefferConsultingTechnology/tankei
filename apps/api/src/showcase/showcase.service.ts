@@ -287,10 +287,16 @@ export class ShowcaseService {
 
   async showcase(stationId: string, now = new Date()) {
     const [station] = await this.db
-      .select({ id: stations.id })
+      .select({ id: stations.id, mode: stations.displayMode })
       .from(stations)
       .where(eq(stations.id, stationId));
-    if (!station) throw new NotFoundException('Posto não encontrado.');
+    if (!station || station.mode === 'oculto') {
+      throw new NotFoundException('Posto não encontrado.');
+    }
+    // Preços ocultos (ADR 0028): as fotos ficam, as promoções não.
+    if (station.mode === 'precos_ocultos') {
+      return { photos: await this.activePhotos(stationId), promotions: [] };
+    }
     const rows = await this.db
       .select()
       .from(promotions)
