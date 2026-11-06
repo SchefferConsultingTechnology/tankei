@@ -1,0 +1,13 @@
+{
+  "identities": [
+    {
+      "name": "tankei",
+      "credentials": [{ "accessKey": "tankei", "secretKey": "tankei-local" }],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    },
+    {
+      "name": "anonymous",
+      "actions": ["Read"]
+    }
+  ]
+}

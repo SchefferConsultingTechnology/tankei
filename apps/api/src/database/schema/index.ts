@@ -9,3 +9,4 @@ export * from './municipalities';
 export * from './claims';
 export * from './organizations';
 export * from './moderation';
+export * from './showcase';

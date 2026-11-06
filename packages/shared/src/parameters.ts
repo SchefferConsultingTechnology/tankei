@@ -11,6 +11,7 @@ export const PARAMETER_UNITS = [
   'hours',
   'days',
   'meters',
+  'megabytes',
   'count',
 ] as const;
 export type ParameterUnit = (typeof PARAMETER_UNITS)[number];
@@ -21,6 +22,7 @@ export const PARAMETER_UNIT_LABELS: Record<ParameterUnit, string> = {
   hours: 'horas',
   days: 'dias',
   meters: 'm',
+  megabytes: 'MB',
   count: '',
 };
 
@@ -29,6 +31,7 @@ export const PARAMETER_GROUP_LABELS: Record<string, string> = {
   price: 'Preços',
   portal: 'Portal do posto',
   claim: 'Pedidos de acesso',
+  media: 'Fotos e promoções',
   team: 'Equipe',
   review: 'Avaliações',
 };
@@ -160,6 +163,19 @@ export const PARAMETER_DEFINITIONS = {
     label: 'Raio da concorrência',
     description:
       'Raio (metros) da concorrência local mostrada ao posto no portal.',
+  },
+  'media.max_station_photos': {
+    schema: positiveInt,
+    unit: 'count',
+    label: 'Fotos por posto',
+    description: 'Máximo de fotos publicadas ao mesmo tempo por posto.',
+  },
+  'media.max_upload_mb': {
+    schema: z.number().int().min(1).max(20),
+    unit: 'megabytes',
+    label: 'Tamanho máximo da imagem',
+    description:
+      'Tamanho máximo (MB) de uma foto ou arte enviada. A API reduz e converte para WebP.',
   },
   'claim.max_pending_per_user': {
     schema: positiveInt,

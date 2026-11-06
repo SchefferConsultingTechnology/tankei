@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  type AnyPgColumn,
   boolean,
   check,
   index,
@@ -11,6 +12,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { fuelTypeEnum, priceReportStatusEnum, priceSourceEnum } from './enums';
 import { priceReferences } from './price-references';
+import { promotions } from './showcase';
 import { stations } from './stations';
 import { users } from './users';
 
@@ -49,6 +51,9 @@ export const priceReports = pgTable(
     reporterTrusted: boolean(),
     // Peso do informe na confirmação (0 a 1). Nulo: anterior à regra, vale 1.
     confirmationWeight: numeric({ precision: 3, scale: 2, mode: 'number' }),
+    // Preço de uma promoção cadastrada (ADR 0026). O fim efetivo considera
+    // promotions.ended_at (encerrada antes).
+    promotionId: uuid().references((): AnyPgColumn => promotions.id),
     promotionLabel: text(),
     promotionStartsAt: timestamp({ withTimezone: true }),
     promotionEndsAt: timestamp({ withTimezone: true }),

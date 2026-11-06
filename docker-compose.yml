@@ -16,5 +16,20 @@ services:
       timeout: 5s
       retries: 10
 
+  # Armazenamento de imagens compatível com S3 (ADR 0026), só para
+  # desenvolvimento: SeaweedFS (a MinIO deixou de publicar imagens). Em
+  # produção, o Supabase Storage. Credenciais em docker/seaweedfs/s3.json;
+  # leitura anônima liberada (imagens públicas).
+  storage:
+    image: chrislusf/seaweedfs:3.97
+    container_name: tankei-storage
+    command: server -dir=/data -s3 -s3.port=9000 -s3.config=/etc/seaweedfs/s3.json
+    ports:
+      - "9000:9000"
+    volumes:
+      - tankei-storage:/data
+      - ./docker/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+
 volumes:
   tankei-db:
+  tankei-storage:

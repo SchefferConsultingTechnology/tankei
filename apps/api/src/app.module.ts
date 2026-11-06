@@ -13,6 +13,7 @@ import { DatabaseModule } from './database/database.module';
 import { MailModule } from './mail/mail.module';
 import { ModerationModule } from './moderation/moderation.module';
 import { ParametersModule } from './parameters/parameters.module';
+import { ShowcaseModule } from './showcase/showcase.module';
 import { PortalModule } from './portal/portal.module';
 import { PricesModule } from './prices/prices.module';
 import { StationsModule } from './stations/stations.module';
@@ -39,6 +40,7 @@ import { UsersModule } from './users/users.module';
     ClaimsModule,
     AdminModule,
     ModerationModule,
+    ShowcaseModule,
   ],
   controllers: [AppController],
   providers: [

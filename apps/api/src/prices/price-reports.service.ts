@@ -16,6 +16,7 @@ import {
   type FuelType,
   type PriceReportRequest,
   type PriceReportResponse,
+  type PromotionPrice,
   roleCan,
 } from '@tankei/shared';
 import {
@@ -36,6 +37,7 @@ import {
   priceModerationCaseReports,
   priceModerationDecisions,
   priceReports,
+  promotions,
   stationFuels,
   stations,
   users,
@@ -60,6 +62,14 @@ import {
   type DisplayParams,
   type ReportForDisplay,
 } from './price-rules';
+
+type Tx = Parameters<Parameters<Database['transaction']>[0]>[0];
+
+export interface CheckedPromotionPrice extends PromotionPrice {
+  status: 'valido' | 'suspeito';
+  referenceId: string | null;
+  deviationPct: number | null;
+}
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -243,8 +253,9 @@ export class PriceReportsService {
     const params = await this.displayParams();
     const since = new Date(now.getTime() - params.hideAfterDays * DAY_MS);
     const rows = await this.db
-      .select()
+      .select({ report: priceReports, endedAt: promotions.endedAt })
       .from(priceReports)
+      .leftJoin(promotions, eq(promotions.id, priceReports.promotionId))
       .where(
         and(
           inArray(priceReports.stationId, stationIds),
@@ -257,10 +268,10 @@ export class PriceReportsService {
       );
 
     const groups = new Map<string, ReportForDisplay[]>();
-    for (const row of rows) {
+    for (const { report: row, endedAt } of rows) {
       if (excluded.has(row.id) || alsoExclude.has(row.id)) continue;
       const key = `${row.stationId}|${row.fuelType}`;
-      groups.set(key, [...(groups.get(key) ?? []), toDisplay(row)]);
+      groups.set(key, [...(groups.get(key) ?? []), toDisplay(row, endedAt)]);
     }
 
     for (const stationId of stationIds) {
@@ -290,6 +301,123 @@ export class PriceReportsService {
       result.set(stationId, prices);
     }
     return result;
+  }
+
+  /**
+   * Preços de uma promoção cadastrada (ADR 0026), com as regras do informe
+   * do posto: faixa da ANP só pelo limite máximo e confirmação de valor
+   * muito diferente do atual. Valida todos antes de gravar qualquer um.
+   */
+  async checkPromotionPrices(
+    stationId: string,
+    prices: PromotionPrice[],
+    confirmed: boolean,
+    now = new Date(),
+  ): Promise<CheckedPromotionPrice[]> {
+    if (prices.length === 0) return [];
+    const [station] = await this.db
+      .select({ state: stations.state })
+      .from(stations)
+      .where(eq(stations.id, stationId));
+    if (!station) throw new NotFoundException('Posto não encontrado.');
+
+    const current = (await this.currentPrices([stationId], now)).get(stationId);
+    const confirmPct = await this.parameters.get('price.variation_confirm_pct');
+    const limits = {
+      normalPct: await this.parameters.get('price.reference_normal_pct'),
+      maxPct: await this.parameters.get('price.reference_max_pct'),
+    };
+
+    const checked: CheckedPromotionPrice[] = [];
+    const far: string[] = [];
+    for (const item of prices) {
+      const label = FUEL_LABELS[item.fuelType];
+      const reference = await this.references.latest(
+        item.fuelType,
+        station.state,
+      );
+      const classification = classifyReport(
+        item.price,
+        reference?.averagePrice ?? null,
+        true,
+        limits,
+      );
+      if (classification.status === 'rejeitado') {
+        throw new UnprocessableEntityException({
+          statusCode: 422,
+          error: 'Unprocessable Entity',
+          code: 'PRICE_OUT_OF_RANGE',
+          message: `${label}: o valor está muito diferente da média de ${reference?.state} (${money.format(reference?.averagePrice ?? 0)}). Confira o preço.`,
+        });
+      }
+      const now_ = current?.find((p) => p.fuelType === item.fuelType);
+      if (now_) {
+        const pct = (Math.abs(item.price - now_.price) / now_.price) * 100;
+        if (pct > confirmPct) {
+          far.push(
+            `${label}: ${money.format(item.price)} é ${Math.round(pct)}% diferente do preço atual (${money.format(now_.price)}).`,
+          );
+        }
+      }
+      checked.push({
+        ...item,
+        status: classification.status,
+        referenceId: reference?.id ?? null,
+        deviationPct: classification.deviationPct,
+      });
+    }
+    if (far.length > 0 && !confirmed) {
+      throw new ConflictException({
+        statusCode: 409,
+        error: 'Conflict',
+        code: 'CONFIRMATION_REQUIRED',
+        message: `${far.join(' ')} Confirme se está correto.`,
+      });
+    }
+    return checked;
+  }
+
+  /** Grava os preços da promoção como informes do posto ligados a ela. */
+  async insertPromotionPrices(
+    db: Tx,
+    values: {
+      stationId: string;
+      userId: string;
+      promotionId: string;
+      title: string;
+      startsAt: Date;
+      endsAt: Date;
+      prices: CheckedPromotionPrice[];
+    },
+    now = new Date(),
+  ): Promise<void> {
+    if (values.prices.length === 0) return;
+    await db.insert(priceReports).values(
+      values.prices.map((p) => ({
+        stationId: values.stationId,
+        fuelType: p.fuelType,
+        price: p.price,
+        source: 'posto' as const,
+        status: p.status,
+        reporterUserId: values.userId,
+        referenceId: p.referenceId,
+        referenceDeviationPct: p.deviationPct,
+        promotionId: values.promotionId,
+        promotionLabel: values.title,
+        promotionStartsAt: values.startsAt,
+        promotionEndsAt: values.endsAt,
+        reportedAt: now,
+      })),
+    );
+    await db
+      .insert(stationFuels)
+      .values(
+        values.prices.map((p) => ({
+          stationId: values.stationId,
+          fuelType: p.fuelType,
+        })),
+      )
+      .onConflictDoNothing();
   }
 
   private async validatePromotion(
@@ -619,7 +747,15 @@ export class PriceReportsService {
   }
 }
 
-function toDisplay(row: typeof priceReports.$inferSelect): ReportForDisplay {
+function toDisplay(
+  row: typeof priceReports.$inferSelect,
+  /** Promoção cadastrada encerrada antes do prazo (ADR 0026). */
+  endedAt: Date | null = null,
+): ReportForDisplay {
+  const endsAt =
+    row.promotionEndsAt && endedAt && endedAt < row.promotionEndsAt
+      ? endedAt
+      : row.promotionEndsAt;
   return {
     price: row.price,
     source: row.source,
@@ -629,11 +765,11 @@ function toDisplay(row: typeof priceReports.$inferSelect): ReportForDisplay {
     // Informes anteriores à regra de peso (ADR 0024) valem 1.
     weight: row.confirmationWeight ?? 1,
     promotion:
-      row.promotionLabel && row.promotionStartsAt && row.promotionEndsAt
+      row.promotionLabel && row.promotionStartsAt && endsAt
         ? {
             label: row.promotionLabel,
             startsAt: row.promotionStartsAt,
-            endsAt: row.promotionEndsAt,
+            endsAt,
           }
         : null,
   };

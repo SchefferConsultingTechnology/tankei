@@ -11,3 +11,4 @@ export * from './claim';
 export * from './organization';
 export * from './admin';
 export * from './moderation';
+export * from './showcase';

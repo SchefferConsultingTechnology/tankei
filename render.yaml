@@ -49,10 +49,26 @@ services:
       # Endereço de resposta dos e-mails (opcional). Vazio: sem resposta.
       - key: MAIL_REPLY_TO
         sync: false
+      # Imagens (ADR 0026): Supabase Storage pela API S3 (Storage > S3
+      # Connection). Endpoint https://<projeto>.supabase.co/storage/v1/s3;
+      # URL pública https://<projeto>.supabase.co/storage/v1/object/public/tankei-imagens.
+      # Sem elas, o envio de imagens responde 503.
+      - key: STORAGE_ENDPOINT
+        sync: false
+      - key: STORAGE_ACCESS_KEY_ID
+        sync: false
+      - key: STORAGE_SECRET_ACCESS_KEY
+        sync: false
+      - key: STORAGE_PUBLIC_URL
+        sync: false
 
       # Não são segredos (ADR 0015).
       - key: GOOGLE_CLIENT_IDS
         value: 881187129858-3elfcgukc2u988u5gc5sqfvjqv0hd334.apps.googleusercontent.com
+      - key: STORAGE_REGION
+        value: us-west-2
+      - key: STORAGE_BUCKET
+        value: tankei-imagens
       # Remetente e links dos e-mails (ADR 0025).
       - key: MAIL_FROM
         value: Tankei <nao-responda@scheffer.solutions>

@@ -12,6 +12,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "db:up": "docker compose up -d db",
+    "storage:up": "docker compose up -d storage",
     "db:down": "docker compose down",
     "db:generate": "pnpm --filter @tankei/shared build && pnpm --filter @tankei/api db:generate",
     "db:migrate": "pnpm --filter @tankei/api db:migrate"
