@@ -47,7 +47,6 @@ export default function CalculatorScreen() {
       contentContainerStyle={[styles.screen, bottomPadding]}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.title}>Etanol ou gasolina?</Text>
       <Text style={styles.muted}>
         {consumption
           ? `Usando o consumo do seu carro: ${consumption.etanol} km/l com etanol e ${consumption.gasolina} km/l com gasolina.`
@@ -135,7 +134,6 @@ function PriceField({
 
 const useStyles = createStyles((colors) => ({
   screen: { padding: spacing.xl, gap: spacing.lg },
-  title: { color: colors.text, fontSize: fontSize.xl, fontWeight: '700' },
   muted: { color: colors.textMuted, fontSize: fontSize.sm },
   body: { color: colors.text, fontSize: fontSize.md },
   row: { flexDirection: 'row', gap: spacing.md },
