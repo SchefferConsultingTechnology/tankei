@@ -2,7 +2,7 @@
   "expo": {
     "name": "Tankei",
     "slug": "tankei",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -12,6 +12,7 @@
     },
     "android": {
       "package": "br.com.tankei.app",
+      "versionCode": 2,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyC-hpnuntdXqK-fAk5nE9t3FLcCqdz-0Fg"
