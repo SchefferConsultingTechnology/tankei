@@ -18,7 +18,10 @@ import {
   claimSchema,
   claimStationSearchSchema,
   createClaimSchema,
+  disputeClaimSchema,
   rejectClaimSchema,
+  stationClaimNoticeSchema,
+  type StationClaimNotice,
   type AdminClaim,
   type Claim,
   type ClaimableStation,
@@ -36,6 +39,8 @@ class AdminClaimDto extends createZodDto(adminClaimSchema) {}
 class AdminClaimsQueryDto extends createZodDto(adminClaimsQuerySchema) {}
 class ApproveClaimDto extends createZodDto(approveClaimSchema) {}
 class RejectClaimDto extends createZodDto(rejectClaimSchema) {}
+class StationClaimNoticeDto extends createZodDto(stationClaimNoticeSchema) {}
+class DisputeClaimDto extends createZodDto(disputeClaimSchema) {}
 
 const claimIdPipe = new ParseUUIDPipe({
   exceptionFactory: () => new BadRequestException('Pedido inválido.'),
@@ -121,5 +126,44 @@ export class AdminClaimsController {
     @CurrentUser() admin: AuthenticatedUser,
   ): Promise<AdminClaim> {
     return this.claims.reject(claimId, admin.id, body.reason);
+  }
+}
+
+const stationIdPipe = new ParseUUIDPipe({
+  exceptionFactory: () => new BadRequestException('Posto inválido.'),
+});
+
+/**
+ * Pedidos de acesso ao posto vistos pelo proprietário atual, que pode dizer
+ * que não reconhece o pedido (ADR 0011 e 0027).
+ */
+@ApiTags('Portal do posto')
+@ApiBearerAuth()
+@Controller('portal/stations/:stationId/claims')
+export class StationClaimsController {
+  constructor(private readonly claims: ClaimsService) {}
+
+  @Get()
+  @ZodResponse({
+    status: 200,
+    type: [StationClaimNoticeDto],
+    description: 'Pedidos em análise de outras pessoas para o posto.',
+  })
+  list(
+    @Param('stationId', stationIdPipe) stationId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<StationClaimNotice[]> {
+    return this.claims.stationNotices(user, stationId);
+  }
+
+  @Post(':claimId/dispute')
+  @HttpCode(204)
+  async dispute(
+    @Param('stationId', stationIdPipe) stationId: string,
+    @Param('claimId', claimIdPipe) claimId: string,
+    @Body() body: DisputeClaimDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<void> {
+    await this.claims.dispute(user, stationId, claimId, body.reason);
   }
 }

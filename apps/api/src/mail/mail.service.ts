@@ -26,11 +26,6 @@ export class MailService {
     this.replyTo = process.env.MAIL_REPLY_TO || undefined;
   }
 
-  /** Endereço de resposta, se configurado (os textos mudam com ele). */
-  get hasReplyTo(): boolean {
-    return Boolean(this.replyTo);
-  }
-
   /** Um e-mail por destinatário (ninguém vê o endereço do outro). */
   async send(to: string[], message: MailMessage): Promise<void> {
     const recipients = [

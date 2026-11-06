@@ -268,6 +268,19 @@ function ClaimCard({
         {claim.reason && <Fact label="Motivo">{claim.reason}</Fact>}
       </Box>
 
+      {claim.disputes.map((d) => (
+        <Alert
+          key={d.createdAt}
+          severity="error"
+          icon={<WarningAmberOutlined />}
+          sx={{ mt: 2 }}
+        >
+          <strong>{d.by ?? 'O proprietário'}</strong>, proprietário do posto,
+          não reconhece este pedido ({new Date(d.createdAt).toLocaleString('pt-BR')}
+          ): {d.reason}
+        </Alert>
+      ))}
+
       {pending && claim.currentManagers > 0 && (
         <Alert
           severity="warning"

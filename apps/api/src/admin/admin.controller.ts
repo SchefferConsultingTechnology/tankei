@@ -16,6 +16,7 @@ import {
   adminNetworkSchema,
   adminNetworkSummarySchema,
   adminRemoveMemberSchema,
+  adminStationNetworkSchema,
   adminStationSchema,
   adminStationSearchSchema,
   adminStationSummarySchema,
@@ -41,6 +42,7 @@ class AdminNetworkDto extends createZodDto(adminNetworkSchema) {}
 class AdminUpdateMemberDto extends createZodDto(adminUpdateMemberSchema) {}
 class AdminRemoveMemberDto extends createZodDto(adminRemoveMemberSchema) {}
 class RenameNetworkDto extends createZodDto(renameOrganizationSchema) {}
+class AdminStationNetworkDto extends createZodDto(adminStationNetworkSchema) {}
 
 const uuid = (message: string) =>
   new ParseUUIDPipe({
@@ -53,7 +55,10 @@ const uuid = (message: string) =>
 @Roles('admin')
 @Controller('admin/stations')
 export class AdminStationsController {
-  constructor(private readonly admin: AdminService) {}
+  constructor(
+    private readonly admin: AdminService,
+    private readonly organizations: OrganizationsService,
+  ) {}
 
   @Get()
   @ZodResponse({
@@ -65,6 +70,21 @@ export class AdminStationsController {
     @Query() query: AdminStationSearchDto,
   ): Promise<AdminStationSummary[]> {
     return this.admin.searchStations(query.q);
+  }
+
+  @Patch(':stationId/network')
+  @HttpCode(204)
+  async setNetwork(
+    @Param('stationId', uuid('Posto inválido.')) stationId: string,
+    @Body() body: AdminStationNetworkDto,
+    @CurrentUser() admin: AuthenticatedUser,
+  ): Promise<void> {
+    await this.organizations.adminSetStationNetwork(
+      admin.id,
+      stationId,
+      body.networkId,
+      body.reason,
+    );
   }
 
   @Get(':stationId')

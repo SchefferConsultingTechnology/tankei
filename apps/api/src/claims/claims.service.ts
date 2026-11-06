@@ -14,12 +14,15 @@ import type {
   ClaimStationSearch,
   ClaimStatus,
   CreateClaim,
+  StationClaimNotice,
 } from '@tankei/shared';
 import { and, count, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import type { AuthenticatedUser } from '../auth/tokens.service';
 import { DRIZZLE, type Database } from '../database/database.module';
 import { normalized } from '../database/normalized';
 import {
   stationClaimDecisions,
+  stationClaimDisputes,
   stationClaims,
   stationManagers,
   stations,
@@ -30,6 +33,7 @@ import { OrganizationsService } from '../organizations/organizations.service';
 import { MailService } from '../mail/mail.service';
 import {
   claimDecidedMail,
+  claimDisputedMail,
   claimToAdminsMail,
   claimToOwnersMail,
 } from '../mail/templates';
@@ -181,9 +185,9 @@ export class ClaimsService {
       owners.map((o) => o.email),
       claimToOwnersMail({
         stationName: claim.station.name,
+        stationId,
         contactName,
         positionLabel,
-        canReply: this.mail.hasReplyTo,
       }),
     );
   }
@@ -212,6 +216,7 @@ export class ClaimsService {
       managerCounts.map((m) => [m.stationId, m.total]),
     );
 
+    const disputes = await this.disputesOf(rows.map((r) => r.id));
     return rows.map((row) => ({
       ...toClaim(row),
       contactName: row.contactName,
@@ -220,7 +225,127 @@ export class ClaimsService {
       account: row.account,
       currentManagers: managersOf.get(row.station.id) ?? 0,
       verificationMethod: row.verificationMethod,
+      disputes: disputes.get(row.id) ?? [],
     }));
+  }
+
+  // ---------- Proprietário atual (ADR 0011 e 0027) ----------
+
+  /** Pedidos em análise de outras pessoas para o posto. */
+  async stationNotices(
+    user: AuthenticatedUser,
+    stationId: string,
+  ): Promise<StationClaimNotice[]> {
+    await this.access.assert(user, stationId, 'manage_team');
+    const rows = await this.db
+      .select({
+        id: stationClaims.id,
+        userId: stationClaims.userId,
+        contactName: stationClaims.contactName,
+        position: stationClaims.position,
+        createdAt: stationClaims.createdAt,
+      })
+      .from(stationClaims)
+      .leftJoin(
+        stationClaimDecisions,
+        eq(stationClaimDecisions.claimId, stationClaims.id),
+      )
+      .where(
+        and(
+          eq(stationClaims.stationId, stationId),
+          isNull(stationClaimDecisions.id),
+        ),
+      )
+      .orderBy(desc(stationClaims.createdAt));
+    const mine = new Set(
+      (
+        await this.db
+          .select({ claimId: stationClaimDisputes.claimId })
+          .from(stationClaimDisputes)
+          .where(eq(stationClaimDisputes.userId, user.id))
+      ).map((d) => d.claimId),
+    );
+    return rows
+      .filter((r) => r.userId !== user.id)
+      .map((r) => ({
+        id: r.id,
+        contactName: r.contactName,
+        position: r.position,
+        createdAt: r.createdAt.toISOString(),
+        disputedByMe: mine.has(r.id),
+      }));
+  }
+
+  /** "Não reconheço este pedido": a equipe Tankei vê antes de decidir. */
+  async dispute(
+    user: AuthenticatedUser,
+    stationId: string,
+    claimId: string,
+    reason: string,
+  ): Promise<void> {
+    await this.access.assert(user, stationId, 'manage_team');
+    const claim = await this.pendingClaim(claimId);
+    if (claim.stationId !== stationId) {
+      throw new NotFoundException('Pedido não encontrado.');
+    }
+    if (claim.userId === user.id) {
+      throw new BadRequestException('Este pedido é seu.');
+    }
+    const inserted = await this.db
+      .insert(stationClaimDisputes)
+      .values({ claimId, userId: user.id, reason })
+      .onConflictDoNothing()
+      .returning({ id: stationClaimDisputes.id });
+    if (inserted.length === 0) {
+      throw new ConflictException('Você já contestou este pedido.');
+    }
+    this.mail.background(async () => {
+      const [row] = await this.list({ claimIds: [claimId] });
+      const [owner] = await this.db
+        .select({ name: users.name, email: users.email })
+        .from(users)
+        .where(eq(users.id, user.id));
+      this.mail.notify(
+        await this.mail.adminEmails(),
+        claimDisputedMail({
+          stationName: row.station.name,
+          ownerName: owner?.name ?? owner?.email ?? 'O proprietário',
+          contactName: row.contactName ?? 'conta excluída',
+          reason,
+        }),
+      );
+    });
+  }
+
+  private async disputesOf(claimIds: string[]) {
+    const result = new Map<
+      string,
+      { by: string | null; reason: string; createdAt: string }[]
+    >();
+    if (claimIds.length === 0) return result;
+    const rows = await this.db
+      .select({
+        claimId: stationClaimDisputes.claimId,
+        reason: stationClaimDisputes.reason,
+        createdAt: stationClaimDisputes.createdAt,
+        name: users.name,
+        email: users.email,
+      })
+      .from(stationClaimDisputes)
+      .leftJoin(users, eq(users.id, stationClaimDisputes.userId))
+      .where(inArray(stationClaimDisputes.claimId, claimIds))
+      .orderBy(stationClaimDisputes.createdAt);
+    for (const row of rows) {
+      result.set(row.claimId, [
+        ...(result.get(row.claimId) ?? []),
+        {
+          by: row.name ?? row.email,
+          reason: row.reason,
+          createdAt: row.createdAt.toISOString(),
+        },
+      ]);
+    }
+    return result;
   }
 
   /** Aprova: registra a decisão e cria o vínculo de responsável, juntos. */
@@ -308,6 +433,7 @@ export class ClaimsService {
       account: row.account,
       currentManagers: managers.total,
       verificationMethod: row.verificationMethod,
+      disputes: (await this.disputesOf([claimId])).get(claimId) ?? [],
     };
   }
 

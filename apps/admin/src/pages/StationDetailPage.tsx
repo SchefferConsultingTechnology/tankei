@@ -11,6 +11,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import List from '@mui/material/List';
+import MenuItem from '@mui/material/MenuItem';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
@@ -21,7 +22,12 @@ import Typography from '@mui/material/Typography';
 import { VERIFICATION_METHOD_LABELS, type AdminStation } from '@tankei/shared';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
-import { useAddManager, useStation } from '../api/admin-queries';
+import {
+  useAddManager,
+  useNetworks,
+  useSetStationNetwork,
+  useStation,
+} from '../api/admin-queries';
 import { errorText, formatDateTime, useMobile } from '../components/hooks';
 import { Notice } from '../components/Notice';
 import { PageHeader } from '../components/PageHeader';
@@ -63,6 +69,7 @@ export function StationDetailPage() {
   const { stationId = '' } = useParams();
   const station = useStation(stationId);
   const [adding, setAdding] = useState(false);
+  const [moving, setMoving] = useState<'mover' | 'tirar' | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
   if (station.isPending) return <PageLoading />;
@@ -130,6 +137,16 @@ export function StationDetailPage() {
                 Abrir rede
               </Button>
             </Stack>
+          ) : null}
+          {s.network ? (
+            <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+              <Button size="small" onClick={() => setMoving('mover')}>
+                Mover para outra rede
+              </Button>
+              <Button size="small" color="error" onClick={() => setMoving('tirar')}>
+                Tirar da rede
+              </Button>
+            </Stack>
           ) : (
             <Typography variant="body2" color="text.secondary">
               Ainda sem rede. Ao vincular um responsável, o posto entra na rede
@@ -190,6 +207,17 @@ export function StationDetailPage() {
         </Section>
       </Box>
 
+      {moving && (
+        <NetworkDialog
+          station={s}
+          mode={moving}
+          onClose={() => setMoving(null)}
+          onDone={(message) => {
+            setMoving(null);
+            setNotice(message);
+          }}
+        />
+      )}
       {adding && (
         <AddManagerDialog
           station={s}
@@ -265,6 +293,114 @@ function AddManagerDialog({
           disabled={!valid || add.isPending}
         >
           Vincular
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+function NetworkDialog({
+  station,
+  mode,
+  onClose,
+  onDone,
+}: {
+  station: AdminStation;
+  mode: 'mover' | 'tirar';
+  onClose: () => void;
+  onDone: (message: string) => void;
+}) {
+  const setNetwork = useSetStationNetwork(station.id);
+  const networks = useNetworks('');
+  const [target, setTarget] = useState('');
+  const [reason, setReason] = useState('');
+  const options = (networks.data ?? []).filter(
+    (n) => n.id !== station.network?.id,
+  );
+  const valid =
+    reason.trim().length >= 5 &&
+    (mode === 'tirar' || target !== '') &&
+    !setNetwork.isPending;
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!valid) return;
+    const name = options.find((n) => n.id === target)?.name;
+    setNetwork.mutate(
+      { networkId: mode === 'tirar' ? null : target, reason: reason.trim() },
+      {
+        onSuccess: () =>
+          onDone(
+            mode === 'tirar'
+              ? `${station.name} saiu da rede.`
+              : `${station.name} agora é da rede ${name ?? ''}.`,
+          ),
+      },
+    );
+  }
+
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      fullScreen={useMobile()}
+      fullWidth
+      maxWidth="sm"
+      slotProps={{ paper: { component: 'form', onSubmit: submit } }}
+    >
+      <DialogTitle sx={{ fontWeight: 700 }}>
+        {mode === 'tirar' ? 'Tirar da rede' : 'Mover para outra rede'}
+      </DialogTitle>
+      <DialogContent>
+        <DialogContentText sx={{ mb: 2 }}>
+          {mode === 'tirar'
+            ? `${station.name} sai de ${station.network?.name}. A equipe dessa rede perde o acesso ao posto.`
+            : `${station.name} sai de ${station.network?.name} e passa para a rede escolhida. A equipe atual perde o acesso; a da nova rede ganha, conforme o escopo de cada um.`}
+        </DialogContentText>
+        <Stack spacing={2}>
+          {mode === 'mover' && (
+            <TextField
+              select
+              label="Nova rede"
+              value={target}
+              onChange={(event) => setTarget(event.target.value)}
+              fullWidth
+              helperText={
+                networks.isPending ? 'Carregando redes…' : undefined
+              }
+            >
+              {options.map((n) => (
+                <MenuItem key={n.id} value={n.id}>
+                  {n.name} ({n.stations}{' '}
+                  {n.stations === 1 ? 'unidade' : 'unidades'})
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
+          <TextField
+            label="Motivo"
+            helperText="Fica no registro das redes, com seu nome."
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+            multiline
+            minRows={2}
+            fullWidth
+            slotProps={{ htmlInput: { maxLength: 300 } }}
+          />
+          {errorText(setNetwork.error) && (
+            <Alert severity="error">{errorText(setNetwork.error)}</Alert>
+          )}
+        </Stack>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={onClose}>Cancelar</Button>
+        <Button
+          type="submit"
+          variant="contained"
+          color={mode === 'tirar' ? 'error' : 'primary'}
+          disabled={!valid}
+        >
+          {mode === 'tirar' ? 'Tirar da rede' : 'Mover'}
         </Button>
       </DialogActions>
     </Dialog>

@@ -116,6 +116,26 @@ export function invitationMail(input: {
   );
 }
 
+export function ownerlessNetworkMail(input: {
+  id: string;
+  name: string;
+}): MailMessage {
+  return layout(
+    `Rede sem proprietário: ${input.name}`,
+    [
+      p(
+        `A rede <strong>${e(input.name)}</strong> ficou sem proprietário: a última conta proprietária foi excluída. Ninguém gerencia a equipe dela.`,
+        `A rede ${input.name} ficou sem proprietário: a última conta proprietária foi excluída. Ninguém gerencia a equipe dela.`,
+      ),
+      p(
+        'Promova alguém da equipe a proprietário ou vincule um responsável pelo posto.',
+        'Promova alguém da equipe a proprietário ou vincule um responsável pelo posto.',
+      ),
+    ],
+    { label: 'Abrir a rede', url: links.admin(`/redes/${input.id}`) },
+  );
+}
+
 // ---------- Pedido de acesso (ADR 0019 e 0011) ----------
 
 export function claimToAdminsMail(input: {
@@ -141,25 +161,50 @@ export function claimToAdminsMail(input: {
 }
 
 export function claimToOwnersMail(input: {
+  stationId: string;
   stationName: string;
   contactName: string;
   positionLabel: string;
-  canReply: boolean;
 }): MailMessage {
-  const what = input.canReply
-    ? 'Se você não reconhece este pedido, responda a este e-mail antes de a equipe Tankei decidir.'
-    : 'Se você não reconhece este pedido, avise a equipe Tankei antes da decisão.';
-  return layout(`Pedido de acesso a ${input.stationName}`, [
-    p(
-      `<strong>${e(input.contactName)}</strong> (${e(input.positionLabel)}) pediu acesso a <strong>${e(input.stationName)}</strong> no portal do Tankei.`,
-      `${input.contactName} (${input.positionLabel}) pediu acesso a ${input.stationName} no portal do Tankei.`,
-    ),
-    p(
-      'A equipe Tankei confirma o vínculo com o posto antes de liberar o acesso.',
-      'A equipe Tankei confirma o vínculo com o posto antes de liberar o acesso.',
-    ),
-    p(e(what), what),
-  ]);
+  const what =
+    'Se você não reconhece este pedido, abra o portal e toque em “Não reconheço” no aviso do pedido, antes de a equipe Tankei decidir.';
+  return layout(
+    `Pedido de acesso a ${input.stationName}`,
+    [
+      p(
+        `<strong>${e(input.contactName)}</strong> (${e(input.positionLabel)}) pediu acesso a <strong>${e(input.stationName)}</strong> no portal do Tankei.`,
+        `${input.contactName} (${input.positionLabel}) pediu acesso a ${input.stationName} no portal do Tankei.`,
+      ),
+      p(
+        'A equipe Tankei confirma o vínculo com o posto antes de liberar o acesso.',
+        'A equipe Tankei confirma o vínculo com o posto antes de liberar o acesso.',
+      ),
+      p(e(what), what),
+    ],
+    {
+      label: 'Ver no portal',
+      url: links.portal(`/postos/${input.stationId}/precos`),
+    },
+  );
+}
+
+export function claimDisputedMail(input: {
+  stationName: string;
+  ownerName: string;
+  contactName: string;
+  reason: string;
+}): MailMessage {
+  return layout(
+    `Pedido contestado pelo proprietário: ${input.stationName}`,
+    [
+      p(
+        `<strong>${e(input.ownerName)}</strong>, proprietário de <strong>${e(input.stationName)}</strong>, não reconhece o pedido de acesso de ${e(input.contactName)}.`,
+        `${input.ownerName}, proprietário de ${input.stationName}, não reconhece o pedido de acesso de ${input.contactName}.`,
+      ),
+      p(`Motivo: ${e(input.reason)}`, `Motivo: ${input.reason}`),
+    ],
+    { label: 'Ver pedidos de acesso', url: links.admin('/') },
+  );
 }
 
 export function claimDecidedMail(input: {

@@ -32,7 +32,7 @@ import {
   users,
 } from '../database/schema';
 import { MailService } from '../mail/mail.service';
-import { invitationMail } from '../mail/templates';
+import { invitationMail, ownerlessNetworkMail } from '../mail/templates';
 import { ParametersService } from '../parameters/parameters.service';
 import { stationDisplayName } from '../stations/display-name';
 
@@ -543,6 +543,74 @@ export class OrganizationsService {
     });
   }
 
+  /**
+   * Tira o posto da rede ou o move para outra (suporte, ADR 0027). Quem tinha
+   * escopo só nesta unidade perde o acesso a ela; o registro das duas redes
+   * guarda a mudança e o motivo.
+   */
+  async adminSetStationNetwork(
+    adminId: string,
+    stationId: string,
+    targetId: string | null,
+    reason: string,
+  ): Promise<void> {
+    const [current] = await this.db
+      .select({ organizationId: organizationStations.organizationId })
+      .from(organizationStations)
+      .where(eq(organizationStations.stationId, stationId));
+    if (!current && targetId === null) {
+      throw new BadRequestException('O posto não está em nenhuma rede.');
+    }
+    if (current?.organizationId === targetId) {
+      throw new BadRequestException('O posto já está nesta rede.');
+    }
+    if (targetId) await this.assertExists(targetId);
+
+    await this.db.transaction(async (tx) => {
+      if (current) {
+        await tx
+          .delete(organizationMemberStations)
+          .where(
+            and(
+              eq(
+                organizationMemberStations.organizationId,
+                current.organizationId,
+              ),
+              eq(organizationMemberStations.stationId, stationId),
+            ),
+          );
+        await tx
+          .delete(organizationStations)
+          .where(eq(organizationStations.stationId, stationId));
+        await this.event(
+          tx,
+          current.organizationId,
+          adminId,
+          'unidade_removida',
+          {
+            stationId,
+            destino: targetId,
+            motivo: 'administrador',
+            reason,
+          },
+        );
+      }
+      if (targetId) {
+        await tx.insert(organizationStations).values({
+          organizationId: targetId,
+          stationId,
+          addedByUserId: adminId,
+        });
+        await this.event(tx, targetId, adminId, 'unidade_adicionada', {
+          stationId,
+          origem: current?.organizationId ?? null,
+          motivo: 'administrador',
+          reason,
+        });
+      }
+    });
+  }
+
   private async assertExists(organizationId: string) {
     const [row] = await this.db
       .select({ id: organizations.id })
@@ -566,7 +634,8 @@ export class OrganizationsService {
   }
 
   /** Na exclusão da conta (ADR 0009): sai de todas as redes, com registro. */
-  async leaveAll(tx: Tx, userId: string): Promise<void> {
+  /** Devolve as redes de que a pessoa saiu. */
+  async leaveAll(tx: Tx, userId: string): Promise<string[]> {
     const memberships = await tx
       .select({ organizationId: organizationMembers.organizationId })
       .from(organizationMembers)
@@ -577,6 +646,29 @@ export class OrganizationsService {
         userId,
         motivo: 'conta_excluida',
       });
+    }
+    return memberships.map((m) => m.organizationId);
+  }
+
+  /**
+   * Redes (entre as informadas) que ficaram sem proprietário: a equipe Tankei
+   * recebe um aviso para socorrer (ADR 0023 e 0027).
+   */
+  async announceOwnerless(organizationIds: string[]): Promise<void> {
+    if (organizationIds.length === 0) return;
+    const rows = await this.db
+      .select({ id: organizations.id, name: organizations.name })
+      .from(organizations)
+      .where(
+        and(
+          inArray(organizations.id, organizationIds),
+          sql`not exists (select 1 from ${organizationMembers} m where m.organization_id = ${organizations.id} and m.role = 'proprietario')`,
+        ),
+      );
+    if (rows.length === 0) return;
+    const admins = await this.mail.adminEmails();
+    for (const row of rows) {
+      this.mail.notify(admins, ownerlessNetworkMail(row));
     }
   }
 

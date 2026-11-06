@@ -242,3 +242,20 @@ export function useRemoveMedia() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['media'] }),
   });
 }
+
+/** Tira o posto da rede (null) ou move para outra (ADR 0027). */
+export function useSetStationNetwork(stationId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { networkId: string | null; reason: string }) =>
+      authorizedRequest(`/admin/stations/${stationId}/network`, empty, {
+        method: 'PATCH',
+        body,
+      }),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['stations'] }),
+        queryClient.invalidateQueries({ queryKey: ['networks'] }),
+      ]),
+  });
+}

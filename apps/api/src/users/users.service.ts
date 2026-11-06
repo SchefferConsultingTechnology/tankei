@@ -66,7 +66,7 @@ export class UsersService {
    * histórico de informes e avaliações.
    */
   async deleteAccount(userId: string): Promise<void> {
-    await this.db.transaction(async (tx) => {
+    const left = await this.db.transaction(async (tx) => {
       await tx
         .update(users)
         .set({
@@ -80,7 +80,7 @@ export class UsersService {
       await tx
         .delete(stationManagers)
         .where(eq(stationManagers.userId, userId));
-      await this.organizations.leaveAll(tx, userId);
+      const networks = await this.organizations.leaveAll(tx, userId);
       // Contato dos pedidos de posto (ADR 0019); o pedido e a decisão ficam.
       await tx
         .update(stationClaims)
@@ -90,7 +90,9 @@ export class UsersService {
         .update(sessions)
         .set({ revokedAt: new Date() })
         .where(and(eq(sessions.userId, userId), isNull(sessions.revokedAt)));
+      return networks;
     });
+    await this.organizations.announceOwnerless(left).catch(() => undefined);
   }
 
   /**

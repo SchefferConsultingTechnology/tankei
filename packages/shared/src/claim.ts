@@ -132,6 +132,17 @@ export const adminClaimSchema = claimSchema.extend({
     z.enum(VERIFICATION_METHODS),
     'Forma de verificação, quando aprovado.',
   ),
+  disputes: z
+    .array(
+      z.object({
+        by: nullable(z.string(), 'Nome de quem contestou.'),
+        reason: z.string(),
+        createdAt: z.iso.datetime(),
+      }),
+    )
+    .describe(
+      'Proprietários atuais que não reconhecem o pedido (ADR 0011 e 0027).',
+    ),
 });
 export type AdminClaim = z.infer<typeof adminClaimSchema>;
 
@@ -158,3 +169,26 @@ export const rejectClaimSchema = z.object({
     .describe('Mostrado a quem pediu.'),
 });
 export type RejectClaim = z.output<typeof rejectClaimSchema>;
+
+/**
+ * Pedido de acesso ao posto visto pelo proprietário atual (ADR 0027): sem
+ * telefone nem observação, só o necessário para reconhecer quem pediu.
+ */
+export const stationClaimNoticeSchema = z.object({
+  id: z.uuid(),
+  contactName: nullable(z.string(), 'Nome informado por quem pediu.'),
+  position: z.enum(CLAIM_POSITIONS),
+  createdAt: z.iso.datetime(),
+  disputedByMe: z.boolean().describe('Se a pessoa já disse que não reconhece.'),
+});
+export type StationClaimNotice = z.infer<typeof stationClaimNoticeSchema>;
+
+export const disputeClaimSchema = z.object({
+  reason: z
+    .string({ error: 'Conte por que você não reconhece o pedido.' })
+    .trim()
+    .min(5, 'Explique em pelo menos 5 caracteres.')
+    .max(300, 'Texto muito longo.')
+    .describe('A equipe Tankei lê antes de decidir.'),
+});
+export type DisputeClaim = z.output<typeof disputeClaimSchema>;

@@ -66,7 +66,30 @@ Conferir de ponta a ponta, no ambiente publicado (Render e Supabase) e no celula
   - não permitir ficar sem proprietário;
   - registro legível.
 
-### 4. Portal e app em aparelhos reais
+### 4. Fase 3: vitrine do posto (ADR 0026)
+
+- [ ] **Armazenamento:** no Supabase, criar o balde público `tankei-imagens` e as chaves S3, e configurar `STORAGE_*` no Render. Sem isso, o envio responde 503.
+- [ ] **Promoções:**
+  - criar com arte e preço por combustível; aparece no app (ficha com a arte, lista e mapa com o selo);
+  - agendada não aparece antes do início;
+  - encerrar antes tira o preço promocional;
+  - preço muito diferente pede confirmação.
+- [ ] **Fotos:**
+  - enviar foto do celular (JPG e HEIC convertido pelo aparelho);
+  - a imagem final está em WebP, com no máximo 1600 px e sem a localização GPS;
+  - respeita os limites de 10 fotos e 5 MB.
+- [ ] **Admin › Imagens:**
+  - remover foto e arte, com motivo;
+  - o posto vê o motivo no portal.
+- [ ] **Permissões:** operador e somente leitura não enviam nem removem imagens.
+
+### 5. Suporte (ADR 0027)
+
+- [ ] **"Não reconheço":** o proprietário vê o pedido de outra pessoa no portal, responde "Não reconheço", a fila do admin mostra a contestação e o e-mail chega à equipe Tankei.
+- [ ] **Mover posto:** mover para outra rede e tirar da rede; conferir o acesso das duas equipes e o registro das duas redes.
+- [ ] **Rede sem dono:** excluir a única conta proprietária de uma rede envia o e-mail "Rede sem proprietário".
+
+### 6. Portal e app em aparelhos reais
 
 - [ ] **Celulares:** portal no celular (Chrome Android e Safari iOS), em tema claro e escuro.
 - [ ] **App:**

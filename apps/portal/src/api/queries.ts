@@ -20,6 +20,7 @@ import {
   stationReputationSchema,
   stationSchema,
   stationModerationCaseSchema,
+  stationClaimNoticeSchema,
   promotionSchema,
   stationPhotoSchema,
   stationPhotosSchema,
@@ -417,5 +418,34 @@ export function useRemovePhoto(stationId: string) {
         { method: 'DELETE' },
       ),
     onSuccess: invalidate,
+  });
+}
+
+// ---------- Pedidos de acesso ao posto (ADR 0027) ----------
+
+export function useStationClaims(stationId: string) {
+  return useQuery({
+    queryKey: ['portal', stationId, 'claims'],
+    queryFn: () =>
+      authorizedRequest(
+        `/portal/stations/${stationId}/claims`,
+        z.array(stationClaimNoticeSchema),
+      ),
+  });
+}
+
+export function useDisputeClaim(stationId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ claimId, reason }: { claimId: string; reason: string }) =>
+      authorizedRequest(
+        `/portal/stations/${stationId}/claims/${claimId}/dispute`,
+        z.undefined(),
+        { method: 'POST', body: { reason } },
+      ),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ['portal', stationId, 'claims'],
+      }),
   });
 }

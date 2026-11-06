@@ -395,6 +395,10 @@ export function describeEvent(
         return d.verifiedOwner
           ? `${place(d.stationId)} entrou na rede, com ${person(d.verifiedOwner)} como proprietário verificado`
           : `${place(d.stationId)} entrou na rede`;
+      case 'unidade_removida':
+        return d.destino
+          ? `${place(d.stationId)} saiu da rede (movido para outra rede)`
+          : `${place(d.stationId)} saiu da rede`;
       case 'proprietario_verificado':
         return `${person(d.userId)} verificado como proprietário de ${place(d.stationId)}`;
       case 'convite_criado':

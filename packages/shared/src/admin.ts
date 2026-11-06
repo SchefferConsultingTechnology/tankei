@@ -161,3 +161,13 @@ export type AdminUpdateMember = z.output<typeof adminUpdateMemberSchema>;
 
 export const adminRemoveMemberSchema = z.object({ reason });
 export type AdminRemoveMember = z.output<typeof adminRemoveMemberSchema>;
+
+/** Tirar o posto da rede (null) ou movê-lo para outra, com motivo. */
+export const adminStationNetworkSchema = z.object({
+  networkId: z
+    .uuid({ error: 'Rede inválida.' })
+    .nullable()
+    .describe('Rede de destino; null tira o posto da rede atual.'),
+  reason,
+});
+export type AdminStationNetwork = z.output<typeof adminStationNetworkSchema>;

@@ -1,4 +1,11 @@
-import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  index,
+  pgTable,
+  text,
+  timestamp,
+  unique,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import {
   claimDecisionEnum,
   claimPositionEnum,
@@ -53,3 +60,25 @@ export const stationClaimDecisions = pgTable('station_claim_decisions', {
     .references(() => users.id),
   decidedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
+
+/**
+ * Proprietário atual do posto que não reconhece o pedido (ADR 0011 e 0027).
+ * Uma por pessoa e pedido; só inserção. A equipe Tankei vê antes de decidir.
+ */
+export const stationClaimDisputes = pgTable(
+  'station_claim_disputes',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    claimId: uuid()
+      .notNull()
+      .references(() => stationClaims.id),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id),
+    reason: text().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('station_claim_disputes_claim_user_unique').on(t.claimId, t.userId),
+  ],
+);

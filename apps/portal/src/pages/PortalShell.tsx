@@ -35,6 +35,7 @@ import {
 } from 'react-router';
 import { useStation } from '../api/queries';
 import { Layout } from '../components/Layout';
+import { ClaimNotices } from '../components/ClaimNotices';
 import { NavItem } from '../components/NavItem';
 import { PageLoading } from '../components/PageLoading';
 import type { PortalContext } from './station-context';
@@ -300,6 +301,9 @@ export function PortalShell({ user }: { user: Me }) {
               .join(' · ')}
           </Typography>
         </Box>
+      )}
+      {stationId && station.data && roleCan(role, 'manage_team') && (
+        <ClaimNotices stationId={stationId} />
       )}
       {(!stationId || station.data) && (
         <Suspense fallback={<PageLoading />}>
