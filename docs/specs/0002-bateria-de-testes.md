@@ -1,0 +1,79 @@
+# Spec 0002: Bateria de testes completa (pendente)
+
+- **Status:** a fazer (adiada pelo autor em 2026-11-06)
+- **Relacionados:** ADR 0016 (ambiente publicado), 0019 a 0025
+
+## Objetivo
+
+Conferir de ponta a ponta, no ambiente publicado (Render e Supabase) e no celular, o que até agora só foi testado automaticamente (e2e no banco de testes) ou com dados de demonstração. Rodar antes de abrir o piloto para postos reais.
+
+## O que já está coberto
+
+- **Testes automáticos** (rodar antes da bateria e anotar o total):
+  - unitários: `pnpm test`;
+  - e2e: `pnpm --filter @tankei/api test:e2e`;
+  - estáticos: `pnpm lint`, `pnpm typecheck`.
+- **Telas conferidas com dados de demonstração** (Playwright e celular): portal, admin, fase 2 e escala do IQP no app.
+
+## Roteiro
+
+### 1. E-mails (ADR 0025): nunca testados com a chave real
+
+- [ ] **Deploy** do commit `ef25195` ou posterior "Live" no Render e `RESEND_API_KEY` configurada.
+- [ ] **Convite para a equipe:**
+  - chega ao e-mail convidado, de `nao-responda@scheffer.solutions`;
+  - o link abre o portal.
+- [ ] **Pedido de acesso:**
+  - a equipe Tankei recebe "Novo pedido de acesso";
+  - se o posto já tem rede, o proprietário recebe "Pedido de acesso a…".
+- [ ] **Decisão do pedido:**
+  - aprovar envia "Acesso liberado";
+  - recusar envia "Pedido de acesso recusado", com o motivo.
+- [ ] **Divergência:**
+  - com duas contas de consumidor confirmando outro valor, proprietário, gestor e operador recebem o aviso com o prazo;
+  - um terceiro informe do mesmo valor não reenvia.
+- [ ] **Moderação:**
+  - contestação e rajada chegam à equipe Tankei;
+  - a decisão chega ao proprietário e ao gestor, e o operador não recebe.
+- [ ] **Leitura:** HTML e texto legíveis no Gmail (web e celular), sem cair no spam. Conferir o SPF e o DKIM do domínio no Resend.
+- [ ] **Falhas:** com uma chave inválida, a ação (ex.: convite) continua funcionando e o erro aparece no log do Render.
+- [ ] **Decidir `MAIL_REPLY_TO`:** que endereço recebe as respostas dos e-mails.
+
+### 2. Fase 2: confiança dos preços (ADR 0020 e 0024)
+
+- [ ] **Informe pelo app:** no posto, `at_station` = sim; longe, não; sem permissão de localização, nulo.
+- [ ] **Conta nova** (menos de `price.trusted_min_account_days`): informa, mas não confirma o informe de outra pessoa.
+- [ ] **Divergência:**
+  - aparece no app ("Consumidores informaram R$ X");
+  - aparece no portal, com prazo;
+  - reconfirmar encerra.
+- [ ] **Prazo:** sem resposta em `price.divergence_response_hours`, vale o valor dos consumidores.
+- [ ] **Contestação pelo portal:**
+  - tira os informes do preço;
+  - "Manter" no admin devolve;
+  - "Anular" remove de vez;
+  - o posto vê a explicação em Contestações.
+- [ ] **Rajada:** 3 contas novas, sem localização, com o mesmo valor destoante, abrem o caso sozinhas e não mudam o preço.
+- [ ] **Desempate:** sem preço do posto, vence o valor com mais pessoas; empate, o mais recente; o app indica "Também foi informado outro valor".
+
+### 3. Admin (ADR 0023)
+
+- [ ] **Parâmetros:** alterar com motivo, ver no histórico e o efeito em até 1 minuto. A validação recusa valores fora da unidade e pares incoerentes.
+- [ ] **Postos:** busca por CNPJ parcial, nome e cidade; vínculo de responsável pelo e-mail.
+- [ ] **Redes:**
+  - promover alguém a proprietário com motivo;
+  - remover da equipe;
+  - não permitir ficar sem proprietário;
+  - registro legível.
+
+### 4. Portal e app em aparelhos reais
+
+- [ ] **Celulares:** portal no celular (Chrome Android e Safari iOS), em tema claro e escuro.
+- [ ] **App:**
+  - escala do IQP (pílula "IQP N/100", medidor, "Como ler o IQP") em 360 e 412 dp, claro e escuro;
+  - TalkBack anunciando "Índice de qualidade N de 100".
+- [ ] **Perfis:** fluxo completo com cada papel (proprietário, gestor, operador, somente leitura), conferindo o que cada um vê e pode fazer.
+
+## Resultado
+
+Registrar no fim deste arquivo: data, quem testou, o que passou e os problemas encontrados (com issue ou commit da correção).
