@@ -42,10 +42,24 @@ services:
         sync: false
       - key: JWT_SECRET
         generateValue: true
+      # E-mails (ADR 0025): chave do Resend, a mesma dos outros projetos no
+      # domínio scheffer.solutions. Sem ela, a API não envia (só registra).
+      - key: RESEND_API_KEY
+        sync: false
+      # Endereço de resposta dos e-mails (opcional). Vazio: sem resposta.
+      - key: MAIL_REPLY_TO
+        sync: false
 
       # Não são segredos (ADR 0015).
       - key: GOOGLE_CLIENT_IDS
         value: 881187129858-3elfcgukc2u988u5gc5sqfvjqv0hd334.apps.googleusercontent.com
+      # Remetente e links dos e-mails (ADR 0025).
+      - key: MAIL_FROM
+        value: Tankei <nao-responda@scheffer.solutions>
+      - key: PORTAL_URL
+        value: https://tankei-portal.onrender.com
+      - key: ADMIN_URL
+        value: https://tankei-admin.onrender.com
 
   # Portal do posto (ADR 0018) e administração (ADR 0019): sites estáticos.
   # As rotas são do navegador (React Router): tudo volta para o index.html.

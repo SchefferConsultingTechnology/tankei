@@ -6,6 +6,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ORG_ROLE_LABELS } from '@tankei/shared';
 import type {
   CreateInvitation,
   Invitation,
@@ -30,6 +31,8 @@ import {
   stations,
   users,
 } from '../database/schema';
+import { MailService } from '../mail/mail.service';
+import { invitationMail } from '../mail/templates';
 import { ParametersService } from '../parameters/parameters.service';
 import { stationDisplayName } from '../stations/display-name';
 
@@ -46,6 +49,7 @@ export class OrganizationsService {
   constructor(
     @Inject(DRIZZLE) private readonly db: Database,
     private readonly parameters: ParametersService,
+    private readonly mail: MailService,
   ) {}
 
   // ---------- Redes da pessoa ----------
@@ -362,6 +366,28 @@ export class OrganizationsService {
       .select({ name: users.name })
       .from(users)
       .where(eq(users.id, user.id));
+
+    // Aviso por e-mail (ADR 0025): o convite vale mesmo se o envio falhar.
+    const [org] = await this.db
+      .select({ name: organizations.name })
+      .from(organizations)
+      .where(eq(organizations.id, organizationId));
+    const units = await this.unitsOf([organizationId]);
+    this.mail.notify(
+      [body.email],
+      invitationMail({
+        organizationName: org?.name ?? 'rede',
+        inviterName: inviter?.name ?? null,
+        roleLabel: ORG_ROLE_LABELS[body.role],
+        stations:
+          body.scope === 'todas'
+            ? []
+            : units
+                .filter((u) => body.stationIds.includes(u.id))
+                .map((u) => u.name),
+        expiresAt: created.expiresAt,
+      }),
+    );
     return toInvitation(created, inviter?.name ?? null, new Date());
   }
 

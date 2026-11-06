@@ -1,6 +1,20 @@
 import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
-import { roleCan, type OrgAction, type OrgRole } from '@tankei/shared';
-import { and, eq, exists, or, sql } from 'drizzle-orm';
+import {
+  ORG_ROLES,
+  roleCan,
+  type OrgAction,
+  type OrgRole,
+} from '@tankei/shared';
+import {
+  and,
+  eq,
+  exists,
+  inArray,
+  isNotNull,
+  isNull,
+  or,
+  sql,
+} from 'drizzle-orm';
 import type { AuthenticatedUser } from '../auth/tokens.service';
 import { DRIZZLE, type Database } from '../database/database.module';
 import {
@@ -8,6 +22,7 @@ import {
   organizationMemberStations,
   organizationStations,
   stations,
+  users,
 } from '../database/schema';
 import { stationDisplayName } from '../stations/display-name';
 
@@ -116,6 +131,62 @@ export class AccessService {
     if (user.role === 'admin' && action === 'view') return true;
     const access = await this.roleAt(user.id, stationId);
     return access !== null && roleCan(access.role, action);
+  }
+
+  /**
+   * Pessoas da equipe que podem fazer a ação no posto (papel e escopo), com
+   * e-mail: os destinatários dos avisos do posto (ADR 0025).
+   */
+  async recipients(
+    stationId: string,
+    action: OrgAction,
+  ): Promise<{ userId: string; name: string | null; email: string }[]> {
+    const roles = ORG_ROLES.filter((role) => roleCan(role, action));
+    const rows = await this.db
+      .select({
+        userId: users.id,
+        name: users.name,
+        email: users.email,
+      })
+      .from(organizationMembers)
+      .innerJoin(
+        organizationStations,
+        eq(
+          organizationStations.organizationId,
+          organizationMembers.organizationId,
+        ),
+      )
+      .innerJoin(users, eq(users.id, organizationMembers.userId))
+      .where(
+        and(
+          eq(organizationStations.stationId, stationId),
+          inArray(organizationMembers.role, roles),
+          isNull(users.deletedAt),
+          isNotNull(users.email),
+          or(
+            eq(organizationMembers.scope, 'todas'),
+            exists(
+              this.db
+                .select({ one: sql`1` })
+                .from(organizationMemberStations)
+                .where(
+                  and(
+                    eq(
+                      organizationMemberStations.organizationId,
+                      organizationMembers.organizationId,
+                    ),
+                    eq(
+                      organizationMemberStations.userId,
+                      organizationMembers.userId,
+                    ),
+                    eq(organizationMemberStations.stationId, stationId),
+                  ),
+                ),
+            ),
+          ),
+        ),
+      );
+    return rows.flatMap((r) => (r.email ? [{ ...r, email: r.email }] : []));
   }
 
   async assert(

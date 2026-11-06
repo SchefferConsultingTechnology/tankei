@@ -45,7 +45,10 @@ import {
   excludedReportIds,
   openCase,
 } from '../moderation/moderation-store';
+import { MailService } from '../mail/mail.service';
+import { divergenceMail, moderationOpenedMail } from '../mail/templates';
 import { ParametersService } from '../parameters/parameters.service';
+import { stationDisplayName } from '../stations/display-name';
 import { AccessService } from '../organizations/access.service';
 import { PriceReferencesService } from './price-references.service';
 import {
@@ -81,6 +84,7 @@ export class PriceReportsService {
     private readonly parameters: ParametersService,
     private readonly references: PriceReferencesService,
     private readonly access: AccessService,
+    private readonly mail: MailService,
   ) {}
 
   /**
@@ -98,6 +102,8 @@ export class PriceReportsService {
       .select({
         id: stations.id,
         state: stations.state,
+        tradeName: stations.tradeName,
+        legalName: stations.legalName,
         latitude: sql<number | null>`ST_Y(${stations.location})`,
         longitude: sql<number | null>`ST_X(${stations.location})`,
       })
@@ -192,7 +198,20 @@ export class PriceReportsService {
     }
 
     if (!isManager && classification.status !== 'rejeitado') {
-      await this.detectBurst(stationId, request.fuelType, now);
+      const stationName = stationDisplayName(
+        station.tradeName,
+        station.legalName,
+      );
+      await this.detectBurst(stationId, stationName, request.fuelType, now);
+      this.mail.background(() =>
+        this.announceDivergence(
+          stationId,
+          stationName,
+          request.fuelType,
+          saved.id,
+          now,
+        ),
+      );
     }
 
     if (classification.status === 'rejeitado') {
@@ -474,8 +493,47 @@ export class PriceReportsService {
    * exibido, de contas não confiáveis ou longe do posto, em pouco tempo. Em
    * vez de mudar o preço, vão para a fila da equipe Tankei.
    */
+  /**
+   * Avisa o posto quando este informe abre uma divergência (ADR 0020 e 0025):
+   * antes dele não havia, ou havia com outro valor. Uma vez por divergência.
+   */
+  private async announceDivergence(
+    stationId: string,
+    stationName: string,
+    fuelType: FuelType,
+    reportId: string,
+    now: Date,
+  ): Promise<void> {
+    const priceOf = async (exclude: Set<string>) =>
+      (await this.currentPrices([stationId], now, exclude))
+        .get(stationId)
+        ?.find((p) => p.fuelType === fuelType);
+    const after = await priceOf(new Set());
+    if (!after?.divergence) return;
+    const before = await priceOf(new Set([reportId]));
+    if (
+      before?.divergence &&
+      samePrice(before.divergence.price, after.divergence.price)
+    ) {
+      return;
+    }
+    const recipients = await this.access.recipients(stationId, 'update_price');
+    this.mail.notify(
+      recipients.map((r) => r.email),
+      divergenceMail({
+        stationId,
+        stationName,
+        fuelLabel: FUEL_LABELS[fuelType],
+        stationPrice: after.price,
+        consumerPrice: after.divergence.price,
+        respondBy: new Date(after.divergence.respondBy),
+      }),
+    );
+  }
+
   private async detectBurst(
     stationId: string,
+    stationName: string,
     fuelType: FuelType,
     now: Date,
   ): Promise<void> {
@@ -538,14 +596,25 @@ export class PriceReportsService {
       ) {
         continue;
       }
+      const reason = `${people.size} informes de ${money.format(group[0].price)} em até ${windowMinutes} minutos, de contas novas ou longe do posto (preço exibido: ${money.format(baseline.price)}).`;
       await openCase(this.db, {
         kind: 'rajada',
         stationId,
         fuelType,
         openedByUserId: null,
-        reason: `${people.size} informes de ${money.format(group[0].price)} em até ${windowMinutes} minutos, de contas novas ou longe do posto (preço exibido: ${money.format(baseline.price)}).`,
+        reason,
         reportIds: [...ids],
       });
+      this.mail.notify(
+        await this.mail.adminEmails(),
+        moderationOpenedMail({
+          kindLabel: 'Rajada de informes',
+          stationName,
+          fuelLabel: FUEL_LABELS[fuelType],
+          reports: ids.size,
+          reason,
+        }),
+      );
     }
   }
 }

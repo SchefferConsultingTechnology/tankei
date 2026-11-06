@@ -5,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { FUEL_LABELS, MODERATION_KIND_LABELS } from '@tankei/shared';
 import type {
   AdminModerationCase,
   CreateContest,
@@ -33,6 +34,8 @@ import {
   users,
 } from '../database/schema';
 import { AccessService } from '../organizations/access.service';
+import { MailService } from '../mail/mail.service';
+import { moderationDecidedMail, moderationOpenedMail } from '../mail/templates';
 import { ParametersService } from '../parameters/parameters.service';
 import { pseudonym } from '../prices/pseudonym';
 import { cityDisplayName, stationDisplayName } from '../stations/display-name';
@@ -53,6 +56,7 @@ export class ModerationService {
     @Inject(DRIZZLE) private readonly db: Database,
     private readonly access: AccessService,
     private readonly parameters: ParametersService,
+    private readonly mail: MailService,
   ) {}
 
   // ---------- Posto ----------
@@ -121,6 +125,7 @@ export class ModerationService {
       }),
     );
     const [created] = await this.stationCaseList(stationId, [caseId]);
+    this.mail.background(() => this.announceOpened(stationId, created));
     return created;
   }
 
@@ -256,7 +261,45 @@ export class ModerationService {
       })
       .onConflictDoNothing();
     const [result] = await this.toAdmin([found]);
+    this.mail.background(() => this.announceDecided(result));
     return result;
+  }
+
+  /** Aviso à equipe Tankei de uma contestação nova (ADR 0025). */
+  private async announceOpened(stationId: string, item: StationModerationCase) {
+    const [place] = await this.db
+      .select({ tradeName: stations.tradeName, legalName: stations.legalName })
+      .from(stations)
+      .where(eq(stations.id, stationId));
+    this.mail.notify(
+      await this.mail.adminEmails(),
+      moderationOpenedMail({
+        kindLabel: MODERATION_KIND_LABELS[item.kind],
+        stationName: place
+          ? stationDisplayName(place.tradeName, place.legalName)
+          : 'posto',
+        fuelLabel: FUEL_LABELS[item.fuelType],
+        reports: item.reports,
+        reason: item.reason,
+      }),
+    );
+  }
+
+  /** Aviso ao posto da decisão: quem pode contestar (ADR 0025). */
+  private async announceDecided(item: AdminModerationCase) {
+    if (!item.decision) return;
+    const recipients = await this.access.recipients(item.station.id, 'contest');
+    this.mail.notify(
+      recipients.map((r) => r.email),
+      moderationDecidedMail({
+        stationId: item.station.id,
+        stationName: item.station.name,
+        fuelLabel: FUEL_LABELS[item.fuelType],
+        annulled: item.decision.decision === 'anulado',
+        isContest: item.kind === 'contestacao',
+        reason: item.decision.reason,
+      }),
+    );
   }
 
   private async toAdmin(

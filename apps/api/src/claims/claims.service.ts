@@ -5,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { CLAIM_POSITION_LABELS } from '@tankei/shared';
 import type {
   AdminClaim,
   ApproveClaim,
@@ -26,6 +27,12 @@ import {
 } from '../database/schema';
 import { AccessService } from '../organizations/access.service';
 import { OrganizationsService } from '../organizations/organizations.service';
+import { MailService } from '../mail/mail.service';
+import {
+  claimDecidedMail,
+  claimToAdminsMail,
+  claimToOwnersMail,
+} from '../mail/templates';
 import { ParametersService } from '../parameters/parameters.service';
 import {
   brandDisplayName,
@@ -83,6 +90,7 @@ export class ClaimsService {
     private readonly parameters: ParametersService,
     private readonly access: AccessService,
     private readonly organizations: OrganizationsService,
+    private readonly mail: MailService,
   ) {}
 
   /** Postos ativos por CNPJ (dígitos, pode ser parcial) ou por nome. */
@@ -142,7 +150,42 @@ export class ClaimsService {
       })
       .returning({ id: stationClaims.id });
     const [claim] = await this.list({ claimIds: [created.id] });
-    return toClaim(claim);
+    const result = toClaim(claim);
+    this.mail.background(() =>
+      this.announceClaim(result, body.stationId, body.contactName),
+    );
+    return result;
+  }
+
+  /**
+   * Avisos do pedido (ADR 0025): à equipe Tankei, para analisar, e a quem já
+   * é proprietário do posto, que pode contestar um pedido indevido (ADR 0011).
+   */
+  private async announceClaim(
+    claim: Claim,
+    stationId: string,
+    contactName: string,
+  ) {
+    const positionLabel = CLAIM_POSITION_LABELS[claim.position];
+    this.mail.notify(
+      await this.mail.adminEmails(),
+      claimToAdminsMail({
+        stationName: claim.station.name,
+        city: `${claim.station.city}/${claim.station.state}`,
+        contactName,
+        positionLabel,
+      }),
+    );
+    const owners = await this.access.recipients(stationId, 'manage_team');
+    this.mail.notify(
+      owners.map((o) => o.email),
+      claimToOwnersMail({
+        stationName: claim.station.name,
+        contactName,
+        positionLabel,
+        canReply: this.mail.hasReplyTo,
+      }),
+    );
   }
 
   /** Pedidos da pessoa, os mais recentes primeiro. */
@@ -216,7 +259,22 @@ export class ClaimsService {
         adminId,
       );
     });
-    return this.adminOne(claimId);
+    const result = await this.adminOne(claimId);
+    this.mail.background(() => this.announceDecision(claim.userId, result));
+    return result;
+  }
+
+  private async announceDecision(userId: string, claim: AdminClaim) {
+    const email = await this.mail.emailOf(userId);
+    if (!email) return;
+    this.mail.notify(
+      [email],
+      claimDecidedMail({
+        stationName: claim.station.name,
+        approved: claim.status === 'aprovado',
+        reason: claim.reason,
+      }),
+    );
   }
 
   async reject(
@@ -224,14 +282,16 @@ export class ClaimsService {
     adminId: string,
     reason: string,
   ): Promise<AdminClaim> {
-    await this.pendingClaim(claimId);
+    const claim = await this.pendingClaim(claimId);
     await this.db.insert(stationClaimDecisions).values({
       claimId,
       decision: 'recusado',
       reason,
       decidedByUserId: adminId,
     });
-    return this.adminOne(claimId);
+    const result = await this.adminOne(claimId);
+    this.mail.background(() => this.announceDecision(claim.userId, result));
+    return result;
   }
 
   private async adminOne(claimId: string): Promise<AdminClaim> {

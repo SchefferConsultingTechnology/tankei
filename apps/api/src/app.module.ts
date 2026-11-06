@@ -10,6 +10,7 @@ import { ZodValidationPipe } from './app.setup';
 import { AuthModule } from './auth/auth.module';
 import { ClaimsModule } from './claims/claims.module';
 import { DatabaseModule } from './database/database.module';
+import { MailModule } from './mail/mail.module';
 import { ModerationModule } from './moderation/moderation.module';
 import { ParametersModule } from './parameters/parameters.module';
 import { PortalModule } from './portal/portal.module';
@@ -29,6 +30,7 @@ import { UsersModule } from './users/users.module';
     ScheduleModule.forRoot(),
     DatabaseModule,
     ParametersModule,
+    MailModule,
     StationsModule,
     PricesModule,
     UsersModule,
