@@ -5,6 +5,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import {
+  adminModerationCaseSchema,
   adminNetworkSchema,
   adminNetworkSummarySchema,
   adminParameterSchema,
@@ -12,6 +13,7 @@ import {
   adminStationSummarySchema,
   parameterChangeSchema,
   type AdminUpdateMember,
+  type ModerationDecision,
   type ParameterKey,
 } from '@tankei/shared';
 import { z } from 'zod';
@@ -167,5 +169,39 @@ export function useRemoveMember(networkId: string) {
         { method: 'POST', body: { reason } },
       ),
     onSuccess: invalidate,
+  });
+}
+
+// ---------- Moderação (ADR 0020 e 0024) ----------
+
+export function useModeration(status: 'em_analise' | 'decididos') {
+  return useQuery({
+    queryKey: ['moderation', status],
+    queryFn: () =>
+      authorizedRequest(
+        `/admin/moderation?status=${status}`,
+        z.array(adminModerationCaseSchema),
+      ),
+  });
+}
+
+export function useDecideModeration() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      caseId,
+      ...body
+    }: {
+      caseId: string;
+      decision: ModerationDecision;
+      reason: string;
+    }) =>
+      authorizedRequest(
+        `/admin/moderation/${caseId}/decide`,
+        adminModerationCaseSchema,
+        { method: 'POST', body },
+      ),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['moderation'] }),
   });
 }

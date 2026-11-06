@@ -1,3 +1,4 @@
+import GavelOutlined from '@mui/icons-material/GavelOutlined';
 import HowToRegOutlined from '@mui/icons-material/HowToRegOutlined';
 import HubOutlined from '@mui/icons-material/HubOutlined';
 import LocalGasStationOutlined from '@mui/icons-material/LocalGasStationOutlined';
@@ -33,15 +34,27 @@ const NetworkDetailPage = lazy(() =>
     default: m.NetworkDetailPage,
   })),
 );
+const ModerationPage = lazy(() =>
+  import('./pages/ModerationPage').then((m) => ({
+    default: m.ModerationPage,
+  })),
+);
 const ParametersPage = lazy(() =>
   import('./pages/ParametersPage').then((m) => ({
     default: m.ParametersPage,
   })),
 );
 
-/** Menu da administração (a moderação entra com a fase 2, ADR 0020). */
+/** Menu da administração. */
 const sidebar = (
   <>
+    <List dense subheader={<ListSubheader>Preços</ListSubheader>}>
+      <NavItem
+        to="/moderacao"
+        label="Moderação"
+        icon={<GavelOutlined fontSize="small" />}
+      />
+    </List>
     <List dense subheader={<ListSubheader>Postos</ListSubheader>}>
       <NavItem
         to="/"
@@ -114,6 +127,7 @@ export function App() {
           <Route path="/redes" element={<NetworksPage />} />
           <Route path="/redes/:networkId" element={<NetworkDetailPage />} />
           <Route path="/parametros" element={<ParametersPage />} />
+          <Route path="/moderacao" element={<ModerationPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

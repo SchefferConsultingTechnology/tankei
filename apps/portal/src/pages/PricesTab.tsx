@@ -25,25 +25,36 @@ import {
   FUEL_LABELS,
   FUEL_TYPES,
   formatPrice,
+  formatUntil,
   type CurrentPrice,
   type FuelType,
   type Station,
 } from '@tankei/shared';
 import { useState, type FormEvent } from 'react';
 import { ApiError } from '../api/client';
-import { useReportPrice, type PriceUpdate } from '../api/queries';
+import {
+  usePriceHistory,
+  useReportPrice,
+  type PriceUpdate,
+} from '../api/queries';
+import { ContestDialog } from '../components/ContestDialog';
 import { PriceTag } from '../components/PriceTag';
 
 /** Preços vigentes da unidade, com atualização por combustível. */
 export function PricesTab({
   station,
   canUpdate = true,
+  canContest = false,
 }: {
   station: Station;
   /** Somente leitura (ADR 0021): vê os preços, sem atualizar. */
   canUpdate?: boolean;
+  /** Proprietário e gestor contestam informes (ADR 0020). */
+  canContest?: boolean;
 }) {
   const [editing, setEditing] = useState<FuelType | null>(null);
+  const [contesting, setContesting] = useState<CurrentPrice | null>(null);
+  const reconfirm = useReportPrice(station.id);
   const [notice, setNotice] = useState<string | null>(null);
   const fuels = FUEL_TYPES.filter((fuel) => station.fuels.includes(fuel));
   const priceOf = (fuel: FuelType) =>
@@ -62,6 +73,78 @@ export function PricesTab({
       <Typography variant="h6" component="h2" sx={{ fontWeight: 700 }}>
         Preços atuais
       </Typography>
+
+      {fuels.flatMap((fuel) => {
+        const price = priceOf(fuel);
+        const divergence = price?.divergence;
+        if (!price || !divergence) return [];
+        return [
+          <Alert
+            key={fuel}
+            severity="warning"
+            sx={{ '& .MuiAlert-message': { width: '100%' } }}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 700 }}>
+              {FUEL_LABELS[fuel]}: consumidores informaram R${' '}
+              {formatPrice(divergence.price)}
+            </Typography>
+            <Typography variant="body2">
+              O app continua mostrando o seu preço (R$ {formatPrice(price.price)}
+              ) com esse aviso. Reconfirme ou conteste{' '}
+              {formatUntil(divergence.respondBy)}; sem resposta, o valor dos
+              consumidores passa a valer.
+            </Typography>
+            {(canUpdate || canContest) && (
+              <Stack
+                direction="row"
+                spacing={1}
+                useFlexGap
+                sx={{ mt: 1, flexWrap: 'wrap' }}
+              >
+                {canUpdate && (
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="warning"
+                    disabled={reconfirm.isPending}
+                    onClick={() =>
+                      reconfirm.mutate(
+                        { fuelType: fuel, price: price.price, confirmed: true },
+                        {
+                          onSuccess: () =>
+                            setNotice(
+                              `Preço de ${FUEL_LABELS[fuel].toLowerCase()} reconfirmado: R$ ${formatPrice(price.price)}.`,
+                            ),
+                        },
+                      )
+                    }
+                  >
+                    Reconfirmar R$ {formatPrice(price.price)}
+                  </Button>
+                )}
+                {canUpdate && (
+                  <Button
+                    size="small"
+                    color="inherit"
+                    onClick={() => setEditing(fuel)}
+                  >
+                    Corrigir preço
+                  </Button>
+                )}
+                {canContest && (
+                  <Button
+                    size="small"
+                    color="inherit"
+                    onClick={() => setContesting(price)}
+                  >
+                    Contestar informes
+                  </Button>
+                )}
+              </Stack>
+            )}
+          </Alert>,
+        ];
+      })}
 
       <Paper variant="outlined">
         <List disablePadding aria-label="Preços por combustível">
@@ -120,6 +203,18 @@ export function PricesTab({
           : 'Seu papel na equipe permite ver os preços, sem alterá-los.'}
       </Typography>
 
+      {contesting && (
+        <DivergenceContest
+          stationId={station.id}
+          price={contesting}
+          onClose={() => setContesting(null)}
+          onDone={(message) => {
+            setContesting(null);
+            setNotice(message);
+          }}
+        />
+      )}
+
       {editing && (
         <PriceDialog
           stationId={station.id}
@@ -149,6 +244,39 @@ export function PricesTab({
         </Alert>
       </Snackbar>
     </Stack>
+  );
+}
+
+/**
+ * Contestação a partir da divergência: carrega os informes recentes do
+ * combustível e já marca os do valor divergente.
+ */
+function DivergenceContest({
+  stationId,
+  price,
+  onClose,
+  onDone,
+}: {
+  stationId: string;
+  price: CurrentPrice;
+  onClose: () => void;
+  onDone: (message: string) => void;
+}) {
+  const history = usePriceHistory(stationId, price.fuelType, 7);
+  if (!history.data) return null;
+  const candidates = history.data.entries.filter((e) => e.contestable);
+  const divergent = price.divergence?.price;
+  return (
+    <ContestDialog
+      stationId={stationId}
+      fuel={price.fuelType}
+      candidates={candidates}
+      preselected={candidates
+        .filter((e) => divergent !== undefined && e.price === divergent)
+        .map((e) => e.id)}
+      onClose={onClose}
+      onDone={onDone}
+    />
   );
 }
 

@@ -65,6 +65,18 @@ export function describePrice(price: CurrentPrice): string {
   return `${BADGE_LABELS[price.badge]} · ${stale}${formatAge(price.updatedAt)}`;
 }
 
+/**
+ * Aviso junto do preço (ADR 0020): consumidores confirmaram outro valor (o
+ * posto ainda pode responder) ou informaram outro valor recentemente.
+ */
+export function priceNote(price: CurrentPrice): string | null {
+  if (price.divergence) {
+    return `Consumidores informaram R$ ${formatPrice(price.divergence.price)}`;
+  }
+  if (price.otherValueReported) return 'Também foi informado outro valor';
+  return null;
+}
+
 export const BADGE_LABELS: Record<PriceBadge, string> = {
   promocao: 'Promoção',
   atualizado_posto: 'Atualizado pelo posto',

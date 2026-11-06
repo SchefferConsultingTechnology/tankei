@@ -19,6 +19,7 @@ import {
   stationCompetitionSchema,
   stationReputationSchema,
   stationSchema,
+  stationModerationCaseSchema,
   type BulkPrice,
   type CreateClaim,
   type CreateInvitation,
@@ -267,5 +268,36 @@ export function useAnswerInvitation() {
       ),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['invitations'] }),
+  });
+}
+
+// ---------- Contestação (ADR 0020) ----------
+
+export function useStationModeration(stationId: string) {
+  return useQuery({
+    queryKey: ['portal', stationId, 'moderation'],
+    queryFn: () =>
+      authorizedRequest(
+        `/portal/stations/${stationId}/moderation`,
+        z.array(stationModerationCaseSchema),
+      ),
+  });
+}
+
+/** Contesta informes: eles saem do preço exibido até a equipe Tankei decidir. */
+export function useContest(stationId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { reportIds: string[]; reason: string }) =>
+      authorizedRequest(
+        `/portal/stations/${stationId}/moderation/contests`,
+        stationModerationCaseSchema,
+        { method: 'POST', body },
+      ),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['stations', stationId] }),
+        queryClient.invalidateQueries({ queryKey: ['portal', stationId] }),
+      ]),
   });
 }

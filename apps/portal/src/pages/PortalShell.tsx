@@ -1,5 +1,6 @@
 import { ORG_ROLE_LABELS, roleCan, type Me } from '@tankei/shared';
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
+import GavelOutlined from '@mui/icons-material/GavelOutlined';
 import GroupOutlined from '@mui/icons-material/GroupOutlined';
 import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
 import HowToRegOutlined from '@mui/icons-material/HowToRegOutlined';
@@ -54,6 +55,11 @@ const UNIT_MENU: {
         label: 'Histórico',
         to: 'precos/historico',
         icon: <HistoryOutlined fontSize="small" />,
+      },
+      {
+        label: 'Contestações',
+        to: 'precos/contestacoes',
+        icon: <GavelOutlined fontSize="small" />,
       },
     ],
   },

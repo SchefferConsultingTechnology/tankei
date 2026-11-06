@@ -35,6 +35,9 @@ const PriceHistoryPage = lazy(() =>
     default: m.PriceHistoryPage,
   })),
 );
+const ContestsPage = lazy(() =>
+  import('./pages/ContestsPage').then((m) => ({ default: m.ContestsPage })),
+);
 const CompetitionTab = lazy(() =>
   import('./pages/CompetitionTab').then((m) => ({ default: m.CompetitionTab })),
 );
@@ -53,7 +56,13 @@ const ReputationTab = lazy(() =>
 /** Telas que recebem o posto da moldura (StationShell). */
 function PricesRoute() {
   const { station } = useStationContext();
-  return <PricesTab station={station} canUpdate={useCan('update_price')} />;
+  return (
+    <PricesTab
+      station={station}
+      canUpdate={useCan('update_price')}
+      canContest={useCan('contest')}
+    />
+  );
 }
 function RegionRoute() {
   const { station } = useStationContext();
@@ -121,6 +130,7 @@ export function App() {
         <Route index element={<LegacyStationRedirect />} />
         <Route path="precos" element={<PricesRoute />} />
         <Route path="precos/historico" element={<PriceHistoryPage />} />
+        <Route path="precos/contestacoes" element={<ContestsPage />} />
         <Route path="concorrencia" element={<RegionRoute />} />
         <Route path="concorrencia/cidades" element={<CitiesPage />} />
         <Route

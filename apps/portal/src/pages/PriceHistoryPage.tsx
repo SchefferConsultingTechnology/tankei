@@ -1,10 +1,13 @@
+import GavelOutlined from '@mui/icons-material/GavelOutlined';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import MenuItem from '@mui/material/MenuItem';
 import Paper from '@mui/material/Paper';
+import Snackbar from '@mui/material/Snackbar';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import ToggleButton from '@mui/material/ToggleButton';
@@ -15,13 +18,17 @@ import {
   FUEL_TYPES,
   formatPrice,
   formatUntil,
+  MODERATION_KIND_LABELS,
   type FuelType,
+  type ModerationStatus,
   type PriceHistoryEntry,
   type PriceReportStatus,
 } from '@tankei/shared';
 import { useState } from 'react';
 import { usePriceHistory } from '../api/queries';
-import { useStationContext } from './station-context';
+import { ContestDialog } from '../components/ContestDialog';
+import { atStationText } from '../components/report-text';
+import { useCan, useStationContext } from './station-context';
 
 const PERIODS = [7, 30, 90] as const;
 
@@ -32,6 +39,15 @@ const STATUS: Record<
   valido: { label: 'Válido', color: 'success' },
   suspeito: { label: 'Suspeito', color: 'warning' },
   rejeitado: { label: 'Rejeitado', color: 'error' },
+};
+
+const MODERATION: Record<
+  ModerationStatus,
+  { label: string; color: 'warning' | 'default' | 'error' }
+> = {
+  em_analise: { label: 'em análise', color: 'warning' },
+  mantido: { label: 'mantido', color: 'default' },
+  anulado: { label: 'anulado', color: 'error' },
 };
 
 /**
@@ -49,6 +65,11 @@ export function PriceHistoryPage() {
   );
   const fuels = FUEL_TYPES.filter((f) => station.fuels.includes(f));
   const entries = history.data?.entries ?? [];
+  const canContest = useCan('contest');
+  const [contesting, setContesting] = useState<PriceHistoryEntry | null>(
+    null,
+  );
+  const [notice, setNotice] = useState<string | null>(null);
 
   return (
     <Stack spacing={2}>
@@ -117,6 +138,11 @@ export function PriceHistoryPage() {
                 entry={entry}
                 showFuel={fuel === 'todos'}
                 divider={index < entries.length - 1}
+                onContest={
+                  canContest && entry.contestable
+                    ? () => setContesting(entry)
+                    : undefined
+                }
               />
             ))}
           </List>
@@ -126,9 +152,48 @@ export function PriceHistoryPage() {
       <Typography variant="body2" color="text.secondary">
         Consumidores aparecem com um apelido (o mesmo para a mesma pessoa neste
         posto), sem nome. Informes suspeitos só entram no preço depois de
-        confirmados; rejeitados nunca entram. Nada é apagado: correções criam um
+        confirmados; rejeitados nunca entram. Informes contestados ficam fora do
+        preço até a equipe Tankei decidir. Nada é apagado: correções criam um
         registro novo.
       </Typography>
+
+      {contesting && (
+        <ContestDialog
+          stationId={station.id}
+          fuel={contesting.fuelType}
+          candidates={entries.filter(
+            (e) => e.contestable && e.fuelType === contesting.fuelType,
+          )}
+          preselected={entries
+            .filter(
+              (e) =>
+                e.contestable &&
+                e.fuelType === contesting.fuelType &&
+                e.price === contesting.price,
+            )
+            .map((e) => e.id)}
+          onClose={() => setContesting(null)}
+          onDone={(message) => {
+            setContesting(null);
+            setNotice(message);
+          }}
+        />
+      )}
+      <Snackbar
+        open={notice !== null}
+        autoHideDuration={6000}
+        onClose={() => setNotice(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          severity="success"
+          variant="filled"
+          onClose={() => setNotice(null)}
+          sx={{ width: '100%' }}
+        >
+          {notice}
+        </Alert>
+      </Snackbar>
     </Stack>
   );
 }
@@ -137,10 +202,12 @@ function HistoryRow({
   entry,
   showFuel,
   divider,
+  onContest,
 }: {
   entry: PriceHistoryEntry;
   showFuel: boolean;
   divider: boolean;
+  onContest?: () => void;
 }) {
   const status = STATUS[entry.status];
   const when = new Date(entry.reportedAt).toLocaleString('pt-BR', {
@@ -180,7 +247,27 @@ function HistoryRow({
         </Stack>
         <Typography variant="body2" color="text.secondary">
           {when} · {entry.reporter}
+          {entry.source === 'usuario' && ` · ${atStationText(entry)}`}
         </Typography>
+        {entry.moderation && (
+          <Chip
+            size="small"
+            variant="outlined"
+            color={MODERATION[entry.moderation.status].color}
+            icon={<GavelOutlined />}
+            label={`${MODERATION_KIND_LABELS[entry.moderation.kind]}: ${MODERATION[entry.moderation.status].label}`}
+            sx={{ mt: 0.5 }}
+          />
+        )}
+        {onContest && (
+          <Button
+            size="small"
+            onClick={onContest}
+            sx={{ mt: 0.5, ml: -0.5, display: 'block' }}
+          >
+            Contestar
+          </Button>
+        )}
         {entry.promotion && (
           <Typography variant="body2" color="text.secondary">
             Promoção “{entry.promotion.label}”{' '}
