@@ -1,6 +1,6 @@
 # Spec 0001: Escala do IQP visível no app
 
-- **Status:** pronta para implementar
+- **Status:** implementada (2026-11-06)
 - **Data:** 2026-11-05
 - **Relacionados:** ADR 0004 (metodologia do IQP), ADR 0017 (identidade e temas). Já implementado no portal (aba Reputação).
 

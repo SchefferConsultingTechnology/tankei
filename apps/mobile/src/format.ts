@@ -7,4 +7,5 @@ export {
   formatDistance,
   formatPrice,
   formatUntil,
+  priceNote,
 } from '@tankei/shared';

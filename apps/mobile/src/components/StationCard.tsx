@@ -6,7 +6,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { describePrice, formatDistance } from '@/format';
+import { describePrice, formatDistance, priceNote } from '@/format';
 import { priceFor, type ListedStation } from '@/stations';
 import { createStyles } from '@/appearance';
 import { fontSize, radius, spacing } from '@/theme';
@@ -45,11 +45,16 @@ export function StationCard({ station, fuel, onPress, style }: Props) {
         <PriceTag price={price} size="lg" />
       </View>
       <View style={styles.footer}>
-        <Text style={styles.muted}>
+        <Text style={[styles.muted, styles.footerText]}>
           {price ? describePrice(price) : 'Sem preço informado'}
         </Text>
         <IqpPill iqp={station.iqp} />
       </View>
+      {price && priceNote(price) && (
+        <Text style={styles.note} numberOfLines={1}>
+          {priceNote(price)}
+        </Text>
+      )}
     </Pressable>
   );
 }
@@ -67,9 +72,13 @@ const useStyles = createStyles((colors) => ({
   titleBox: { flex: 1 },
   name: { color: colors.text, fontSize: fontSize.lg, fontWeight: '600' },
   muted: { color: colors.textMuted, fontSize: fontSize.sm },
+  note: { color: colors.warning, fontSize: fontSize.sm, fontWeight: '600' },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: spacing.sm,
   },
+  // O texto quebra a linha; a pílula do IQP mantém o tamanho (spec 0001).
+  footerText: { flex: 1 },
 }));

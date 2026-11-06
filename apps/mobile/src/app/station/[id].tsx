@@ -1,4 +1,12 @@
-import { FUEL_LABELS, type Station, type StationIqp } from '@tankei/shared';
+import {
+  FUEL_LABELS,
+  IQP_EXPLANATION,
+  IQP_SCALE_MAX,
+  type Station,
+  type StationIqp,
+} from '@tankei/shared';
+import { SymbolView } from 'expo-symbols';
+import { useState } from 'react';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import {
   ActivityIndicator,
@@ -11,9 +19,10 @@ import {
   View,
 } from 'react-native';
 import { useStation, useStationIqp } from '@/api/queries';
+import { IqpGauge } from '@/components/IqpGauge';
 import { PriceTag } from '@/components/PriceTag';
 import { useBottomPadding } from '@/hooks/useBottomPadding';
-import { CONFIDENCE_LABELS, describePrice } from '@/format';
+import { CONFIDENCE_LABELS, describePrice, priceNote } from '@/format';
 import { priceFor } from '@/stations';
 import { createStyles, useTheme } from '@/appearance';
 import { fontSize, radius, spacing } from '@/theme';
@@ -79,6 +88,9 @@ export default function StationScreen() {
                 {price?.promotion && (
                   <Text style={styles.promotion}>{price.promotion.label}</Text>
                 )}
+                {price && priceNote(price) && (
+                  <Text style={styles.note}>{priceNote(price)}</Text>
+                )}
               </View>
               <PriceTag price={price} size="lg" />
             </View>
@@ -112,42 +124,95 @@ export default function StationScreen() {
 
 function IqpDetail({ iqp }: { iqp: StationIqp }) {
   const styles = useStyles();
-  if (iqp.score === null) {
-    return (
-      <Text style={styles.muted}>
-        Dados insuficientes: o índice aparece a partir de 3 avaliações de
-        pessoas diferentes ({iqp.reviewers} até agora).
-      </Text>
-    );
-  }
   return (
     <View style={{ gap: spacing.md }}>
       <View style={styles.scoreRow}>
-        <Text style={styles.score}>{iqp.score}</Text>
-        <Text style={styles.muted}>
-          de 100 · {iqp.confidence ? CONFIDENCE_LABELS[iqp.confidence] : ''} ·{' '}
-          {iqp.reviewers} avaliações
-        </Text>
-      </View>
-      {iqp.dimensions.map((dimension) => (
-        <View key={dimension.dimension} style={{ gap: spacing.xs }}>
-          <View style={styles.dimensionHeader}>
-            <Text style={styles.body}>{dimension.label}</Text>
-            <Text style={styles.muted}>
-              {dimension.score === null ? 'sem dados' : dimension.score}
+        <IqpGauge score={iqp.score} />
+        <View style={{ flex: 1, gap: 2 }}>
+          {iqp.score === null ? (
+            <Text style={styles.body}>
+              Dados insuficientes: a nota aparece quando mais pessoas diferentes
+              avaliarem ({iqp.reviewers} até agora).
             </Text>
-          </View>
-          <View style={styles.bar}>
-            <View
-              style={[styles.barFill, { width: `${dimension.score ?? 0}%` }]}
-            />
-          </View>
+          ) : (
+            <>
+              <Text style={styles.body}>
+                {iqp.confidence ? CONFIDENCE_LABELS[iqp.confidence] : ''}
+              </Text>
+              <Text style={styles.muted}>
+                {iqp.reviewers === 1
+                  ? '1 pessoa avaliou'
+                  : `${iqp.reviewers} pessoas avaliaram`}
+              </Text>
+            </>
+          )}
         </View>
-      ))}
-      <Text style={styles.muted}>
-        O IQP mede a experiência relatada por consumidores. Preço e anúncios não
-        alteram a nota.
-      </Text>
+      </View>
+      {iqp.score !== null && (
+        <>
+          <Text style={styles.muted}>Notas de 0 a {IQP_SCALE_MAX}</Text>
+          {iqp.dimensions.map((dimension) => (
+            <View key={dimension.dimension} style={{ gap: spacing.xs }}>
+              <View style={styles.dimensionHeader}>
+                <Text style={styles.body}>{dimension.label}</Text>
+                <Text style={styles.muted}>
+                  {dimension.score === null ? 'sem dados' : dimension.score}
+                </Text>
+              </View>
+              <View style={styles.bar}>
+                <View
+                  style={[
+                    styles.barFill,
+                    { width: `${dimension.score ?? 0}%` },
+                  ]}
+                />
+              </View>
+            </View>
+          ))}
+        </>
+      )}
+      <HowToRead version={iqp.methodologyVersion} />
+    </View>
+  );
+}
+
+/** "Como ler o IQP" (spec 0001): mesmo texto do portal, fechado por padrão. */
+function HowToRead({ version }: { version: string }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
+  const [open, setOpen] = useState(false);
+  return (
+    <View style={styles.howTo}>
+      <Pressable
+        style={styles.howToHeader}
+        onPress={() => setOpen((value) => !value)}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+      >
+        <Text style={styles.howToTitle}>Como ler o IQP</Text>
+        <SymbolView
+          name={{
+            ios: open ? 'chevron.up' : 'chevron.down',
+            android: open ? 'expand_less' : 'expand_more',
+            web: open ? 'expand_less' : 'expand_more',
+          }}
+          size={20}
+          tintColor={colors.textMuted}
+        />
+      </Pressable>
+      {open && (
+        <View style={{ gap: spacing.sm }}>
+          {IQP_EXPLANATION.map((line) => (
+            <View key={line} style={styles.bulletRow}>
+              <Text style={styles.muted}>•</Text>
+              <Text style={[styles.muted, { flex: 1 }]}>{line}</Text>
+            </View>
+          ))}
+          <Text style={styles.muted}>
+            Índice calculado pelo Tankei com a metodologia {version}.
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -245,14 +310,28 @@ const useStyles = createStyles((colors, badgeColors) => ({
     fontSize: fontSize.sm,
     fontWeight: '600',
   },
+  note: { color: colors.warning, fontSize: fontSize.sm, fontWeight: '600' },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   priceInfo: { flex: 1, gap: 2 },
-  scoreRow: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm },
-  score: { color: colors.primary, fontSize: 40, fontWeight: '800' },
+  scoreRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
+  howTo: {
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
+    paddingTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  howToHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
+  },
+  howToTitle: { color: colors.text, fontSize: fontSize.md, fontWeight: '600' },
+  bulletRow: { flexDirection: 'row', gap: spacing.sm },
   dimensionHeader: { flexDirection: 'row', justifyContent: 'space-between' },
   bar: {
     height: 6,
-    backgroundColor: colors.background,
+    backgroundColor: colors.surfaceAlt,
     borderRadius: radius.pill,
     overflow: 'hidden',
   },

@@ -24,6 +24,7 @@ import { SignInRequired } from '@/components/SignInRequired';
 import { describePrice } from '@/format';
 import { useBottomPadding } from '@/hooks/useBottomPadding';
 import { useFuelPreference } from '@/hooks/useFuelPreference';
+import { useUserLocation } from '@/hooks/useUserLocation';
 import { priceFor } from '@/stations';
 import { createStyles, useTheme } from '@/appearance';
 import { fontSize, radius, spacing } from '@/theme';
@@ -54,12 +55,20 @@ export default function ReportPriceScreen() {
   const [digits, setDigits] = useState('');
   const queryClient = useQueryClient();
   const bottomPadding = useBottomPadding();
+  // Só a posição real: sem permissão, o hook devolve o centro da cidade.
+  // A API guarda apenas se a pessoa estava no posto (ADR 0020), nunca a posição.
+  const location = useUserLocation();
+  const position =
+    location.status === 'granted'
+      ? { latitude: location.coords.lat, longitude: location.coords.lng }
+      : undefined;
 
   const report = useMutation({
     mutationFn: (input: {
       fuelType: FuelType;
       price: number;
       confirmed: boolean;
+      position?: { latitude: number; longitude: number };
     }) =>
       authorizedRequest(`/stations/${id}/prices`, priceReportResponseSchema, {
         method: 'POST',
@@ -111,7 +120,7 @@ export default function ReportPriceScreen() {
   function send(confirmed: boolean) {
     if (price === null) return;
     report.mutate(
-      { fuelType: fuel, price, confirmed },
+      { fuelType: fuel, price, confirmed, position },
       {
         onSuccess: done,
         onError: (error) => {

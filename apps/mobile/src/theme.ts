@@ -31,6 +31,8 @@ export interface Palette {
   text: string;
   textMuted: string;
   danger: string;
+  /** Avisos (ex.: consumidores informaram outro preço, ADR 0020). Texto ≥ 4,5:1. */
+  warning: string;
   /** Sombra de elementos flutuantes. */
   shadow: string;
   /** Véu atrás de painéis. */
@@ -51,6 +53,7 @@ export const palettes: Record<Scheme, Palette> = {
     text: '#0F1B33',
     textMuted: '#5B6B85',
     danger: '#B91C1C',
+    warning: '#B45309',
     shadow: '#000000',
     backdrop: 'rgba(1, 32, 73, 0.45)',
     star: '#F59E0B',
@@ -66,6 +69,7 @@ export const palettes: Record<Scheme, Palette> = {
     text: '#F1F5FB',
     textMuted: '#9AABC6',
     danger: '#F87171',
+    warning: '#FCD34D',
     shadow: '#000000',
     backdrop: 'rgba(0, 0, 0, 0.6)',
     star: '#FBBF24',
