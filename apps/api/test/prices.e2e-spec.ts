@@ -303,7 +303,7 @@ describe('Informes de preço (e2e)', () => {
 
     it('cria promoção com período, que vale sobre os outros preços', async () => {
       const now = Date.now();
-      const res = await report(gestor, station.s2, {
+      const promotion = {
         fuelType: 'gasolina_comum',
         price: 3.459,
         promotion: {
@@ -311,6 +311,15 @@ describe('Informes de preço (e2e)', () => {
           startsAt: new Date(now - 60_000).toISOString(),
           endsAt: new Date(now + 6 * 3_600_000).toISOString(),
         },
+      };
+
+      // Muito abaixo do preço atual (6,25): pede confirmação também na promoção.
+      const first = await report(gestor, station.s2, promotion).expect(409);
+      expect(first.body).toMatchObject({ code: 'CONFIRMATION_REQUIRED' });
+
+      const res = await report(gestor, station.s2, {
+        ...promotion,
+        confirmed: true,
       }).expect(201);
 
       // Na promoção, o limite normal não se aplica: aceito, não suspeito.

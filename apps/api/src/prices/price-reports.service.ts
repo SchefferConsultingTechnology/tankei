@@ -101,7 +101,9 @@ export class PriceReportsService {
       await this.enforceLimits(user.id, stationId, request.fuelType, now);
     }
 
-    if (!request.confirmed && !request.promotion) {
+    // Promoção também confirma: um valor muito longe do atual costuma ser erro
+    // de digitação (ex.: 3,00 em vez de 5,00), e ela vale acima dos outros preços.
+    if (!request.confirmed) {
       await this.requireConfirmationIfFar(
         stationId,
         request.fuelType,

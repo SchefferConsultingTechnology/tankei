@@ -26,6 +26,10 @@ Pela regra do ADR 0003, o preço do posto é substituído quando duas pessoas di
 
 Sem preço recente do posto, entre informes de consumidores na janela de confirmação vence o valor com mais pessoas diferentes, contadas com os pesos acima; persistindo o empate, vale o mais recente. Quando houver valores conflitantes, o app mostra o vencedor e indica que houve outro valor informado.
 
+### Confirmação do valor
+
+Quem informa um preço muito diferente do vigente (parâmetro `price.variation_confirm_pct`) confirma antes de publicar. Vale também para o posto e para **promoções**: antes, a promoção pulava essa confirmação, e um erro de digitação (ex.: etanol a R$ 3,00) entrava direto, acima dos outros preços.
+
 ### Selos
 
 "Informado por motorista" passa a "Informado por consumidor" e "Confirmado por motoristas" a "Confirmado por consumidores" (fase 1). Os identificadores internos não mudam.
