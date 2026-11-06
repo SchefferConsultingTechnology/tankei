@@ -72,6 +72,18 @@ export const stationSchema = z.object({
     .array(currentPriceSchema)
     .describe('Preço vigente de cada combustível que tem preço exibível.'),
   iqp: iqpSummarySchema,
+  activePromotions: z
+    .array(
+      z.object({
+        id: z.uuid(),
+        title: z.string(),
+        endsAt: z.iso.datetime(),
+      }),
+    )
+    .default([])
+    .describe(
+      'Promoções cadastradas vigentes (ADR 0026), para o destaque na lista e no mapa.',
+    ),
 });
 
 export type Station = z.infer<typeof stationSchema>;

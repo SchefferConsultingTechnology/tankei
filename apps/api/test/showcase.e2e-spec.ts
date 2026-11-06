@@ -313,6 +313,16 @@ describe('Vitrine do posto: fotos e promoções (e2e)', () => {
         badge: 'promocao',
         promotion: { label: 'Semana do motorista' },
       });
+      // Destaque na lista e no mapa (faixa e filtro "Só promoções").
+      const station = (
+        await http().get(`/v1/stations/${stationId}`).expect(200)
+      ).body as Station;
+      expect(station.activePromotions).toEqual([
+        expect.objectContaining({
+          id: promotion.id,
+          title: 'Semana do motorista',
+        }),
+      ]);
     });
 
     it('preço muito diferente do atual pede confirmação', async () => {
@@ -416,6 +426,12 @@ describe('Vitrine do posto: fotos e promoções (e2e)', () => {
         .expect(200);
       expect((res.body as Promotion).status).toBe('encerrada');
       expect(await currentPrice('gasolina_comum')).toBeUndefined();
+      const station = (
+        await http().get(`/v1/stations/${stationId}`).expect(200)
+      ).body as Station;
+      expect(station.activePromotions.map((p) => p.id)).not.toContain(
+        promotion.id,
+      );
       expect((await showcase()).promotions.map((p) => p.id)).not.toContain(
         promotion.id,
       );

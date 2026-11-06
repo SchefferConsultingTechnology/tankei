@@ -11,9 +11,26 @@ import {
   type NearbyStation,
   type Station,
 } from '@tankei/shared';
-import { and, asc, count, eq, isNotNull, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  eq,
+  gt,
+  inArray,
+  isNotNull,
+  isNull,
+  lte,
+  or,
+  sql,
+} from 'drizzle-orm';
 import { DRIZZLE, type Database } from '../database/database.module';
-import { municipalities, stationFuels, stations } from '../database/schema';
+import {
+  municipalities,
+  promotions,
+  stationFuels,
+  stations,
+} from '../database/schema';
 import { IqpService } from '../iqp/iqp.service';
 import { PriceReportsService } from '../prices/price-reports.service';
 import {
@@ -199,9 +216,31 @@ export class StationsService {
 
   private async enrich(rows: StationRow[]): Promise<Station[]> {
     const ids = rows.map((row) => row.id);
-    const [prices, iqpScores] = await Promise.all([
-      this.priceReports.currentPrices(ids),
+    const now = new Date();
+    const [prices, iqpScores, promotionRows] = await Promise.all([
+      this.priceReports.currentPrices(ids, now),
       this.iqp.latest(ids),
+      // Promoções vigentes (ADR 0026): começaram e não terminaram nem foram
+      // encerradas antes.
+      // inArray com lista vazia vira "false" no Drizzle.
+      this.db
+        .select({
+          id: promotions.id,
+          stationId: promotions.stationId,
+          title: promotions.title,
+          endsAt: promotions.endsAt,
+          endedAt: promotions.endedAt,
+        })
+        .from(promotions)
+        .where(
+          and(
+            inArray(promotions.stationId, ids),
+            lte(promotions.startsAt, now),
+            gt(promotions.endsAt, now),
+            or(isNull(promotions.endedAt), gt(promotions.endedAt, now)),
+          ),
+        )
+        .orderBy(asc(promotions.endsAt)),
     ]);
 
     return rows.map((row) => ({
@@ -218,6 +257,16 @@ export class StationsService {
       fuels: row.fuels,
       prices: prices.get(row.id) ?? [],
       iqp: this.iqp.summary(iqpScores.get(row.id)),
+      activePromotions: promotionRows
+        .filter((p) => p.stationId === row.id)
+        .map((p) => ({
+          id: p.id,
+          title: p.title,
+          endsAt: (p.endedAt && p.endedAt < p.endsAt
+            ? p.endedAt
+            : p.endsAt
+          ).toISOString(),
+        })),
     }));
   }
 }

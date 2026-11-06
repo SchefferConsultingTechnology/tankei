@@ -81,3 +81,27 @@ export function withDistanceFrom(
       : station,
   );
 }
+
+/**
+ * Promoção em destaque no cartão (ADR 0026): a cadastrada que termina antes;
+ * sem ela, o preço promocional do combustível escolhido (caminho antigo).
+ */
+export function promotionHighlight(
+  station: Station,
+  fuel: FuelType,
+): { title: string; endsAt: string; others: number } | null {
+  const [first, ...rest] = station.activePromotions;
+  if (first) {
+    return { title: first.title, endsAt: first.endsAt, others: rest.length };
+  }
+  const promo = priceFor(station, fuel)?.promotion;
+  return promo ? { title: promo.label, endsAt: promo.endsAt, others: 0 } : null;
+}
+
+/** Posto com promoção vigente (filtro "Só promoções"). */
+export function hasPromotion(station: Station): boolean {
+  return (
+    station.activePromotions.length > 0 ||
+    station.prices.some((p) => p.promotion !== null)
+  );
+}

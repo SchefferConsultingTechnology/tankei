@@ -1,5 +1,6 @@
 import { FUEL_TYPES } from '@tankei/shared';
 import { router } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -28,24 +29,26 @@ import { usePlace } from '@/place';
 import {
   availableFuels,
   distanceMeters,
+  hasPromotion,
   withDistanceFrom,
   type ListedStation,
 } from '@/stations';
 import { createStyles, useTheme } from '@/appearance';
-import { fontSize, spacing } from '@/theme';
+import { fontSize, radius, spacing } from '@/theme';
 
 /** Deslocamento, em metros, que dispara nova busca de postos por perto. */
 const NEARBY_REFRESH_M = 2_000;
 
 export default function HomeScreen() {
   const styles = useStyles();
-  const { colors } = useTheme();
+  const { colors, badgeColors } = useTheme();
   const { place } = usePlace();
   const city = place.kind === 'city' ? place.municipality : null;
   const location = useUserLocation();
   const [fuel, setFuel] = useFuelPreference();
   const [mode, setMode] = useState<ViewMode>('mapa');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [onlyPromotions, setOnlyPromotions] = useState(false);
   const cardPadding = useBottomPadding(spacing.md);
 
   // A busca por proximidade é refeita ao se afastar do ponto da última busca.
@@ -66,16 +69,19 @@ export default function HomeScreen() {
   const query = city ? cityStations : nearby;
 
   const found = city ? cityStations.data?.stations : nearby.data;
-  const stations: ListedStation[] = useMemo(
+  const all: ListedStation[] = useMemo(
     () =>
       userLocation ? withDistanceFrom(found ?? [], userLocation) : (found ?? []),
     // userLocation vem do estado: muda só quando a pessoa se desloca.
     [found, userLocation],
   );
+  // Filtro "Só promoções" (ADR 0026): vale para o mapa e a lista.
+  const promotionCount = all.filter(hasPromotion).length;
+  const stations = onlyPromotions ? all.filter(hasPromotion) : all;
   const center = city
     ? (cityStations.data?.center ?? PILOT_CITY_CENTER)
     : location.coords;
-  const fuels = availableFuels(stations, FUEL_TYPES);
+  const fuels = availableFuels(all, FUEL_TYPES);
   if (!fuels.includes(fuel)) fuels.unshift(fuel);
 
   // Some sozinho quando o posto sai da busca (outra cidade ou outro lugar).
@@ -133,7 +139,9 @@ export default function HomeScreen() {
       return (
         <Centered>
           <Text style={styles.notice}>
-            {city
+            {onlyPromotions
+              ? 'Nenhum posto com promoção agora.'
+              : city
               ? 'Nenhum posto encontrado nesta cidade.'
               : 'Nenhum posto encontrado por perto.'}
           </Text>
@@ -161,6 +169,29 @@ export default function HomeScreen() {
           <FuelPicker fuels={fuels} selected={fuel} onSelect={setFuel} />
         </View>
         <ViewModeSwitch mode={mode} onChange={setMode} />
+        {(promotionCount > 0 || onlyPromotions) && (
+          <Pressable
+            onPress={() => setOnlyPromotions((value) => !value)}
+            style={[styles.promoChip, onlyPromotions && styles.promoChipActive]}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: onlyPromotions }}
+            accessibilityLabel={`Só postos com promoção (${promotionCount})`}
+          >
+            <SymbolView
+              name={{ ios: 'tag.fill', android: 'sell', web: 'sell' }}
+              size={16}
+              tintColor={onlyPromotions ? colors.surface : badgeColors.promocao}
+            />
+            <Text
+              style={[
+                styles.promoChipText,
+                onlyPromotions && styles.promoChipTextActive,
+              ]}
+            >
+              Só promoções ({promotionCount})
+            </Text>
+          </Pressable>
+        )}
         {!city && location.status === 'denied' && (
           <Text style={styles.notice}>
             Não foi possível obter sua localização: mostrando o centro de
@@ -191,8 +222,27 @@ function Centered({ children }: { children: React.ReactNode }) {
   return <View style={styles.centered}>{children}</View>;
 }
 
-const useStyles = createStyles((colors) => ({
+const useStyles = createStyles((colors, badgeColors) => ({
   screen: { flex: 1 },
+  promoChip: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.pill,
+    borderWidth: 1.5,
+    borderColor: badgeColors.promocao,
+  },
+  promoChipActive: { backgroundColor: badgeColors.promocao },
+  promoChipText: {
+    color: badgeColors.promocao,
+    fontSize: fontSize.sm,
+    fontWeight: '700',
+  },
+  promoChipTextActive: { color: colors.surface },
   toolbar: {
     backgroundColor: colors.surface,
     borderBottomColor: colors.border,

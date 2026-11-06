@@ -184,6 +184,7 @@ describe('StationsController (e2e)', () => {
         fuels: ['gasolina_comum', 'etanol'],
         prices: [],
         iqp: { score: null, confidence: null, reviewers: 0 },
+        activePromotions: [],
       });
     });
 
