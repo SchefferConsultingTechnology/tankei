@@ -92,7 +92,6 @@ export function StationCard({
         </View>
         <PriceTag price={price} size="lg" />
       </View>
-      <StationFacts station={station} />
       <View style={styles.footer}>
         <Text style={[styles.muted, styles.footerText]}>
           {/* Com a faixa, o prazo já aparece em cima. */}
@@ -121,6 +120,8 @@ export function StationCard({
           {priceNote(price)}
         </Text>
       )}
+      {/* Horário e serviços depois das informações do preço. */}
+      <StationFacts station={station} />
       {detailed && <AgreementLines station={station} fuel={fuel} />}
       {/* Deixa claro que o cartão abre a ficha completa. */}
       <View style={styles.more}>
@@ -196,7 +197,7 @@ function StationFacts({ station }: { station: ListedStation }) {
   const status = openingStatus(station.hours, station.state);
   if (!status && station.services.length === 0) return null;
   return (
-    <View style={styles.facts}>
+    <View style={styles.factsColumn}>
       {status && (
         <View style={styles.fact}>
           <View
@@ -216,7 +217,9 @@ function StationFacts({ station }: { station: ListedStation }) {
           </Text>
         </View>
       )}
-      {station.services.map((service) => (
+      {station.services.length > 0 && (
+        <View style={styles.facts}>
+          {station.services.map((service) => (
         <View key={service} style={styles.serviceChip}>
           <SymbolView
             name={
@@ -229,7 +232,9 @@ function StationFacts({ station }: { station: ListedStation }) {
             {STATION_SERVICE_LABELS[service]}
           </Text>
         </View>
-      ))}
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -255,6 +260,7 @@ const useStyles = createStyles((colors, badgeColors) => ({
     gap: 2,
   },
   moreText: { color: colors.primary, fontSize: fontSize.sm, fontWeight: '700' },
+  factsColumn: { gap: spacing.xs },
   facts: {
     flexDirection: 'row',
     flexWrap: 'wrap',
