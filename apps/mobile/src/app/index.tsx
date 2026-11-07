@@ -68,6 +68,10 @@ export default function HomeScreen() {
   const motion =
     !city && location.status === 'granted' ? location.motion : null;
   const driving = useDriving(motion);
+  // Depois de dirigir, a posição vira um carro (fica no último rumo ao parar).
+  // Só caminhando, continua o ponto azul.
+  const [hasDriven, setHasDriven] = useState(false);
+  if (driving && !hasDriven) setHasDriven(true);
   const heading = driving ? (motion?.heading ?? null) : null;
   const [showBehind, setShowBehind] = useState(false);
   const aheadOnly = userLocation !== null && heading !== null && !showBehind;
@@ -163,6 +167,7 @@ export default function HomeScreen() {
             center={center}
             userLocation={userLocation}
             driving={heading !== null ? motion : null}
+            userHeading={hasDriven ? (motion?.heading ?? null) : null}
             selectedId={selected?.id ?? null}
             onSelect={(station) => setSelectedId(station.id)}
             onDeselect={() => setSelectedId(null)}

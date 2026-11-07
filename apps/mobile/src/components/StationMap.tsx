@@ -2,7 +2,7 @@ import type { FuelType } from '@tankei/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, Rect } from 'react-native-svg';
 import type { Coordinates } from '@/api/queries';
 import { projectPoint, zoomForSpeed, type Motion } from '@/driving';
 import {
@@ -33,6 +33,11 @@ interface Props {
    * ajusta o zoom pela velocidade. Nulo parado ou fora do modo direção.
    */
   driving: Motion | null;
+  /**
+   * Rumo conhecido da pessoa: com ele, o ponto azul vira um carro apontando
+   * para onde ela vai (fica no último rumo ao parar).
+   */
+  userHeading: number | null;
   /** Posto destacado no mapa (o cartão dele aparece por cima). */
   selectedId: string | null;
   onSelect: (station: ListedStation) => void;
@@ -48,6 +53,9 @@ const INITIAL_DELTA = 0.05;
 
 /** Com o mapa mais perto que isto (~2 km de altura), o nome aparece. */
 const NAME_LABEL_DELTA = 0.02;
+
+/** Vidros do carro da posição (desenho fixo, igual nos dois temas). */
+const CAR_GLASS = 'rgba(16, 32, 64, 0.85)';
 
 /** Dirigindo, o carro fica esta fração da altura abaixo do centro. */
 const AHEAD_SCREEN_FRACTION = 0.25;
@@ -82,6 +90,7 @@ export function StationMap({
   center,
   userLocation,
   driving,
+  userHeading,
   selectedId,
   onSelect,
   onDeselect,
@@ -178,7 +187,7 @@ export function StationMap({
           .catch(() => undefined);
       }}
       onPanDrag={() => setFollowing(false)}
-      showsUserLocation={userLocation !== null}
+      showsUserLocation={userLocation !== null && userHeading === null}
       // Mapa girado: a bússola aparece e, tocada, volta o norte para cima.
       showsCompass
       showsMyLocationButton={false}
@@ -188,6 +197,9 @@ export function StationMap({
       userInterfaceStyle={scheme}
       customMapStyle={scheme === 'dark' ? DARK_MAP_STYLE : []}
     >
+      {userLocation && userHeading !== null && (
+        <UserCarMarker location={userLocation} heading={userHeading} />
+      )}
       {located.map((station) => (
         <PriceMarker
           key={station.id}
@@ -223,6 +235,59 @@ export function StationMap({
       </Pressable>
     )}
     </View>
+  );
+}
+
+/**
+ * Carro visto de cima no lugar do ponto azul (como no Google Maps). Marcador
+ * "flat": gira junto com o mapa e aponta para o rumo em relação ao norte.
+ */
+function UserCarMarker({
+  location,
+  heading,
+}: {
+  location: Coordinates;
+  heading: number;
+}) {
+  const { colors } = useTheme();
+  // Redesenha só quando a aparência muda (desempenho).
+  const [drawn, setDrawn] = useState<string | null>(null);
+  useEffect(() => {
+    const timer = setTimeout(() => setDrawn(colors.accent), 500);
+    return () => clearTimeout(timer);
+  }, [colors.accent]);
+  return (
+    <Marker
+      identifier="user-car"
+      coordinate={{ latitude: location.lat, longitude: location.lng }}
+      anchor={{ x: 0.5, y: 0.5 }}
+      flat
+      rotation={heading}
+      tappable={false}
+      tracksViewChanges={drawn !== colors.accent}
+      zIndex={TOP_Z_INDEX + 1}
+      accessibilityLabel="Sua posição"
+    >
+      <Svg width={26} height={42} viewBox="0 0 26 42">
+        {/* Carroceria com contorno branco, para destacar sobre o mapa. */}
+        <Rect
+          x={2}
+          y={2}
+          width={22}
+          height={38}
+          rx={9}
+          fill={colors.accent}
+          stroke="#FFFFFF"
+          strokeWidth={2.5}
+        />
+        {/* Para-brisa (frente, em cima) e vidro traseiro. */}
+        <Path d="M6 13 L20 13 L18 19 L8 19 Z" fill={CAR_GLASS} />
+        <Path d="M8 30 L18 30 L19.5 35 L6.5 35 Z" fill={CAR_GLASS} />
+        {/* Faróis. */}
+        <Rect x={6} y={4.5} width={4} height={2.5} rx={1} fill="#FFF6D5" />
+        <Rect x={16} y={4.5} width={4} height={2.5} rx={1} fill="#FFF6D5" />
+      </Svg>
+    </Marker>
   );
 }
 
