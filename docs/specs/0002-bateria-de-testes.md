@@ -120,6 +120,14 @@ Conferir de ponta a ponta, no ambiente publicado (Render e Supabase) e no celula
 - [ ] **App:**
   - escala do IQP (pílula "IQP N/100", medidor, "Como ler o IQP") em 360 e 412 dp, claro e escuro;
   - TalkBack anunciando "Índice de qualidade N de 100".
+- [ ] **Modo direção (ADR 0032), num trajeto real (ex.: Curitibanos → Lages):**
+  - acima de 15 km/h aparece "Dirigindo: mostrando os postos à frente"; o mapa gira no sentido da estrada, com o carro abaixo do centro;
+  - o zoom abre na estrada e fecha na cidade, sem ficar pulando;
+  - postos que ficaram para trás somem; "Ver todos" traz de volta;
+  - postos novos aparecem à frente sem a tela piscar;
+  - parado (semáforo), o modo continua até ficar abaixo de 5 km/h; a bússola volta o norte;
+  - arrastar o mapa para de seguir; "Seguir minha posição" volta;
+  - anotar a bateria gasta por hora.
 - [ ] **Tela ligada:** com o app aberto a tela não apaga; desligando "Manter a tela ligada" em Conta, volta a apagar no tempo do celular; em segundo plano, apaga normalmente.
 - [ ] **Perfis:** fluxo completo com cada papel (proprietário, gestor, operador, somente leitura), conferindo o que cada um vê e pode fazer.
 

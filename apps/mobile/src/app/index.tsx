@@ -14,6 +14,12 @@ import {
   type Coordinates,
 } from '@/api/queries';
 import { FuelPicker } from '@/components/FuelPicker';
+import {
+  isAhead,
+  projectPoint,
+  SEARCH_AHEAD_M,
+  useDriving,
+} from '@/driving';
 import { SelectField } from '@/components/SelectField';
 import { StationCard } from '@/components/StationCard';
 import { StationList } from '@/components/StationList';
@@ -38,6 +44,11 @@ import { fontSize, radius, spacing } from '@/theme';
 
 /** Deslocamento, em metros, que dispara nova busca de postos por perto. */
 const NEARBY_REFRESH_M = 2_000;
+/**
+ * Dirigindo, o ponto da busca fica à frente e gira nas curvas: folga maior
+ * para não buscar a cada curva (o raio de 15 km cobre a diferença).
+ */
+const NEARBY_REFRESH_DRIVING_M = 3_000;
 
 export default function HomeScreen() {
   const styles = useStyles();
@@ -50,18 +61,32 @@ export default function HomeScreen() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [onlyPromotions, setOnlyPromotions] = useState(false);
   const cardPadding = useBottomPadding(spacing.md);
-
-  // A busca por proximidade é refeita ao se afastar do ponto da última busca.
-  const [searchCenter, setSearchCenter] = useState<Coordinates | null>(null);
-  if (
-    location.coords &&
-    (!searchCenter ||
-      distanceMeters(location.coords, searchCenter) > NEARBY_REFRESH_M)
-  ) {
-    setSearchCenter(location.coords);
-  }
   const userLocation =
     !city && location.status === 'granted' ? location.coords : null;
+
+  // Modo direção (ADR 0032): em movimento, com rumo conhecido.
+  const motion =
+    !city && location.status === 'granted' ? location.motion : null;
+  const driving = useDriving(motion);
+  const heading = driving ? (motion?.heading ?? null) : null;
+  const [showBehind, setShowBehind] = useState(false);
+  const aheadOnly = userLocation !== null && heading !== null && !showBehind;
+
+  // A busca por proximidade é refeita ao se afastar do ponto da última busca.
+  // Dirigindo, o ponto fica alguns km à frente, no sentido do deslocamento.
+  const [searchCenter, setSearchCenter] = useState<Coordinates | null>(null);
+  const wantedCenter =
+    location.coords && heading !== null
+      ? projectPoint(location.coords, heading, SEARCH_AHEAD_M)
+      : location.coords;
+  if (
+    wantedCenter &&
+    (!searchCenter ||
+      distanceMeters(wantedCenter, searchCenter) >
+        (heading !== null ? NEARBY_REFRESH_DRIVING_M : NEARBY_REFRESH_M))
+  ) {
+    setSearchCenter(wantedCenter);
+  }
 
   // Só uma das buscas fica ativa: perto de você ou a cidade escolhida.
   const nearby = useNearbyStations(city ? null : searchCenter);
@@ -77,7 +102,16 @@ export default function HomeScreen() {
   );
   // Filtro "Só promoções" (ADR 0026): vale para o mapa e a lista.
   const promotionCount = all.filter(hasPromotion).length;
-  const stations = onlyPromotions ? all.filter(hasPromotion) : all;
+  const promoted = onlyPromotions ? all.filter(hasPromotion) : all;
+  // Dirigindo, só os postos à frente (o selecionado fica, mesmo se passou).
+  const stations =
+    aheadOnly && userLocation && heading !== null
+      ? promoted.filter(
+          (s) =>
+            s.id === selectedId ||
+            (s.location !== null && isAhead(userLocation, heading, s.location)),
+        )
+      : promoted;
   const center = city
     ? (cityStations.data?.center ?? PILOT_CITY_CENTER)
     : location.coords;
@@ -128,6 +162,7 @@ export default function HomeScreen() {
             fuel={fuel}
             center={center}
             userLocation={userLocation}
+            driving={heading !== null ? motion : null}
             selectedId={selected?.id ?? null}
             onSelect={(station) => setSelectedId(station.id)}
             onDeselect={() => setSelectedId(null)}
@@ -237,6 +272,29 @@ export default function HomeScreen() {
             <Text style={styles.toolChipText}>Etanol ou gasolina?</Text>
           </Pressable>
         </View>
+        {heading !== null && (
+          <View style={styles.drivingBar}>
+            <SymbolView
+              name={{ ios: 'car.fill', android: 'directions_car', web: 'directions_car' }}
+              size={16}
+              tintColor={colors.primary}
+            />
+            <Text style={styles.drivingText}>
+              {showBehind
+                ? 'Dirigindo: mostrando todos os postos'
+                : 'Dirigindo: mostrando os postos à frente'}
+            </Text>
+            <Pressable
+              onPress={() => setShowBehind((value) => !value)}
+              hitSlop={8}
+              accessibilityRole="button"
+            >
+              <Text style={styles.drivingAction}>
+                {showBehind ? 'Só à frente' : 'Ver todos'}
+              </Text>
+            </Pressable>
+          </View>
+        )}
         {!city && location.status === 'denied' && (
           <Text style={styles.notice}>
             Não foi possível obter sua localização: mostrando o centro de
@@ -327,6 +385,22 @@ const useStyles = createStyles((colors, badgeColors) => ({
     paddingHorizontal: spacing.lg,
   },
   content: { flex: 1 },
+  drivingBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceAlt,
+  },
+  drivingText: { flex: 1, color: colors.text, fontSize: fontSize.sm },
+  drivingAction: {
+    color: colors.primary,
+    fontSize: fontSize.sm,
+    fontWeight: '700',
+  },
   mapCard: {
     position: 'absolute',
     left: spacing.lg,

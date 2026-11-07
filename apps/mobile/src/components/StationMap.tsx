@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import Svg, { Path } from 'react-native-svg';
 import type { Coordinates } from '@/api/queries';
+import { projectPoint, zoomForSpeed, type Motion } from '@/driving';
 import {
   MARKER_SIZE,
   metersPerPoint,
@@ -27,6 +28,11 @@ interface Props {
   center: Coordinates;
   /** Posição da pessoa, que o mapa acompanha; nula na busca por cidade. */
   userLocation: Coordinates | null;
+  /**
+   * Movimento de quem dirige (modo direção, ADR 0032): o mapa gira no rumo e
+   * ajusta o zoom pela velocidade. Nulo parado ou fora do modo direção.
+   */
+  driving: Motion | null;
   /** Posto destacado no mapa (o cartão dele aparece por cima). */
   selectedId: string | null;
   onSelect: (station: ListedStation) => void;
@@ -42,6 +48,16 @@ const INITIAL_DELTA = 0.05;
 
 /** Com o mapa mais perto que isto (~2 km de altura), o nome aparece. */
 const NAME_LABEL_DELTA = 0.02;
+
+/** Dirigindo, o carro fica esta fração da altura abaixo do centro. */
+const AHEAD_SCREEN_FRACTION = 0.25;
+
+/** Altura visível do mapa, em metros, num zoom do Google Maps (tiles de 256 dp). */
+function visibleMeters(zoom: number, lat: number, heightDp: number): number {
+  const metersPerDp =
+    (156_543.03 * Math.cos((lat * Math.PI) / 180)) / Math.pow(2, zoom);
+  return metersPerDp * (heightDp || 600);
+}
 
 /** Bomba de combustível (Material "local_gas_station"), 24 × 24. */
 const PUMP_PATH =
@@ -65,6 +81,7 @@ export function StationMap({
   fuel,
   center,
   userLocation,
+  driving,
   selectedId,
   onSelect,
   onDeselect,
@@ -76,15 +93,48 @@ export function StationMap({
   const [mapHeight, setMapHeight] = useState(0);
   // Segue a pessoa até ela arrastar o mapa; o botão volta a seguir.
   const [following, setFollowing] = useState(true);
-  const followsUser = following && userLocation !== null;
+
+  // Zoom escolhido pelo modo direção; nulo fora dele (vale o da pessoa).
+  const autoZoom = useRef<number | null>(null);
+  const heading = driving?.heading ?? null;
+  const speedKmh = driving?.speedKmh ?? null;
+
+  const userLat = userLocation?.lat;
+  const userLng = userLocation?.lng;
 
   useEffect(() => {
-    if (!followsUser) return;
-    mapRef.current?.animateCamera(
-      { center: { latitude: userLocation.lat, longitude: userLocation.lng } },
-      { duration: 500 },
+    if (!following || userLat === undefined || userLng === undefined) return;
+    const position = { lat: userLat, lng: userLng };
+    if (heading === null || speedKmh === null) {
+      autoZoom.current = null;
+      mapRef.current?.animateCamera(
+        { center: { latitude: userLat, longitude: userLng } },
+        { duration: 500 },
+      );
+      return;
+    }
+    // Dirigindo: mapa no rumo, zoom pela velocidade (só troca de faixa com
+    // folga) e o carro abaixo do centro, para mostrar mais da estrada à frente.
+    // O zoom só é aplicado ao trocar de faixa: o zoom feito com os dedos
+    // vale até a próxima troca.
+    const zoom = zoomForSpeed(speedKmh, autoZoom.current);
+    const zoomChanged = zoom !== autoZoom.current;
+    autoZoom.current = zoom;
+    const center = projectPoint(
+      position,
+      heading,
+      AHEAD_SCREEN_FRACTION * visibleMeters(zoom, userLat, mapHeight),
     );
-  }, [followsUser, userLocation?.lat, userLocation?.lng]);
+    mapRef.current?.animateCamera(
+      {
+        center: { latitude: center.lat, longitude: center.lng },
+        heading,
+        pitch: 0,
+        ...(zoomChanged && { zoom }),
+      },
+      { duration: 800 },
+    );
+  }, [following, userLat, userLng, heading, speedKmh, mapHeight]);
   // Postos sem coordenada não vão para o mapa (aparecem na lista).
   const located = useMemo(() => stations.filter(isLocated), [stations]);
   // Só os postos com preço disputam espaço: os sem preço viram um ponto discreto.
@@ -129,6 +179,8 @@ export function StationMap({
       }}
       onPanDrag={() => setFollowing(false)}
       showsUserLocation={userLocation !== null}
+      // Mapa girado: a bússola aparece e, tocada, volta o norte para cima.
+      showsCompass
       showsMyLocationButton={false}
       toolbarEnabled={false}
       // Segue o tema do app (inclusive a escolha fixa na Conta). No Android,
