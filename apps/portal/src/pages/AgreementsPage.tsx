@@ -213,10 +213,24 @@ type Row = { enabled: boolean; kind: DiscountKind; value: string };
 /** Opção "Cadastrar …" da lista de convênios. */
 const NEW_OPTION = '__novo__';
 
-const parseValue = (text: string) => {
-  const value = Number(text.trim().replace(',', '.'));
-  return Number.isFinite(value) && value > 0 ? value : null;
+/**
+ * Desconto digitado só com números, como o preço no app: as duas últimas
+ * casas são os centavos (R$/L) ou a parte decimal (%). "20" = 0,20.
+ */
+const MAX_DISCOUNT_DIGITS = 5;
+const toDigits = (text: string) =>
+  text.replace(/\D/g, '').replace(/^0+/, '').slice(0, MAX_DISCOUNT_DIGITS);
+const parseValue = (digits: string) => {
+  const value = Number(digits || '0') / 100;
+  return value > 0 ? value : null;
 };
+const formatDigits = (digits: string) =>
+  digits
+    ? (Number(digits) / 100).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    : '';
 
 function AgreementDialog({
   stationId,
@@ -255,7 +269,7 @@ function AgreementDialog({
           {
             enabled: d !== undefined,
             kind: d?.kind ?? 'reais_litro',
-            value: d ? String(d.value).replace('.', ',') : '',
+            value: d ? String(Math.round(d.value * 100)) : '',
           },
         ];
       }),
@@ -402,12 +416,14 @@ function AgreementDialog({
                       <TextField
                         size="small"
                         label="Desconto"
-                        value={row.value}
-                        onChange={(e) => setRow(fuel, { value: e.target.value })}
-                        error={row.value.trim() !== '' && value === null}
+                        value={formatDigits(row.value)}
+                        onChange={(e) =>
+                          setRow(fuel, { value: toDigits(e.target.value) })
+                        }
+                        placeholder="0,00"
                         sx={{ width: 140 }}
                         slotProps={{
-                          htmlInput: { inputMode: 'decimal' },
+                          htmlInput: { inputMode: 'numeric', autoComplete: 'off' },
                           input: {
                             startAdornment:
                               row.kind === 'reais_litro' ? (
