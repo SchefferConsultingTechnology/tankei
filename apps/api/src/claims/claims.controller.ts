@@ -46,6 +46,10 @@ const claimIdPipe = new ParseUUIDPipe({
   exceptionFactory: () => new BadRequestException('Pedido inválido.'),
 });
 
+const stationIdPipe = new ParseUUIDPipe({
+  exceptionFactory: () => new BadRequestException('Posto inválido.'),
+});
+
 /** Pedido para gerenciar um posto no portal (ADR 0019). */
 @ApiTags('Reivindicação de posto')
 @ApiBearerAuth()
@@ -61,6 +65,19 @@ export class ClaimsController {
   })
   search(@Query() query: ClaimStationSearchDto): Promise<ClaimableStation[]> {
     return this.claims.searchStations(query);
+  }
+
+  @Get('stations/:stationId')
+  @ZodResponse({
+    status: 200,
+    type: ClaimableStationDto,
+    description:
+      'Um posto ativo, para o pedido que já chega com o posto (ADR 0031).',
+  })
+  station(
+    @Param('stationId', stationIdPipe) stationId: string,
+  ): Promise<ClaimableStation> {
+    return this.claims.claimableStation(stationId);
   }
 
   @Post()
@@ -128,10 +145,6 @@ export class AdminClaimsController {
     return this.claims.reject(claimId, admin.id, body.reason);
   }
 }
-
-const stationIdPipe = new ParseUUIDPipe({
-  exceptionFactory: () => new BadRequestException('Posto inválido.'),
-});
 
 /**
  * Pedidos de acesso ao posto vistos pelo proprietário atual, que pode dizer

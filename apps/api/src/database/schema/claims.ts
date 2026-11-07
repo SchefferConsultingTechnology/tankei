@@ -8,6 +8,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import {
   claimDecisionEnum,
+  claimOriginEnum,
   claimPositionEnum,
   verificationMethodEnum,
 } from './enums';
@@ -32,6 +33,8 @@ export const stationClaims = pgTable(
     phone: text(),
     position: claimPositionEnum().notNull(),
     message: text(),
+    /** De onde veio o pedido (ADR 0031). */
+    origin: claimOriginEnum().notNull().default('portal'),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

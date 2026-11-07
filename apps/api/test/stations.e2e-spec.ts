@@ -185,6 +185,7 @@ describe('StationsController (e2e)', () => {
         prices: [],
         iqp: { score: null, confidence: null, reviewers: 0 },
         mode: 'normal',
+        managed: false,
         activePromotions: [],
       });
     });

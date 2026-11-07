@@ -74,6 +74,9 @@ services:
         value: scheffer.consulting.technology@gmail.com
       - key: PORTAL_URL
         value: https://tankei-portal.onrender.com
+      # WhatsApp Business da equipe, para donos de posto (ADR 0031).
+      - key: SUPPORT_WHATSAPP
+        value: "5548999040445"
       - key: ADMIN_URL
         value: https://tankei-admin.onrender.com
 

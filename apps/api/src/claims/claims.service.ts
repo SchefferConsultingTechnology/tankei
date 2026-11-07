@@ -118,6 +118,16 @@ export class ClaimsService {
     return rows.map(toClaimable);
   }
 
+  /** Um posto ativo, para o pedido que chega com o posto escolhido (ADR 0031). */
+  async claimableStation(stationId: string): Promise<ClaimableStation> {
+    const [row] = await this.db
+      .select(stationColumns)
+      .from(stations)
+      .where(and(eq(stations.id, stationId), eq(stations.active, true)));
+    if (!row) throw new NotFoundException('Posto não encontrado.');
+    return toClaimable(row);
+  }
+
   async create(userId: string, body: CreateClaim): Promise<Claim> {
     const [station] = await this.db
       .select({ id: stations.id })
@@ -151,6 +161,7 @@ export class ClaimsService {
         phone: body.phone,
         position: body.position,
         message: body.message || null,
+        origin: body.origin,
       })
       .returning({ id: stationClaims.id });
     const [claim] = await this.list({ claimIds: [created.id] });
@@ -222,6 +233,7 @@ export class ClaimsService {
       contactName: row.contactName,
       phone: row.phone,
       message: row.message,
+      origin: row.origin,
       account: row.account,
       currentManagers: managersOf.get(row.station.id) ?? 0,
       verificationMethod: row.verificationMethod,
@@ -430,6 +442,7 @@ export class ClaimsService {
       contactName: row.contactName,
       phone: row.phone,
       message: row.message,
+      origin: row.origin,
       account: row.account,
       currentManagers: managers.total,
       verificationMethod: row.verificationMethod,
@@ -491,6 +504,7 @@ export class ClaimsService {
         contactName: stationClaims.contactName,
         phone: stationClaims.phone,
         message: stationClaims.message,
+        origin: stationClaims.origin,
         createdAt: stationClaims.createdAt,
         decision: stationClaimDecisions.decision,
         reason: stationClaimDecisions.reason,

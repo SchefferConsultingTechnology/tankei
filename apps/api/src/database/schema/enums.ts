@@ -1,6 +1,7 @@
 import { pgEnum } from 'drizzle-orm/pg-core';
 import {
   AUTH_PROVIDERS,
+  CLAIM_ORIGINS,
   CLAIM_POSITIONS,
   FUEL_TYPES,
   IQP_CONFIDENCE_LEVELS,
@@ -51,6 +52,8 @@ export const verificationMethodEnum = pgEnum(
   'verification_method',
   VERIFICATION_METHODS,
 );
+
+export const claimOriginEnum = pgEnum('claim_origin', CLAIM_ORIGINS);
 
 export const claimPositionEnum = pgEnum('claim_position', CLAIM_POSITIONS);
 

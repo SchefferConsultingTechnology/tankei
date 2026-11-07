@@ -29,6 +29,7 @@ import {
 import { DRIZZLE, type Database } from '../database/database.module';
 import {
   municipalities,
+  organizationStations,
   promotions,
   stationFuels,
   stations,
@@ -236,7 +237,7 @@ export class StationsService {
   private async enrich(rows: StationRow[]): Promise<Station[]> {
     const ids = rows.map((row) => row.id);
     const now = new Date();
-    const [prices, iqpScores, promotionRows] = await Promise.all([
+    const [prices, iqpScores, promotionRows, managedRows] = await Promise.all([
       this.priceReports.currentPrices(ids, now),
       this.iqp.latest(ids),
       // Promoções vigentes (ADR 0026): começaram e não terminaram nem foram
@@ -260,7 +261,13 @@ export class StationsService {
           ),
         )
         .orderBy(asc(promotions.endsAt)),
+      // Postos já com rede no portal (ADR 0031).
+      this.db
+        .select({ stationId: organizationStations.stationId })
+        .from(organizationStations)
+        .where(inArray(organizationStations.stationId, ids)),
     ]);
+    const managed = new Set(managedRows.map((r) => r.stationId));
 
     return rows.map((row) => ({
       id: row.id,
@@ -279,6 +286,7 @@ export class StationsService {
         row.displayMode === 'precos_ocultos' ? [] : (prices.get(row.id) ?? []),
       mode: row.displayMode === 'oculto' ? 'normal' : row.displayMode,
       iqp: this.iqp.summary(iqpScores.get(row.id)),
+      managed: managed.has(row.id),
       activePromotions: promotionRows
         .filter(
           (p) => p.stationId === row.id && row.displayMode !== 'precos_ocultos',

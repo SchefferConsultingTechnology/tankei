@@ -8,15 +8,18 @@ import ListItem from '@mui/material/ListItem';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import CircularProgress from '@mui/material/CircularProgress';
 import {
+  CLAIM_ORIGINS,
   CLAIM_POSITION_LABELS,
   CLAIM_STATUS_LABELS,
   type Claim,
+  type ClaimOrigin,
   type Me,
 } from '@tankei/shared';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router';
-import { useMyClaims } from '../api/queries';
+import { Link, useSearchParams } from 'react-router';
+import { useClaimStation, useMyClaims } from '../api/queries';
 import { useAuth } from '../auth/AuthProvider';
 import { ClaimForm } from './ClaimForm';
 
@@ -35,6 +38,17 @@ export function ClaimsPage({ user }: { user: Me }) {
   const { refreshUser } = useAuth();
   const [creating, setCreating] = useState(false);
   const [sent, setSent] = useState(false);
+  // Link do app (ADR 0031): /acesso?posto=<id>&origem=app_dono.
+  const [params, setParams] = useSearchParams();
+  const linkedId = params.get('posto');
+  const linkedOrigin = params.get('origem');
+  const origin: ClaimOrigin = CLAIM_ORIGINS.includes(
+    linkedOrigin as ClaimOrigin,
+  )
+    ? (linkedOrigin as ClaimOrigin)
+    : 'portal';
+  const linked = useClaimStation(linkedId);
+  const clearLink = () => setParams({}, { replace: true });
   const managed = new Set(user.managedStations.map((s) => s.id));
 
   // Pedido aprovado depois do login: recarrega a conta para o posto aparecer.
@@ -44,6 +58,41 @@ export function ClaimsPage({ user }: { user: Me }) {
   useEffect(() => {
     if (approvedNotLoaded) void refreshUser().catch(() => undefined);
   }, [approvedNotLoaded, refreshUser]);
+
+  if (linkedId) {
+    if (linked.isPending) {
+      return (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+          <CircularProgress aria-label="Carregando o posto" />
+        </Box>
+      );
+    }
+    const alreadyManaged = managed.has(linkedId);
+    if (linked.isError || alreadyManaged) {
+      return (
+        <Alert
+          severity={alreadyManaged ? 'info' : 'error'}
+          action={<Button onClick={clearLink}>Continuar</Button>}
+        >
+          {alreadyManaged
+            ? 'Você já gerencia este posto.'
+            : 'Não encontramos o posto do link. Procure pelo CNPJ ou pelo nome.'}
+        </Alert>
+      );
+    }
+    return (
+      <ClaimForm
+        user={user}
+        initialStation={linked.data}
+        origin={origin}
+        onCancel={clearLink}
+        onSent={() => {
+          clearLink();
+          setSent(true);
+        }}
+      />
+    );
+  }
 
   if (creating) {
     return (

@@ -1,5 +1,6 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import {
+  appConfigSchema,
   cityStationsSchema,
   cityWithStationsSchema,
   nearbyStationSchema,
@@ -81,5 +82,14 @@ export function useCityStations(municipality: string | null, fuel: FuelType) {
         `/stations?municipality=${municipality!}&fuel=${fuel}`,
         cityStationsSchema,
       ),
+  });
+}
+
+/** WhatsApp da equipe e endereço do portal (ADR 0031). Muda raramente. */
+export function useAppConfig() {
+  return useQuery({
+    queryKey: ['config'],
+    staleTime: 60 * 60 * 1000,
+    queryFn: () => apiGet('/config', appConfigSchema),
   });
 }

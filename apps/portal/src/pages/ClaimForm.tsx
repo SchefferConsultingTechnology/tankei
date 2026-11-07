@@ -17,6 +17,7 @@ import {
   CLAIM_POSITION_LABELS,
   CLAIM_POSITIONS,
   type ClaimableStation,
+  type ClaimOrigin,
   type ClaimPosition,
   type Me,
 } from '@tankei/shared';
@@ -32,13 +33,20 @@ export function ClaimForm({
   user,
   onCancel,
   onSent,
+  initialStation = null,
+  origin = 'portal',
 }: {
   user: Me;
   onCancel: () => void;
   onSent: () => void;
+  /** Posto já escolhido pelo link do app (ADR 0031): começa nos dados. */
+  initialStation?: ClaimableStation | null;
+  origin?: ClaimOrigin;
 }) {
-  const [station, setStation] = useState<ClaimableStation | null>(null);
-  const [confirmed, setConfirmed] = useState(false);
+  const [station, setStation] = useState<ClaimableStation | null>(
+    initialStation,
+  );
+  const [confirmed, setConfirmed] = useState(initialStation !== null);
   const step = confirmed && station ? 1 : 0;
 
   return (
@@ -65,6 +73,7 @@ export function ClaimForm({
       ) : (
         <ContactStep
           user={user}
+          origin={origin}
           station={station!}
           onBack={() => setConfirmed(false)}
           onSent={onSent}
@@ -185,11 +194,13 @@ function SearchStep({
 
 function ContactStep({
   user,
+  origin,
   station,
   onBack,
   onSent,
 }: {
   user: Me;
+  origin: ClaimOrigin;
   station: ClaimableStation;
   onBack: () => void;
   onSent: () => void;
@@ -214,6 +225,7 @@ function ContactStep({
         phone,
         position,
         message: message.trim() || undefined,
+        origin,
       },
       { onSuccess: onSent },
     );

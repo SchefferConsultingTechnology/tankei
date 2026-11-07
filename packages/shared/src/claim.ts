@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CLAIM_ORIGINS } from './owner-invite';
 import { nullable } from './validation';
 
 /**
@@ -99,6 +100,10 @@ export const createClaimSchema = z.object({
     .max(500, 'Mensagem muito longa.')
     .optional()
     .describe('Observação para a equipe (melhor horário para ligar, por exemplo).'),
+  origin: z
+    .enum(CLAIM_ORIGINS)
+    .default('portal')
+    .describe('De onde veio o pedido (ADR 0031).'),
 });
 export type CreateClaim = z.output<typeof createClaimSchema>;
 
@@ -119,6 +124,7 @@ export const adminClaimSchema = claimSchema.extend({
   contactName: nullable(z.string(), 'Nulo se a conta foi excluída.'),
   phone: nullable(z.string(), 'Só dígitos. Nulo se a conta foi excluída.'),
   message: nullable(z.string(), 'Observação de quem pediu.'),
+  origin: z.enum(CLAIM_ORIGINS).describe('De onde veio o pedido (ADR 0031).'),
   account: z.object({
     id: z.uuid(),
     name: nullable(z.string(), 'Nome na conta do Google.'),

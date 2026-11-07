@@ -155,6 +155,13 @@
       "when": 1793995424070,
       "tag": "0021_favorites_and_alerts",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1794010480539,
+      "tag": "0022_claim_origin",
+      "breakpoints": true
     }
   ]
 }

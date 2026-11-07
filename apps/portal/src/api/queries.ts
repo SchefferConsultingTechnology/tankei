@@ -26,7 +26,7 @@ import {
   stationPhotosSchema,
   stationPromotionSchema,
   type BulkPrice,
-  type CreateClaim,
+  createClaimSchema,
   type CreateInvitation,
   type UpdateMember,
   type FuelType,
@@ -161,10 +161,23 @@ export function useClaimSearch(q: string, state: string) {
   });
 }
 
+/** Posto que chega escolhido pelo link do app (ADR 0031). */
+export function useClaimStation(stationId: string | null) {
+  return useQuery({
+    queryKey: ['claims', 'station', stationId],
+    enabled: stationId !== null,
+    queryFn: () =>
+      authorizedRequest(
+        `/claims/stations/${stationId}`,
+        claimableStationSchema,
+      ),
+  });
+}
+
 export function useCreateClaim() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: Omit<CreateClaim, 'phone'> & { phone: string }) =>
+    mutationFn: (body: z.input<typeof createClaimSchema>) =>
       authorizedRequest('/claims', claimSchema, { method: 'POST', body }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['claims', 'mine'] }),

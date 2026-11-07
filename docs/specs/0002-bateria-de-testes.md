@@ -122,6 +122,14 @@ Conferir de ponta a ponta, no ambiente publicado (Render e Supabase) e no celula
   - TalkBack anunciando "Índice de qualidade N de 100".
 - [ ] **Perfis:** fluxo completo com cada papel (proprietário, gestor, operador, somente leitura), conferindo o que cada um vê e pode fazer.
 
+### 9. Caminho do dono do posto (ADR 0031)
+
+- [ ] **Convite na ficha:** aparece num posto sem rede e some num posto com rede.
+- [ ] **WhatsApp:** abre o WhatsApp Business da equipe com a mensagem pronta (posto, endereço, código).
+- [ ] **Pedir acesso:** o link abre o portal; depois do login, o pedido começa no passo dos dados com o posto certo; o admin vê a origem "Veio do app (responsável)".
+- [ ] **Indicar:** o compartilhamento leva o link; o pedido feito por ele mostra "Veio do app (convite)".
+- [ ] **Produção:** `SUPPORT_WHATSAPP` configurada no Render.
+
 ## Resultado
 
 Registrar no fim deste arquivo: data, quem testou, o que passou e os problemas encontrados (com issue ou commit da correção).

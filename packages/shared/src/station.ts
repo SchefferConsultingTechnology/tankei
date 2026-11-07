@@ -78,6 +78,12 @@ export const stationSchema = z.object({
     .describe(
       'Como o posto aparece (ADR 0028). Postos ocultos não são retornados.',
     ),
+  managed: z
+    .boolean()
+    .default(false)
+    .describe(
+      'O posto já é gerenciado por uma rede no portal (ADR 0031). Sem rede, o app convida o responsável.',
+    ),
   activePromotions: z
     .array(
       z.object({

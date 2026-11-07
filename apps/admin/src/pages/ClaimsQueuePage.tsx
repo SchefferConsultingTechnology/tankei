@@ -26,6 +26,7 @@ import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import {
+  CLAIM_ORIGIN_LABELS,
   CLAIM_POSITION_LABELS,
   CLAIM_STATUS_LABELS,
   CLAIM_STATUSES,
@@ -257,6 +258,7 @@ function ClaimCard({
         <Fact label="Pedido em">
           {new Date(claim.createdAt).toLocaleString('pt-BR')}
         </Fact>
+        <Fact label="Origem">{CLAIM_ORIGIN_LABELS[claim.origin]}</Fact>
         {claim.message && <Fact label="Observação">{claim.message}</Fact>}
         {claim.decidedAt && (
           <Fact label={`${CLAIM_STATUS_LABELS[claim.status]} em`}>
