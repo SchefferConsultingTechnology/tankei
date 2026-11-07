@@ -1,4 +1,5 @@
-import { FUEL_TYPES, type FuelType } from '@tankei/shared';
+import { FUEL_TYPES, type FuelType, type Station } from '@tankei/shared';
+import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useEffect, useMemo, useState } from 'react';
@@ -10,6 +11,7 @@ import {
 } from 'react-native';
 import {
   useAppConfig,
+  useSelectedStation,
   useCityStations,
   useNearbyStations,
   type Coordinates,
@@ -145,7 +147,27 @@ export default function HomeScreen() {
   if (!fuels.includes(fuel)) fuels.unshift(fuel);
 
   // Some sozinho quando o posto sai da busca (outra cidade ou outro lugar).
-  const selected = stations.find((station) => station.id === selectedId);
+  // Ao tocar, o posto é buscado na hora: o cartão mostra horário, serviços e
+  // preço atuais, mesmo que a lista do mapa seja de alguns minutos atrás.
+  const listed = stations.find((station) => station.id === selectedId);
+  const fresh = useSelectedStation(listed ? listed.id : null);
+  // O marcador do mapa também passa a usar os dados recém-buscados.
+  const queryClient = useQueryClient();
+  const freshStation = fresh.data;
+  useEffect(() => {
+    if (!freshStation) return;
+    queryClient.setQueriesData<Station[]>(
+      { queryKey: ['stations', 'nearby'] },
+      (list) =>
+        list?.map((s) =>
+          s.id === freshStation.id ? { ...s, ...freshStation } : s,
+        ),
+    );
+  }, [freshStation, queryClient]);
+  const selected =
+    listed && fresh.data?.id === listed.id
+      ? { ...listed, ...fresh.data }
+      : listed;
 
   const open = (station: ListedStation) =>
     router.push({ pathname: '/station/[id]', params: { id: station.id } });

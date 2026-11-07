@@ -23,6 +23,12 @@ export interface Coordinates {
 /** Raio da busca na tela inicial, em metros. */
 const SEARCH_RADIUS_M = 15_000;
 
+/**
+ * Lista do mapa: atualiza sozinha neste intervalo com o app aberto (e ao
+ * voltar para o app), para preços e "aberto agora" não ficarem velhos.
+ */
+const LIST_REFRESH_MS = 2 * 60_000;
+
 /** Postos perto do ponto, com preços e IQP. Recarrega ao voltar para o app. */
 export function useNearbyStations(center: Coordinates | null) {
   return useQuery({
@@ -31,6 +37,7 @@ export function useNearbyStations(center: Coordinates | null) {
     // Nova busca ao se deslocar: o mapa continua com os postos anteriores
     // enquanto ela carrega.
     placeholderData: keepPreviousData,
+    refetchInterval: LIST_REFRESH_MS,
     queryFn: () =>
       apiGet(
         `/stations/nearby?lat=${center!.lat}&lng=${center!.lng}&radius=${SEARCH_RADIUS_M}`,
@@ -39,10 +46,25 @@ export function useNearbyStations(center: Coordinates | null) {
   });
 }
 
+/**
+ * Um posto, sempre conferido com a API ao abrir (mostra o que já tem e
+ * atualiza): horário, serviços e preço mudam pelo portal a qualquer hora.
+ */
 export function useStation(id: string) {
   return useQuery({
     queryKey: ['stations', id],
+    staleTime: 0,
     queryFn: () => apiGet(`/stations/${id}`, stationSchema),
+  });
+}
+
+/** O posto tocado no mapa, buscado na hora (o cartão usa os dados atuais). */
+export function useSelectedStation(id: string | null) {
+  return useQuery({
+    queryKey: ['stations', id],
+    enabled: id !== null,
+    staleTime: 0,
+    queryFn: () => apiGet(`/stations/${id!}`, stationSchema),
   });
 }
 
@@ -77,6 +99,7 @@ export function useCityStations(municipality: string | null, fuel: FuelType) {
   return useQuery({
     queryKey: ['stations', 'city', municipality, fuel],
     enabled: municipality !== null,
+    refetchInterval: LIST_REFRESH_MS,
     queryFn: () =>
       apiGet(
         `/stations?municipality=${municipality!}&fuel=${fuel}`,

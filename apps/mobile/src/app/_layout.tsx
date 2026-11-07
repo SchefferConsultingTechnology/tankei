@@ -1,11 +1,15 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  focusManager,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query';
 import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { SymbolView } from 'expo-symbols';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, Text, View } from 'react-native';
+import { AppState, Image, Pressable, Text, View } from 'react-native';
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
 import { Avatar } from '@/components/Avatar';
 import { KeepScreenOnProvider } from '@/keep-awake';
@@ -109,6 +113,13 @@ function App() {
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(colors.background).catch(() => undefined);
   }, [colors.background]);
+  // Voltar para o app conta como "foco": consultas antigas são atualizadas.
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (status) =>
+      focusManager.setFocused(status === 'active'),
+    );
+    return () => subscription.remove();
+  }, []);
   const [queryClient] = useState(
     () =>
       new QueryClient({

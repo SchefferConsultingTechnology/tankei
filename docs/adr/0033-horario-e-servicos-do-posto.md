@@ -30,6 +30,11 @@ Nem todo posto funciona 24 horas, e quem procura um posto à noite ou no domingo
   - o cartão do posto, no mapa e na lista, mostra "aberto agora" em verde ou vermelho e os serviços com ícone;
   - a ficha ganha a seção "Horário e serviços", com o tipo de dia de hoje em destaque.
 - **Cartão do mapa:** o cartão aberto pelo toque num posto fecha sozinho depois de `app.map_card_close_seconds` segundos (parâmetro novo, valor inicial 8; 0 = não fecha). Tocar de novo num posto recomeça a contagem. O app lê o valor em `GET /v1/config`.
+- **Dados atuais no app (revisto em 2026-11-07):**
+  - ao tocar num posto do mapa, o app busca o posto na hora; o cartão e o marcador passam a usar os dados atuais;
+  - a ficha confere com a API sempre que abre;
+  - a lista do mapa se atualiza a cada 2 minutos com o app aberto e ao voltar para o app.
+  - Antes, a lista só era buscada ao abrir o app ou depois de 2 km de deslocamento.
 - **IQP:** não muda. Serviço marcado não dá nota, e não ter o serviço não tira nota.
 
 ## Consequências
