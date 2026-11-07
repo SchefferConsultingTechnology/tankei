@@ -1,7 +1,7 @@
 import type { FuelType } from '@tankei/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, type Region } from 'react-native-maps';
 import Svg, { Path, Rect } from 'react-native-svg';
 import type { Coordinates } from '@/api/queries';
 import { projectPoint, zoomForSpeed, type Motion } from '@/driving';
@@ -100,6 +100,8 @@ export function StationMap({
   const mapRef = useRef<MapView>(null);
   const [latitudeDelta, setLatitudeDelta] = useState(INITIAL_DELTA);
   const [mapHeight, setMapHeight] = useState(0);
+  // Última região vista: o mapa recriado na troca de tema volta a ela.
+  const [region, setRegion] = useState<Region | null>(null);
   // Segue a pessoa até ela arrastar o mapa; o botão volta a seguir.
   const [following, setFollowing] = useState(true);
 
@@ -160,22 +162,28 @@ export function StationMap({
   return (
     <View style={StyleSheet.absoluteFill}>
     <MapView
+      // O Google Maps no Android não troca o estilo (escuro → claro) com o
+      // mapa aberto: recria o mapa ao mudar o tema, na mesma região.
+      key={scheme}
       ref={mapRef}
       style={StyleSheet.absoluteFill}
-      initialRegion={{
-        latitude: center.lat,
-        longitude: center.lng,
-        latitudeDelta: INITIAL_DELTA,
-        longitudeDelta: INITIAL_DELTA,
-      }}
+      initialRegion={
+        region ?? {
+          latitude: center.lat,
+          longitude: center.lng,
+          latitudeDelta: INITIAL_DELTA,
+          longitudeDelta: INITIAL_DELTA,
+        }
+      }
       onPress={(event) => {
         // No iOS, o toque no marcador também chega ao mapa.
         if (event.nativeEvent.action !== 'marker-press') onDeselect();
       }}
       onLayout={(event) => setMapHeight(event.nativeEvent.layout.height)}
-      onRegionChangeComplete={(region) =>
-        setLatitudeDelta(region.latitudeDelta)
-      }
+      onRegionChangeComplete={(next) => {
+        setLatitudeDelta(next.latitudeDelta);
+        setRegion(next);
+      }}
       // O Android ajusta o zoom inicial à proporção da tela sem avisar pela
       // mudança de região: lê a área visível real assim que o mapa fica pronto.
       onMapReady={() => {
