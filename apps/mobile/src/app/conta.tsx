@@ -13,6 +13,7 @@ import { Avatar } from '@/components/Avatar';
 import { CarProfileForm } from '@/components/CarProfileForm';
 import { ContributionCard } from '@/components/ContributionCard';
 import { KeepScreenOnSwitch } from '@/components/KeepScreenOnSwitch';
+import { SpeedometerChooser } from '@/components/SpeedometerChooser';
 import { ThemeChooser } from '@/components/ThemeChooser';
 import { createStyles, useTheme } from '@/appearance';
 import { fontSize, radius, spacing } from '@/theme';
@@ -79,6 +80,9 @@ export default function AccountScreen() {
         <View style={styles.appearance}>
           <KeepScreenOnSwitch />
         </View>
+        <View style={styles.appearance}>
+          <SpeedometerChooser />
+        </View>
       </ScrollView>
     );
   }
@@ -123,6 +127,9 @@ export default function AccountScreen() {
       </View>
       <View style={styles.appearance}>
         <KeepScreenOnSwitch />
+      </View>
+      <View style={styles.appearance}>
+        <SpeedometerChooser />
       </View>
     </ScrollView>
   );

@@ -15,6 +15,7 @@ import {
   type Coordinates,
 } from '@/api/queries';
 import { FuelPicker } from '@/components/FuelPicker';
+import { SpeedCard } from '@/components/SpeedCard';
 import {
   isAhead,
   projectPoint,
@@ -229,6 +230,11 @@ export default function HomeScreen() {
   return (
     <View style={styles.screen}>
       <View style={styles.toolbar}>
+        <SpeedCard
+          speedKmh={
+            location.status === 'granted' ? location.motion.speedKmh : null
+          }
+        />
         <View style={styles.filters}>
           <SelectField
             label={city ? 'Cidade' : 'Mostrando'}

@@ -128,6 +128,10 @@ Conferir de ponta a ponta, no ambiente publicado (Render e Supabase) e no celula
   - parado (semáforo), o modo continua até ficar abaixo de 5 km/h; a bússola volta o norte;
   - arrastar o mapa para de seguir; "Seguir minha posição" volta;
   - anotar a bateria gasta por hora.
+- [ ] **Velocímetro:**
+  - no padrão, o cartão aparece acima de 40 km/h e some abaixo de 35;
+  - o número fica verde acima de 40, laranja acima de 80 e vermelho acima de 110;
+  - "Sempre" mostra o cartão parado (0 km/h); "Desligado" não mostra o cartão.
 - [ ] **Tela ligada:** com o app aberto a tela não apaga; desligando "Manter a tela ligada" em Conta, volta a apagar no tempo do celular; em segundo plano, apaga normalmente.
 - [ ] **Perfis:** fluxo completo com cada papel (proprietário, gestor, operador, somente leitura), conferindo o que cada um vê e pode fazer.
 

@@ -13,7 +13,14 @@ Com a tela sempre ligada, o app passa a ser usado no carro, como o Maps e o Waze
 - **Quando entra:** com a opção "Perto de você", acima de 15 km/h; sai abaixo de 5 km/h. A folga evita alternar em semáforo e lombada.
 - **Leituras do GPS:** uma por segundo (antes, uma a cada 25 m), mesmo parado. Assim a velocidade cai a zero ao parar e o modo desliga. Oscilações de menos de 8 m com a mesma velocidade são ignoradas, para o mapa não tremer.
 - **Carro no lugar do ponto azul:** depois de entrar no modo direção, a posição vira um carro visto de cima, na cor de destaque do tema e com contorno branco. Ele aponta para o rumo, gira com o mapa e fica no último rumo ao parar. Só caminhando, continua o ponto azul.
-- **Velocímetro:** no modo direção, a velocidade aparece no canto superior esquerdo do mapa. Pode diferir do painel do carro, que por norma marca um pouco a mais.
+- **Velocímetro (revisto em 2026-11-07):**
+  - sai do canto do mapa e vira um cartão largo acima de "Mostrando" e "Combustível", no mapa e na lista;
+  - cores do número: verde acima de 40 km/h, laranja acima de 80 e vermelho acima de 110; abaixo de 40, cor normal do texto;
+  - preferência em Conta, guardada só no aparelho:
+    - "Acima de 40 km/h" (padrão): aparece acima de 40 e some abaixo de 35, com folga para não piscar;
+    - "Sempre";
+    - "Desligado".
+  - Pode diferir do painel do carro, que por norma marca um pouco a mais.
 - **Velocidade e rumo:** vêm do GPS. Sem rumo do GPS, o app calcula pela direção entre as duas últimas posições. A velocidade é suavizada. O rumo só é atualizado acima de 5 km/h, porque abaixo disso ele não é confiável.
 - **Mapa no rumo:** o mapa gira no sentido do deslocamento. O carro fica um quarto da tela abaixo do centro, para mostrar mais da estrada à frente.
 - **Parado:** o mapa mantém a última direção. A bússola volta o norte para cima.

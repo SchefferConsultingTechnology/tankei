@@ -9,6 +9,7 @@ import { Image, Pressable, Text, View } from 'react-native';
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
 import { Avatar } from '@/components/Avatar';
 import { KeepScreenOnProvider } from '@/keep-awake';
+import { SpeedometerProvider } from '@/speedometer';
 import { PlaceProvider } from '@/place';
 import {
   createStyles,
@@ -122,6 +123,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <KeepScreenOnProvider>
+        <SpeedometerProvider>
         <PlaceProvider>
           <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
           <Stack
@@ -173,6 +175,7 @@ function App() {
             />
           </Stack>
         </PlaceProvider>
+        </SpeedometerProvider>
         </KeepScreenOnProvider>
       </AuthProvider>
     </QueryClientProvider>

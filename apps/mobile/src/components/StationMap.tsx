@@ -214,17 +214,6 @@ export function StationMap({
         />
       ))}
     </MapView>
-    {speedKmh !== null && (
-      <View style={styles.speed} pointerEvents="none">
-        <Text
-          style={styles.speedValue}
-          accessibilityLabel={`${Math.round(speedKmh)} quilômetros por hora`}
-        >
-          {Math.round(speedKmh)}
-        </Text>
-        <Text style={styles.speedUnit}>km/h</Text>
-      </View>
-    )}
     {userLocation && !following && (
       <Pressable
         style={styles.follow}
@@ -428,31 +417,5 @@ const useStyles = createStyles((colors) => ({
     fontSize: fontSize.sm,
     fontWeight: '600',
   },
-  // Velocidade no modo direção (canto superior esquerdo, como no Waze).
-  speed: {
-    position: 'absolute',
-    top: spacing.md,
-    left: spacing.md,
-    minWidth: 64,
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    elevation: 4,
-    shadowColor: colors.shadow,
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 1 },
-  },
-  speedValue: {
-    color: colors.text,
-    fontSize: fontSize.xl,
-    fontWeight: '800',
-    fontVariant: ['tabular-nums'],
-  },
-  speedUnit: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
   noPriceSelected: { borderColor: colors.primary, borderWidth: 2.5 },
 }));
