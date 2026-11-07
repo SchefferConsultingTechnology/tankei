@@ -15,6 +15,9 @@ import {
   officialDivergenceSchema,
   parameterChangeSchema,
   stationInfoSchema,
+  adminAgreementSchema,
+  type CreateAgreement,
+  type UpdateAgreement,
   type UpdateStationInfo,
   type AdminUpdateMember,
   type ModerationDecision,
@@ -26,6 +29,55 @@ import { authorizedRequest } from './session';
 
 /** Resposta sem corpo (204). */
 const empty = z.undefined();
+
+// ---------- Convênios (ADR 0034) ----------
+
+export function useAgreements() {
+  return useQuery({
+    queryKey: ['admin', 'agreements'],
+    queryFn: () =>
+      authorizedRequest('/admin/agreements', z.array(adminAgreementSchema)),
+  });
+}
+
+function useInvalidateAgreements() {
+  const queryClient = useQueryClient();
+  return () =>
+    queryClient.invalidateQueries({ queryKey: ['admin', 'agreements'] });
+}
+
+export function useCreateAgreement() {
+  const invalidate = useInvalidateAgreements();
+  return useMutation({
+    mutationFn: (body: CreateAgreement) =>
+      authorizedRequest('/admin/agreements', adminAgreementSchema, {
+        method: 'POST',
+        body,
+      }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateAgreement() {
+  const invalidate = useInvalidateAgreements();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: UpdateAgreement }) =>
+      authorizedRequest(`/admin/agreements/${id}`, adminAgreementSchema, {
+        method: 'PATCH',
+        body,
+      }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useRemoveAgreement() {
+  const invalidate = useInvalidateAgreements();
+  return useMutation({
+    mutationFn: (id: string) =>
+      authorizedRequest(`/admin/agreements/${id}`, empty, { method: 'DELETE' }),
+    onSuccess: invalidate,
+  });
+}
 
 // ---------- Horário e serviços do posto (ADR 0033) ----------
 

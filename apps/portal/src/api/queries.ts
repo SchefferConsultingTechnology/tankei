@@ -25,6 +25,10 @@ import {
   stationPhotoSchema,
   stationPhotosSchema,
   stationInfoSchema,
+  agreementSchema,
+  stationAgreementSchema,
+  type CreateAgreement,
+  type SetStationAgreement,
   type UpdateStationInfo,
   stationPromotionSchema,
   type BulkPrice,
@@ -433,6 +437,74 @@ export function useRemovePhoto(stationId: string) {
         { method: 'DELETE' },
       ),
     onSuccess: invalidate,
+  });
+}
+
+// ---------- Convênios (ADR 0034) ----------
+
+export function useAgreementSearch(q: string) {
+  return useQuery({
+    queryKey: ['agreements', 'search', q],
+    queryFn: () =>
+      authorizedRequest(
+        `/portal/agreements?q=${encodeURIComponent(q)}`,
+        z.array(agreementSchema),
+      ),
+  });
+}
+
+export function useCreateAgreement() {
+  return useMutation({
+    mutationFn: (body: CreateAgreement) =>
+      authorizedRequest('/portal/agreements', agreementSchema, {
+        method: 'POST',
+        body,
+      }),
+  });
+}
+
+export function useStationAgreements(stationId: string) {
+  return useQuery({
+    queryKey: ['portal', stationId, 'agreements'],
+    queryFn: () =>
+      authorizedRequest(
+        `/portal/stations/${stationId}/agreements`,
+        z.array(stationAgreementSchema),
+      ),
+  });
+}
+
+export function useSetStationAgreement(stationId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      agreementId,
+      body,
+    }: {
+      agreementId: string;
+      body: SetStationAgreement;
+    }) =>
+      authorizedRequest(
+        `/portal/stations/${stationId}/agreements/${agreementId}`,
+        z.array(stationAgreementSchema),
+        { method: 'PUT', body },
+      ),
+    onSuccess: (data) =>
+      queryClient.setQueryData(['portal', stationId, 'agreements'], data),
+  });
+}
+
+export function useEndStationAgreement(stationId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (agreementId: string) =>
+      authorizedRequest(
+        `/portal/stations/${stationId}/agreements/${agreementId}/end`,
+        z.array(stationAgreementSchema),
+        { method: 'POST' },
+      ),
+    onSuccess: (data) =>
+      queryClient.setQueryData(['portal', stationId, 'agreements'], data),
   });
 }
 

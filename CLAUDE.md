@@ -41,4 +41,4 @@ pnpm --filter @tankei/api dev
 pnpm --filter @tankei/api test:e2e     # precisa do container do banco (db:up)
 ```
 
-Os testes e2e rodam no banco `<banco>_test`, recriado com as migrations a cada execução (`test/global-setup.ts`); podem gravar em tabelas só de inserção (`price_reports`, `parameters`, `price_references`, `station_info_versions`), que bloqueiam UPDATE, DELETE e TRUNCATE por trigger. Os arquivos rodam em paralelo no mesmo banco: use dados próprios (CNPJs e coordenadas distintos) em cada arquivo.
+Os testes e2e rodam no banco `<banco>_test`, recriado com as migrations a cada execução (`test/global-setup.ts`); podem gravar em tabelas só de inserção (`price_reports`, `parameters`, `price_references`, `station_info_versions`, `station_agreement_versions`), que bloqueiam UPDATE, DELETE e TRUNCATE por trigger. Os arquivos rodam em paralelo no mesmo banco: use dados próprios (CNPJs e coordenadas distintos) em cada arquivo.

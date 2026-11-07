@@ -159,6 +159,25 @@ Conferir de ponta a ponta, no ambiente publicado (Render e Supabase) e no celula
   - fecha sozinho depois de 8 s;
   - mudar `app.map_card_close_seconds` no admin muda o tempo; 0 deixa o cartão aberto.
 
+### 11. Convênios (ADR 0034)
+
+- [ ] **Portal:**
+  - adicionar um convênio existente e um novo;
+  - o mesmo nome com outra grafia (maiúsculas ou acento) usa o existente;
+  - descontos em R$/L e em %, com a prévia do preço final;
+  - acima do limite, a API recusa;
+  - editar e encerrar;
+  - operador não altera.
+- [ ] **Admin:**
+  - criar, renomear e desativar;
+  - desativado some do app e da busca do portal;
+  - excluir só aparece em convênio nunca usado.
+- [ ] **App:**
+  - o preço no mapa e na lista é sem desconto;
+  - o cartão aberto pelo toque mostra os convênios do combustível escolhido;
+  - a ficha mostra a seção "Convênios";
+  - todo cartão mostra "Ver detalhes do posto ›".
+
 ## Resultado
 
 Registrar no fim deste arquivo: data, quem testou, o que passou e os problemas encontrados (com issue ou commit da correção).

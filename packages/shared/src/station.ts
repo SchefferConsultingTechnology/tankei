@@ -3,6 +3,7 @@ import { FUEL_TYPES } from './fuel';
 import { iqpSummarySchema } from './iqp';
 import { currentPriceSchema } from './price';
 import { nullable, numericString } from './validation';
+import { stationAgreementSchema } from './agreement';
 import { STATION_SERVICES, storedOpeningHoursSchema } from './station-info';
 
 /** Limites da busca por proximidade, em metros. */
@@ -87,6 +88,12 @@ export const stationSchema = z.object({
     .array(z.enum(STATION_SERVICES))
     .default([])
     .describe('Serviços marcados (ADR 0033), como calibragem e borracharia.'),
+  agreements: z
+    .array(stationAgreementSchema)
+    .default([])
+    .describe(
+      'Convênios vigentes com desconto (ADR 0034). O preço em prices é sempre o sem desconto.',
+    ),
   managed: z
     .boolean()
     .default(false)

@@ -169,6 +169,13 @@
       "when": 1794078476883,
       "tag": "0023_station_info",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794085700487,
+      "tag": "0024_agreements",
+      "breakpoints": true
     }
   ]
 }

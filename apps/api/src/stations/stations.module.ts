@@ -1,3 +1,4 @@
+import { AgreementsModule } from '../agreements/agreements.module';
 import { StationInfoModule } from '../station-info/station-info.module';
 import { Module } from '@nestjs/common';
 import { IqpModule } from '../iqp/iqp.module';
@@ -9,7 +10,13 @@ import { StationsController } from './stations.controller';
 import { StationsService } from './stations.service';
 
 @Module({
-  imports: [PricesModule, IqpModule, MunicipalitiesModule, StationInfoModule],
+  imports: [
+    PricesModule,
+    IqpModule,
+    MunicipalitiesModule,
+    StationInfoModule,
+    AgreementsModule,
+  ],
   controllers: [StationsController],
   providers: [AnpRevendedoresClient, AnpImportService, StationsService],
   exports: [AnpImportService, StationsService],

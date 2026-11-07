@@ -218,6 +218,7 @@ export default function HomeScreen() {
                 fuel={fuel}
                 onPress={() => open(selected)}
                 onReport={() => report(selected)}
+                detailed
                 style={styles.mapCardShadow}
               />
             </View>

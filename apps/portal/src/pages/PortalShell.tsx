@@ -2,6 +2,7 @@ import { ORG_ROLE_LABELS, roleCan, type Me } from '@tankei/shared';
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import CampaignOutlined from '@mui/icons-material/CampaignOutlined';
 import GavelOutlined from '@mui/icons-material/GavelOutlined';
+import HandshakeOutlined from '@mui/icons-material/HandshakeOutlined';
 import PhotoLibraryOutlined from '@mui/icons-material/PhotoLibraryOutlined';
 import ScheduleOutlined from '@mui/icons-material/ScheduleOutlined';
 import GroupOutlined from '@mui/icons-material/GroupOutlined';
@@ -64,6 +65,11 @@ const UNIT_MENU: {
         label: 'Contestações',
         to: 'precos/contestacoes',
         icon: <GavelOutlined fontSize="small" />,
+      },
+      {
+        label: 'Convênios',
+        to: 'precos/convenios',
+        icon: <HandshakeOutlined fontSize="small" />,
       },
     ],
   },

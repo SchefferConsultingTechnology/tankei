@@ -35,6 +35,11 @@ const PriceHistoryPage = lazy(() =>
     default: m.PriceHistoryPage,
   })),
 );
+const AgreementsPage = lazy(() =>
+  import('./pages/AgreementsPage').then((m) => ({
+    default: m.AgreementsPage,
+  })),
+);
 const ContestsPage = lazy(() =>
   import('./pages/ContestsPage').then((m) => ({ default: m.ContestsPage })),
 );
@@ -144,6 +149,7 @@ export function App() {
         <Route path="precos" element={<PricesRoute />} />
         <Route path="precos/historico" element={<PriceHistoryPage />} />
         <Route path="precos/contestacoes" element={<ContestsPage />} />
+        <Route path="precos/convenios" element={<AgreementsPage />} />
         <Route path="posto/horario" element={<StationInfoPage />} />
         <Route path="divulgacao/promocoes" element={<PromotionsPage />} />
         <Route path="divulgacao/fotos" element={<PhotosPage />} />

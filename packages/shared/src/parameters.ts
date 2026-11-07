@@ -7,6 +7,7 @@ const positiveInt = z.number().int().positive();
 /** Unidade do valor, para exibir e validar no admin. */
 export const PARAMETER_UNITS = [
   'percent',
+  'reais',
   'seconds',
   'minutes',
   'hours',
@@ -19,6 +20,7 @@ export type ParameterUnit = (typeof PARAMETER_UNITS)[number];
 
 export const PARAMETER_UNIT_LABELS: Record<ParameterUnit, string> = {
   percent: '%',
+  reais: 'R$',
   seconds: 'segundos',
   minutes: 'minutos',
   hours: 'horas',
@@ -39,6 +41,7 @@ export const PARAMETER_GROUP_LABELS: Record<string, string> = {
   team: 'Equipe',
   review: 'Avaliações',
   app: 'App',
+  agreement: 'Convênios',
 };
 
 /**
@@ -234,6 +237,20 @@ export const PARAMETER_DEFINITIONS = {
     label: 'Fechamento do cartão no mapa',
     description:
       'Segundos até o cartão aberto pelo toque num posto do mapa fechar sozinho (ADR 0033). 0 = não fecha sozinho.',
+  },
+  'agreement.max_discount_pct': {
+    schema: percent,
+    unit: 'percent',
+    label: 'Desconto máximo de convênio (%)',
+    description:
+      'Maior desconto percentual que o posto pode cadastrar num convênio (ADR 0034). Evita erro de digitação.',
+  },
+  'agreement.max_discount_per_liter': {
+    schema: z.number().positive().max(10),
+    unit: 'reais',
+    label: 'Desconto máximo de convênio (R$ por litro)',
+    description:
+      'Maior desconto em R$ por litro que o posto pode cadastrar num convênio (ADR 0034).',
   },
 } satisfies Record<
   string,

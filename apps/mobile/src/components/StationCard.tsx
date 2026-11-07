@@ -1,4 +1,7 @@
 import {
+  describeDiscount,
+  discountedPrice,
+  formatPrice,
   openingStatus,
   STATION_SERVICE_LABELS,
   type FuelType,
@@ -34,6 +37,11 @@ interface Props {
   onPress: () => void;
   /** Posto sem preço: atalho para ser o primeiro a informar. */
   onReport?: () => void;
+  /**
+   * Cartão aberto pelo toque no mapa: mostra também os convênios do
+   * combustível escolhido (ADR 0034).
+   */
+  detailed?: boolean;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -43,6 +51,7 @@ export function StationCard({
   fuel,
   onPress,
   onReport,
+  detailed = false,
   style,
 }: Props) {
   const styles = useStyles();
@@ -112,7 +121,59 @@ export function StationCard({
           {priceNote(price)}
         </Text>
       )}
+      {detailed && <AgreementLines station={station} fuel={fuel} />}
+      {/* Deixa claro que o cartão abre a ficha completa. */}
+      <View style={styles.more}>
+        <Text style={styles.moreText}>Ver detalhes do posto</Text>
+        <SymbolView
+          name={{
+            ios: 'chevron.right',
+            android: 'chevron_right',
+            web: 'chevron_right',
+          }}
+          size={18}
+          tintColor={colors.primary}
+        />
+      </View>
     </Pressable>
+  );
+}
+
+/**
+ * Convênios do combustível escolhido (ADR 0034): o preço do cartão é o sem
+ * desconto; aqui aparece o preço final em cada convênio.
+ */
+function AgreementLines({
+  station,
+  fuel,
+}: {
+  station: ListedStation;
+  fuel: FuelType;
+}) {
+  const styles = useStyles();
+  const price = priceFor(station, fuel)?.price;
+  const lines = station.agreements.flatMap((a) => {
+    const discount = a.discounts.find((d) => d.fuelType === fuel);
+    return discount ? [{ agreement: a, discount }] : [];
+  });
+  if (lines.length === 0) return null;
+  return (
+    <View style={styles.agreements}>
+      <Text style={styles.agreementsTitle}>Convênios</Text>
+      {lines.map(({ agreement, discount }) => (
+        <Text
+          key={agreement.agreement.id}
+          style={styles.agreementLine}
+          numberOfLines={2}
+        >
+          <Text style={styles.agreementName}>{agreement.agreement.name}: </Text>
+          {price !== undefined
+            ? `R$ ${formatPrice(discountedPrice(price, discount))} (${describeDiscount(discount)})`
+            : describeDiscount(discount)}
+          {agreement.note ? ` · ${agreement.note}` : ''}
+        </Text>
+      ))}
+    </View>
   );
 }
 
@@ -174,6 +235,26 @@ function StationFacts({ station }: { station: ListedStation }) {
 }
 
 const useStyles = createStyles((colors, badgeColors) => ({
+  agreements: {
+    gap: 2,
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
+    paddingTop: spacing.sm,
+  },
+  agreementsTitle: {
+    color: colors.textMuted,
+    fontSize: fontSize.sm,
+    fontWeight: '700',
+  },
+  agreementLine: { color: colors.text, fontSize: fontSize.sm },
+  agreementName: { fontWeight: '700' },
+  more: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 2,
+  },
+  moreText: { color: colors.primary, fontSize: fontSize.sm, fontWeight: '700' },
   facts: {
     flexDirection: 'row',
     flexWrap: 'wrap',
