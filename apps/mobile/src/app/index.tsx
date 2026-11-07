@@ -1,7 +1,7 @@
 import { FUEL_TYPES, type FuelType } from '@tankei/shared';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import {
+  useAppConfig,
   useCityStations,
   useNearbyStations,
   type Coordinates,
@@ -59,8 +60,20 @@ export default function HomeScreen() {
   const [fuel, setFuel] = useFuelPreference();
   const [mode, setMode] = useState<ViewMode>('mapa');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  /** Conta os toques em postos: tocar de novo no mesmo recomeça o prazo. */
+  const [selectTick, setSelectTick] = useState(0);
   const [onlyPromotions, setOnlyPromotions] = useState(false);
   const cardPadding = useBottomPadding(spacing.md);
+  const config = useAppConfig();
+
+  // O cartão aberto pelo toque no mapa fecha sozinho (parâmetro
+  // app.map_card_close_seconds, ADR 0033; 0 = não fecha). Cada toque recomeça.
+  const closeSeconds = config.data?.mapCardCloseSeconds ?? 0;
+  useEffect(() => {
+    if (!selectedId || closeSeconds <= 0) return;
+    const timer = setTimeout(() => setSelectedId(null), closeSeconds * 1000);
+    return () => clearTimeout(timer);
+  }, [selectedId, selectTick, closeSeconds]);
   const userLocation =
     !city && location.status === 'granted' ? location.coords : null;
 
@@ -169,7 +182,10 @@ export default function HomeScreen() {
             driving={heading !== null ? motion : null}
             userHeading={hasDriven ? (motion?.heading ?? null) : null}
             selectedId={selected?.id ?? null}
-            onSelect={(station) => setSelectedId(station.id)}
+            onSelect={(station) => {
+              setSelectedId(station.id);
+              setSelectTick((tick) => tick + 1);
+            }}
             onDeselect={() => setSelectedId(null)}
           />
           {selected && (

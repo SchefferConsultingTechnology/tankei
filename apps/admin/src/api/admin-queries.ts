@@ -14,6 +14,8 @@ import {
   adminStationSummarySchema,
   officialDivergenceSchema,
   parameterChangeSchema,
+  stationInfoSchema,
+  type UpdateStationInfo,
   type AdminUpdateMember,
   type ModerationDecision,
   type ParameterKey,
@@ -24,6 +26,29 @@ import { authorizedRequest } from './session';
 
 /** Resposta sem corpo (204). */
 const empty = z.undefined();
+
+// ---------- Horário e serviços do posto (ADR 0033) ----------
+
+export function useAdminStationInfo(stationId: string) {
+  return useQuery({
+    queryKey: ['admin', 'stations', stationId, 'info'],
+    queryFn: () =>
+      authorizedRequest(`/admin/stations/${stationId}/info`, stationInfoSchema),
+  });
+}
+
+export function useUpdateAdminStationInfo(stationId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: UpdateStationInfo) =>
+      authorizedRequest(`/admin/stations/${stationId}/info`, stationInfoSchema, {
+        method: 'PUT',
+        body,
+      }),
+    onSuccess: (data) =>
+      queryClient.setQueryData(['admin', 'stations', stationId, 'info'], data),
+  });
+}
 
 // ---------- Parâmetros ----------
 

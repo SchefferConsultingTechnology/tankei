@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { IQP_METHODOLOGY_VERSION, type AppConfig } from '@tankei/shared';
 import { sql } from 'drizzle-orm';
 import { DRIZZLE, type Database } from './database/database.module';
+import { ParametersService } from './parameters/parameters.service';
 
 export interface HealthStatus {
   status: 'ok' | 'degradado';
@@ -12,7 +13,10 @@ export interface HealthStatus {
 
 @Injectable()
 export class AppService {
-  constructor(@Inject(DRIZZLE) private readonly db: Database) {}
+  constructor(
+    @Inject(DRIZZLE) private readonly db: Database,
+    private readonly parameters: ParametersService,
+  ) {}
 
   async getHealth(): Promise<HealthStatus> {
     const databaseOk = await this.db
@@ -32,13 +36,16 @@ export class AppService {
    * WhatsApp da equipe e endereço do portal (ADR 0031). Vêm do ambiente: não
    * são regras de negócio e mudam sem nova versão do app.
    */
-  getConfig(): AppConfig {
+  async getConfig(): Promise<AppConfig> {
     const digits = (process.env.SUPPORT_WHATSAPP ?? '').replace(/\D/g, '');
     return {
       supportWhatsapp: /^\d{12,13}$/.test(digits) ? digits : null,
       portalUrl: (process.env.PORTAL_URL || 'http://localhost:5173').replace(
         /\/$/,
         '',
+      ),
+      mapCardCloseSeconds: await this.parameters.get(
+        'app.map_card_close_seconds',
       ),
     };
   }

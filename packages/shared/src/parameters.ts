@@ -7,6 +7,7 @@ const positiveInt = z.number().int().positive();
 /** Unidade do valor, para exibir e validar no admin. */
 export const PARAMETER_UNITS = [
   'percent',
+  'seconds',
   'minutes',
   'hours',
   'days',
@@ -18,6 +19,7 @@ export type ParameterUnit = (typeof PARAMETER_UNITS)[number];
 
 export const PARAMETER_UNIT_LABELS: Record<ParameterUnit, string> = {
   percent: '%',
+  seconds: 'segundos',
   minutes: 'minutos',
   hours: 'horas',
   days: 'dias',
@@ -36,6 +38,7 @@ export const PARAMETER_GROUP_LABELS: Record<string, string> = {
   contributor: 'Contribuição',
   team: 'Equipe',
   review: 'Avaliações',
+  app: 'App',
 };
 
 /**
@@ -224,6 +227,13 @@ export const PARAMETER_DEFINITIONS = {
     label: 'Intervalo entre avaliações',
     description:
       'Intervalo mínimo (dias) entre avaliações da mesma conta para o mesmo posto.',
+  },
+  'app.map_card_close_seconds': {
+    schema: z.number().int().min(0).max(120),
+    unit: 'seconds',
+    label: 'Fechamento do cartão no mapa',
+    description:
+      'Segundos até o cartão aberto pelo toque num posto do mapa fechar sozinho (ADR 0033). 0 = não fecha sozinho.',
   },
 } satisfies Record<
   string,

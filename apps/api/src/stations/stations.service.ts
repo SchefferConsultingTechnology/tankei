@@ -36,6 +36,7 @@ import {
 } from '../database/schema';
 import { IqpService } from '../iqp/iqp.service';
 import { PriceReportsService } from '../prices/price-reports.service';
+import { StationInfoService } from '../station-info/station-info.service';
 import {
   brandDisplayName,
   cityDisplayName,
@@ -90,6 +91,7 @@ export class StationsService {
     @Inject(DRIZZLE) private readonly db: Database,
     private readonly priceReports: PriceReportsService,
     private readonly iqp: IqpService,
+    private readonly stationInfo: StationInfoService,
   ) {}
 
   /**
@@ -237,36 +239,38 @@ export class StationsService {
   private async enrich(rows: StationRow[]): Promise<Station[]> {
     const ids = rows.map((row) => row.id);
     const now = new Date();
-    const [prices, iqpScores, promotionRows, managedRows] = await Promise.all([
-      this.priceReports.currentPrices(ids, now),
-      this.iqp.latest(ids),
-      // Promoções vigentes (ADR 0026): começaram e não terminaram nem foram
-      // encerradas antes.
-      // inArray com lista vazia vira "false" no Drizzle.
-      this.db
-        .select({
-          id: promotions.id,
-          stationId: promotions.stationId,
-          title: promotions.title,
-          endsAt: promotions.endsAt,
-          endedAt: promotions.endedAt,
-        })
-        .from(promotions)
-        .where(
-          and(
-            inArray(promotions.stationId, ids),
-            lte(promotions.startsAt, now),
-            gt(promotions.endsAt, now),
-            or(isNull(promotions.endedAt), gt(promotions.endedAt, now)),
-          ),
-        )
-        .orderBy(asc(promotions.endsAt)),
-      // Postos já com rede no portal (ADR 0031).
-      this.db
-        .select({ stationId: organizationStations.stationId })
-        .from(organizationStations)
-        .where(inArray(organizationStations.stationId, ids)),
-    ]);
+    const [prices, iqpScores, promotionRows, managedRows, info] =
+      await Promise.all([
+        this.priceReports.currentPrices(ids, now),
+        this.iqp.latest(ids),
+        // Promoções vigentes (ADR 0026): começaram e não terminaram nem foram
+        // encerradas antes.
+        // inArray com lista vazia vira "false" no Drizzle.
+        this.db
+          .select({
+            id: promotions.id,
+            stationId: promotions.stationId,
+            title: promotions.title,
+            endsAt: promotions.endsAt,
+            endedAt: promotions.endedAt,
+          })
+          .from(promotions)
+          .where(
+            and(
+              inArray(promotions.stationId, ids),
+              lte(promotions.startsAt, now),
+              gt(promotions.endsAt, now),
+              or(isNull(promotions.endedAt), gt(promotions.endedAt, now)),
+            ),
+          )
+          .orderBy(asc(promotions.endsAt)),
+        // Postos já com rede no portal (ADR 0031).
+        this.db
+          .select({ stationId: organizationStations.stationId })
+          .from(organizationStations)
+          .where(inArray(organizationStations.stationId, ids)),
+        this.stationInfo.current(ids),
+      ]);
     const managed = new Set(managedRows.map((r) => r.stationId));
 
     return rows.map((row) => ({
@@ -287,6 +291,8 @@ export class StationsService {
       mode: row.displayMode === 'oculto' ? 'normal' : row.displayMode,
       iqp: this.iqp.summary(iqpScores.get(row.id)),
       managed: managed.has(row.id),
+      hours: info.get(row.id)?.hours ?? null,
+      services: info.get(row.id)?.services ?? [],
       activePromotions: promotionRows
         .filter(
           (p) => p.stationId === row.id && row.displayMode !== 'precos_ocultos',

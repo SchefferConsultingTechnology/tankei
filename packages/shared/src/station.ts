@@ -3,6 +3,7 @@ import { FUEL_TYPES } from './fuel';
 import { iqpSummarySchema } from './iqp';
 import { currentPriceSchema } from './price';
 import { nullable, numericString } from './validation';
+import { STATION_SERVICES, storedOpeningHoursSchema } from './station-info';
 
 /** Limites da busca por proximidade, em metros. */
 export const NEARBY_DEFAULT_RADIUS_M = 5_000;
@@ -78,6 +79,14 @@ export const stationSchema = z.object({
     .describe(
       'Como o posto aparece (ADR 0028). Postos ocultos não são retornados.',
     ),
+  hours: nullable(
+    storedOpeningHoursSchema,
+    'Horário de atendimento (ADR 0033); nulo se não informado.',
+  ).default(null),
+  services: z
+    .array(z.enum(STATION_SERVICES))
+    .default([])
+    .describe('Serviços marcados (ADR 0033), como calibragem e borracharia.'),
   managed: z
     .boolean()
     .default(false)

@@ -57,6 +57,11 @@ const CompetitorPromotionsPage = lazy(() =>
     default: m.CompetitorPromotionsPage,
   })),
 );
+const StationInfoPage = lazy(() =>
+  import('./pages/StationInfoPage').then((m) => ({
+    default: m.StationInfoPage,
+  })),
+);
 const ReputationTab = lazy(() =>
   import('./pages/ReputationTab').then((m) => ({ default: m.ReputationTab })),
 );
@@ -139,6 +144,7 @@ export function App() {
         <Route path="precos" element={<PricesRoute />} />
         <Route path="precos/historico" element={<PriceHistoryPage />} />
         <Route path="precos/contestacoes" element={<ContestsPage />} />
+        <Route path="posto/horario" element={<StationInfoPage />} />
         <Route path="divulgacao/promocoes" element={<PromotionsPage />} />
         <Route path="divulgacao/fotos" element={<PhotosPage />} />
         <Route path="concorrencia" element={<RegionRoute />} />

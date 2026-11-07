@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DRIZZLE } from './database/database.module';
+import { ParametersService } from './parameters/parameters.service';
 
 describe('AppController', () => {
   const execute = jest.fn();
@@ -11,7 +12,11 @@ describe('AppController', () => {
     execute.mockReset();
     const app: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AppService, { provide: DRIZZLE, useValue: { execute } }],
+      providers: [
+        AppService,
+        { provide: DRIZZLE, useValue: { execute } },
+        { provide: ParametersService, useValue: { get: jest.fn() } },
+      ],
     }).compile();
 
     appController = app.get<AppController>(AppController);

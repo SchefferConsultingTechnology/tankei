@@ -162,6 +162,13 @@
       "when": 1794010480539,
       "tag": "0022_claim_origin",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1794078476883,
+      "tag": "0023_station_info",
+      "breakpoints": true
     }
   ]
 }

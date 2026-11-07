@@ -1,4 +1,9 @@
-import type { FuelType } from '@tankei/shared';
+import {
+  openingStatus,
+  STATION_SERVICE_LABELS,
+  type FuelType,
+  type StationService,
+} from '@tankei/shared';
 import { SymbolView } from 'expo-symbols';
 import {
   Pressable,
@@ -78,6 +83,7 @@ export function StationCard({
         </View>
         <PriceTag price={price} size="lg" />
       </View>
+      <StationFacts station={station} />
       <View style={styles.footer}>
         <Text style={[styles.muted, styles.footerText]}>
           {/* Com a faixa, o prazo já aparece em cima. */}
@@ -110,7 +116,83 @@ export function StationCard({
   );
 }
 
+/** Ícones dos serviços (ADR 0033). */
+const SERVICE_ICONS: Record<
+  StationService,
+  { ios: string; android: string; web: string }
+> = {
+  calibrador: { ios: 'gauge.with.dots.needle.33percent', android: 'speed', web: 'speed' },
+  borracharia: { ios: 'wrench.and.screwdriver', android: 'tire_repair', web: 'tire_repair' },
+};
+
+/**
+ * Aberto agora e serviços (ADR 0033), numa linha. Sem horário informado, não
+ * diz nada sobre aberto ou fechado.
+ */
+function StationFacts({ station }: { station: ListedStation }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
+  const status = openingStatus(station.hours, station.state);
+  if (!status && station.services.length === 0) return null;
+  return (
+    <View style={styles.facts}>
+      {status && (
+        <View style={styles.fact}>
+          <View
+            style={[
+              styles.dot,
+              { backgroundColor: status.open ? colors.success : colors.danger },
+            ]}
+          />
+          <Text
+            style={[
+              styles.factText,
+              { color: status.open ? colors.success : colors.danger },
+            ]}
+            numberOfLines={1}
+          >
+            {status.label}
+          </Text>
+        </View>
+      )}
+      {station.services.map((service) => (
+        <View key={service} style={styles.serviceChip}>
+          <SymbolView
+            name={
+              SERVICE_ICONS[service] as Parameters<typeof SymbolView>[0]['name']
+            }
+            size={14}
+            tintColor={colors.text}
+          />
+          <Text style={styles.serviceText}>
+            {STATION_SERVICE_LABELS[service]}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 const useStyles = createStyles((colors, badgeColors) => ({
+  facts: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  fact: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  dot: { width: 8, height: 8, borderRadius: 4 },
+  factText: { fontSize: fontSize.sm, fontWeight: '700' },
+  serviceChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+  },
+  serviceText: { color: colors.text, fontSize: fontSize.sm, fontWeight: '600' },
   // Promoção (ADR 0026): borda e faixa na cor de promoção, com o nome e o
   // prazo. Não muda a ordem da lista (menor preço).
   cardPromotion: { borderColor: badgeColors.promocao, borderWidth: 1.5 },

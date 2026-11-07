@@ -35,6 +35,7 @@ export const ORG_ACTIONS = [
   'view',
   'update_price',
   'manage_promotions',
+  'manage_info',
   'contest',
   'manage_team',
 ] as const;
@@ -42,7 +43,7 @@ export type OrgAction = (typeof ORG_ACTIONS)[number];
 
 export const ROLE_PERMISSIONS: Record<OrgRole, readonly OrgAction[]> = {
   proprietario: ORG_ACTIONS,
-  gestor: ['view', 'update_price', 'manage_promotions', 'contest'],
+  gestor: ['view', 'update_price', 'manage_promotions', 'manage_info', 'contest'],
   operador: ['view', 'update_price'],
   leitura: ['view'],
 };

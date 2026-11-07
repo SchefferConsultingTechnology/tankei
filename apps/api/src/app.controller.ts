@@ -23,7 +23,7 @@ export class AppController {
     type: AppConfigDto,
     description: 'Configuração pública para o app (ADR 0031).',
   })
-  getConfig(): AppConfig {
+  getConfig(): Promise<AppConfig> {
     return this.appService.getConfig();
   }
 }

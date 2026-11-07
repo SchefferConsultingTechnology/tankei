@@ -31,6 +31,8 @@ export interface Palette {
   text: string;
   textMuted: string;
   danger: string;
+  /** Situação positiva (ex.: posto aberto agora, ADR 0033). Texto ≥ 4,5:1. */
+  success: string;
   /** Avisos (ex.: consumidores informaram outro preço, ADR 0020). Texto ≥ 4,5:1. */
   warning: string;
   /** Sombra de elementos flutuantes. */
@@ -53,6 +55,7 @@ export const palettes: Record<Scheme, Palette> = {
     text: '#0F1B33',
     textMuted: '#5B6B85',
     danger: '#B91C1C',
+    success: '#15803D',
     warning: '#B45309',
     shadow: '#000000',
     backdrop: 'rgba(1, 32, 73, 0.45)',
@@ -69,6 +72,7 @@ export const palettes: Record<Scheme, Palette> = {
     text: '#F1F5FB',
     textMuted: '#9AABC6',
     danger: '#F87171',
+    success: '#4ADE80',
     warning: '#FCD34D',
     shadow: '#000000',
     backdrop: 'rgba(0, 0, 0, 0.6)',

@@ -24,6 +24,8 @@ import {
   promotionSchema,
   stationPhotoSchema,
   stationPhotosSchema,
+  stationInfoSchema,
+  type UpdateStationInfo,
   stationPromotionSchema,
   type BulkPrice,
   createClaimSchema,
@@ -431,6 +433,29 @@ export function useRemovePhoto(stationId: string) {
         { method: 'DELETE' },
       ),
     onSuccess: invalidate,
+  });
+}
+
+// ---------- Horário e serviços (ADR 0033) ----------
+
+export function useStationInfo(stationId: string) {
+  return useQuery({
+    queryKey: ['portal', stationId, 'info'],
+    queryFn: () =>
+      authorizedRequest(`/portal/stations/${stationId}/info`, stationInfoSchema),
+  });
+}
+
+export function useUpdateStationInfo(stationId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: UpdateStationInfo) =>
+      authorizedRequest(`/portal/stations/${stationId}/info`, stationInfoSchema, {
+        method: 'PUT',
+        body,
+      }),
+    onSuccess: (data) =>
+      queryClient.setQueryData(['portal', stationId, 'info'], data),
   });
 }
 

@@ -17,6 +17,7 @@ import { ParametersModule } from './parameters/parameters.module';
 import { ShowcaseModule } from './showcase/showcase.module';
 import { PortalModule } from './portal/portal.module';
 import { PricesModule } from './prices/prices.module';
+import { StationInfoModule } from './station-info/station-info.module';
 import { StationsModule } from './stations/stations.module';
 import { UsersModule } from './users/users.module';
 
@@ -34,6 +35,7 @@ import { UsersModule } from './users/users.module';
     ParametersModule,
     MailModule,
     StationsModule,
+    StationInfoModule,
     PricesModule,
     UsersModule,
     AuthModule,

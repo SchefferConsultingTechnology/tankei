@@ -15,6 +15,14 @@ export const appConfigSchema = z.object({
     'WhatsApp da equipe Tankei, só dígitos com DDI e DDD. Nulo esconde o botão.',
   ),
   portalUrl: z.string().describe('Endereço do portal do posto.'),
+  mapCardCloseSeconds: z
+    .number()
+    .int()
+    .min(0)
+    .default(8)
+    .describe(
+      'Segundos até o cartão do mapa fechar sozinho (parâmetro app.map_card_close_seconds, ADR 0033). 0 = não fecha.',
+    ),
 });
 export type AppConfig = z.infer<typeof appConfigSchema>;
 

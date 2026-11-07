@@ -36,6 +36,7 @@ const ACTION_MESSAGES: Record<OrgAction, string> = {
   view: 'Você não faz parte da equipe deste posto.',
   update_price: 'Seu papel no posto não permite atualizar preços.',
   manage_promotions: 'Seu papel no posto não permite gerenciar promoções.',
+  manage_info: 'Seu papel no posto não permite alterar horário e serviços.',
   contest: 'Seu papel no posto não permite contestar informes.',
   manage_team: 'Só proprietários da rede gerenciam a equipe.',
 };

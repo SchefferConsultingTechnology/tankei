@@ -139,6 +139,22 @@ Conferir de ponta a ponta, no ambiente publicado (Render e Supabase) e no celula
 - [ ] **Indicar:** o compartilhamento leva o link; o pedido feito por ele mostra "Veio do app (convite)".
 - [ ] **Produção:** `SUPPORT_WHATSAPP` configurada no Render.
 
+### 10. Horário, serviços e cartão do mapa (ADR 0033)
+
+- [ ] **Portal:**
+  - proprietário e gestor salvam horário e serviços em "Posto › Horário e serviços";
+  - operador vê sem poder alterar;
+  - a prévia "No app, agora" bate com o relógio.
+- [ ] **Admin:** a equipe preenche um posto sem responsável; o resumo mostra "pela equipe".
+- [ ] **App, cartão do mapa:**
+  - "Aberto · fecha às…" em verde e "Fechado · abre…" em vermelho;
+  - os ícones de Calibragem e Borracharia aparecem;
+  - num posto sem horário informado, não aparece nada.
+- [ ] **Casos de horário:** horário que passa da meia-noite, sábado com pausa para o almoço, domingo fechado e um feriado nacional (por exemplo, 15/11).
+- [ ] **Cartão:**
+  - fecha sozinho depois de 8 s;
+  - mudar `app.map_card_close_seconds` no admin muda o tempo; 0 deixa o cartão aberto.
+
 ## Resultado
 
 Registrar no fim deste arquivo: data, quem testou, o que passou e os problemas encontrados (com issue ou commit da correção).

@@ -3,6 +3,7 @@ import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import CampaignOutlined from '@mui/icons-material/CampaignOutlined';
 import GavelOutlined from '@mui/icons-material/GavelOutlined';
 import PhotoLibraryOutlined from '@mui/icons-material/PhotoLibraryOutlined';
+import ScheduleOutlined from '@mui/icons-material/ScheduleOutlined';
 import GroupOutlined from '@mui/icons-material/GroupOutlined';
 import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
 import HowToRegOutlined from '@mui/icons-material/HowToRegOutlined';
@@ -63,6 +64,16 @@ const UNIT_MENU: {
         label: 'Contestações',
         to: 'precos/contestacoes',
         icon: <GavelOutlined fontSize="small" />,
+      },
+    ],
+  },
+  {
+    label: 'Posto',
+    items: [
+      {
+        label: 'Horário e serviços',
+        to: 'posto/horario',
+        icon: <ScheduleOutlined fontSize="small" />,
       },
     ],
   },

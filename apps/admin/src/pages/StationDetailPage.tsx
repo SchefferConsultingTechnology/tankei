@@ -32,6 +32,7 @@ import { errorText, formatDateTime, useMobile } from '../components/hooks';
 import { Notice } from '../components/Notice';
 import { PageHeader } from '../components/PageHeader';
 import { PageLoading } from '../components/PageLoading';
+import { StationInfoSection } from '../components/StationInfoSection';
 import { StationModeSection } from '../components/StationModeSection';
 
 function Section({
@@ -219,6 +220,11 @@ export function StationDetailPage() {
           }}
         />
       )}
+      <StationInfoSection
+        stationId={s.id}
+        state={s.state}
+        onNotice={setNotice}
+      />
       <StationModeSection station={s} onNotice={setNotice} />
 
       {adding && (
