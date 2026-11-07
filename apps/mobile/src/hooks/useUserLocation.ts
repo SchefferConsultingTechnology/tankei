@@ -14,7 +14,7 @@ export type LocationState =
 
 /**
  * Localização atual, pedindo permissão uma vez, e acompanhada enquanto a tela
- * está aberta (a cada WATCH_DISTANCE_M metros). Sem permissão, sem posição
+ * está aberta (a cada segundo, com velocidade e rumo). Sem permissão, sem posição
  * em 10 s ou com erro, usa o centro da cidade-piloto. A localização só é
  * usada na busca e não é guardada pela API (ADR 0009).
  */
@@ -29,15 +29,29 @@ export function useUserLocation(): LocationState {
     let subscription: Location.LocationSubscription | null = null;
     let previous: { coords: Coordinates; time: number } | null = null;
     let motion: Motion = { speedKmh: null, heading: null };
+    /** Última posição repassada às telas. */
+    let shown: Coordinates | null = null;
     const update = (position: Location.LocationObject) => {
       if (cancelled) return;
       const coords = {
         lat: position.coords.latitude,
         lng: position.coords.longitude,
       };
+      const before = motion;
       motion = nextMotion(motion, previous, coords, position);
       previous = { coords, time: position.timestamp };
-      setState({ status: 'granted', coords, motion });
+      // Parado, o GPS oscila alguns metros: mantém a posição anterior (o mapa
+      // não treme e a lista não é recalculada) e só avisa se o movimento mudou.
+      const jitter = shown !== null && distanceMeters(shown, coords) < JITTER_M;
+      if (
+        jitter &&
+        before.heading === motion.heading &&
+        Math.abs((before.speedKmh ?? 0) - (motion.speedKmh ?? 0)) < 1
+      ) {
+        return;
+      }
+      if (!jitter || shown === null) shown = coords;
+      setState({ status: 'granted', coords: shown, motion });
     };
     void (async () => {
       try {
@@ -60,7 +74,10 @@ export function useUserLocation(): LocationState {
           {
             // GPS: com a precisão da rede, o ponto pula dezenas de metros.
             accuracy: Location.Accuracy.High,
-            distanceInterval: WATCH_DISTANCE_M,
+            // Uma leitura por segundo, mesmo parado: a velocidade do GPS cai
+            // a zero e o modo direção desliga (ADR 0032).
+            timeInterval: WATCH_INTERVAL_MS,
+            distanceInterval: 0,
           },
           update,
         ).catch(() => null);
@@ -127,8 +144,10 @@ function nextMotion(
   return { speedKmh, heading };
 }
 
-/** Deslocamento mínimo, em metros, para uma nova posição. */
-const WATCH_DISTANCE_M = 25;
+/** Intervalo entre leituras do GPS. */
+const WATCH_INTERVAL_MS = 1_000;
+/** Deslocamento abaixo disto é oscilação do GPS, não movimento. */
+const JITTER_M = 8;
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {

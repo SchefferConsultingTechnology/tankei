@@ -11,6 +11,8 @@ Com a tela sempre ligada, o app passa a ser usado no carro, como o Maps e o Waze
 ## Decisão
 
 - **Quando entra:** com a opção "Perto de você", acima de 15 km/h; sai abaixo de 5 km/h. A folga evita alternar em semáforo e lombada.
+- **Leituras do GPS:** uma por segundo (antes, uma a cada 25 m), mesmo parado. Assim a velocidade cai a zero ao parar e o modo desliga. Oscilações de menos de 8 m com a mesma velocidade são ignoradas, para o mapa não tremer.
+- **Velocímetro:** no modo direção, a velocidade aparece no canto superior esquerdo do mapa. Pode diferir do painel do carro, que por norma marca um pouco a mais.
 - **Velocidade e rumo:** vêm do GPS. Sem rumo do GPS, o app calcula pela direção entre as duas últimas posições. A velocidade é suavizada. O rumo só é atualizado acima de 5 km/h, porque abaixo disso ele não é confiável.
 - **Mapa no rumo:** o mapa gira no sentido do deslocamento. O carro fica um quarto da tela abaixo do centro, para mostrar mais da estrada à frente.
 - **Parado:** o mapa mantém a última direção. A bússola volta o norte para cima.
