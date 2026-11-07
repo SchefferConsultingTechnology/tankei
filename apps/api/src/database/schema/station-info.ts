@@ -22,6 +22,8 @@ export const stationInfoVersions = pgTable(
       .notNull()
       .references(() => stations.id),
     hours: jsonb().$type<OpeningHours>(),
+    /** Nome no app nesta versão (ADR 0035); nulo usa o nome oficial. */
+    displayName: text(),
     // text[]: o driver pg não converte arrays de enum.
     services: text().array().notNull().default([]),
     /** "posto" (portal) ou "equipe" (admin). */

@@ -801,6 +801,7 @@ export class OrganizationsService {
         id: stations.id,
         tradeName: stations.tradeName,
         legalName: stations.legalName,
+        displayName: stations.displayName,
       })
       .from(organizationStations)
       .innerJoin(stations, eq(stations.id, organizationStations.stationId))
@@ -809,7 +810,7 @@ export class OrganizationsService {
     return rows.map((r) => ({
       organizationId: r.organizationId,
       id: r.id,
-      name: stationDisplayName(r.tradeName, r.legalName),
+      name: stationDisplayName(r.tradeName, r.legalName, r.displayName),
     }));
   }
 

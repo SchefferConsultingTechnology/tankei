@@ -117,6 +117,13 @@ export const STATION_SERVICE_LABELS: Record<StationService, string> = {
 
 /** Horário e serviços, como o portal e o admin editam. */
 export const stationInfoSchema = z.object({
+  displayName: nullable(
+    z.string(),
+    'Nome no app escolhido pelo posto (ADR 0035); nulo usa o nome oficial.',
+  ),
+  officialName: z
+    .string()
+    .describe('Nome pelo cadastro da ANP (nome fantasia ou razão social).'),
   hours: nullable(
     storedOpeningHoursSchema,
     'Horário de atendimento, se informado.',
@@ -131,6 +138,16 @@ export const stationInfoSchema = z.object({
 export type StationInfo = z.infer<typeof stationInfoSchema>;
 
 export const updateStationInfoSchema = z.object({
+  displayName: z
+    .string()
+    .trim()
+    .min(3, 'Nome muito curto (mínimo 3 caracteres).')
+    .max(60, 'Nome muito longo (até 60 caracteres).')
+    .nullable()
+    .optional()
+    .describe(
+      'Nome no app (ADR 0035). Nulo volta ao nome oficial; ausente mantém o atual.',
+    ),
   hours: openingHoursSchema.nullable(),
   services: z
     .array(z.enum(STATION_SERVICES, { error: 'Serviço inválido.' }))

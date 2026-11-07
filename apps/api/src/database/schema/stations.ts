@@ -26,6 +26,11 @@ export const stations = pgTable(
     anpAuthorization: text(),
     legalName: text().notNull(),
     tradeName: text(),
+    /**
+     * Nome escolhido pelo posto no portal (ADR 0035), como é conhecido na
+     * região. Quando informado, é o nome do posto no app.
+     */
+    displayName: text(),
     brand: text().notNull(),
     address: text().notNull(),
     complement: text(),

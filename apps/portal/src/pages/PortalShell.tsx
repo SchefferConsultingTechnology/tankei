@@ -77,7 +77,7 @@ const UNIT_MENU: {
     label: 'Posto',
     items: [
       {
-        label: 'Horário e serviços',
+        label: 'Dados do posto',
         to: 'posto/horario',
         icon: <ScheduleOutlined fontSize="small" />,
       },

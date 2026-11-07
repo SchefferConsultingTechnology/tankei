@@ -2,7 +2,9 @@ import Snackbar from '@mui/material/Snackbar';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
+import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useAuth } from '../auth/AuthProvider';
 import { ApiError } from '../api/client';
 import { useStationInfo, useUpdateStationInfo } from '../api/queries';
 import { PageLoading } from '../components/PageLoading';
@@ -16,15 +18,18 @@ export function StationInfoPage() {
   const info = useStationInfo(station.id);
   const update = useUpdateStationInfo(station.id);
   const [saved, setSaved] = useState(false);
+  const queryClient = useQueryClient();
+  const { refreshUser } = useAuth();
 
   return (
     <Stack spacing={2}>
       <div>
         <Typography variant="h6" component="h2" sx={{ fontWeight: 700 }}>
-          Horário e serviços
+          Dados do posto
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Aparecem no app, no cartão do posto no mapa e na ficha.
+          Nome, horário e serviços aparecem no app, no cartão do posto no mapa
+          e na ficha.
           {!canEdit && ' Só o proprietário e o gestor alteram.'}
         </Typography>
       </div>
@@ -48,7 +53,16 @@ export function StationInfoPage() {
               : null
           }
           onSave={(body) =>
-            update.mutate(body, { onSuccess: () => setSaved(true) })
+            update.mutate(body, {
+              onSuccess: () => {
+                setSaved(true);
+                // O nome novo aparece no cabeçalho e na lista de unidades.
+                void queryClient.invalidateQueries({
+                  queryKey: ['stations', station.id],
+                });
+                void refreshUser().catch(() => undefined);
+              },
+            })
           }
         />
       )}
@@ -56,7 +70,7 @@ export function StationInfoPage() {
         open={saved}
         autoHideDuration={4000}
         onClose={() => setSaved(false)}
-        message="Horário e serviços salvos. Já aparecem no app."
+        message="Dados do posto salvos. Já aparecem no app."
       />
     </Stack>
   );

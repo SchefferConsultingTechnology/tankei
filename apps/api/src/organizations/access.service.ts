@@ -83,6 +83,7 @@ export class AccessService {
         organizationId: organizationStations.organizationId,
         role: organizationMembers.role,
         tradeName: stations.tradeName,
+        displayName: stations.displayName,
         legalName: stations.legalName,
       })
       .from(organizationMembers)
@@ -107,7 +108,7 @@ export class AccessService {
       stationId: row.stationId,
       organizationId: row.organizationId,
       role: row.role,
-      name: stationDisplayName(row.tradeName, row.legalName),
+      name: stationDisplayName(row.tradeName, row.legalName, row.displayName),
     }));
   }
 

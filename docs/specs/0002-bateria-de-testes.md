@@ -159,6 +159,12 @@ Conferir de ponta a ponta, no ambiente publicado (Render e Supabase) e no celula
   - fecha sozinho depois de 8 s;
   - mudar `app.map_card_close_seconds` no admin muda o tempo; 0 deixa o cartão aberto.
 
+- [ ] **Nome no app (ADR 0035):**
+  - o posto informa o nome em "Dados do posto";
+  - o nome aparece no app (mapa, lista, ficha, favoritos), no e-mail de alerta e no portal;
+  - em branco, volta ao nome da ANP;
+  - a importação da ANP não apaga o nome.
+
 ### 11. Convênios (ADR 0034)
 
 - [ ] **Portal:**

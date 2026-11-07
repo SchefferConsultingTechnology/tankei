@@ -123,6 +123,8 @@ describe('Horário e serviços do posto (ADR 0033) (e2e)', () => {
         .expect(200)
     ).body as StationInfo;
     expect(empty).toEqual({
+      displayName: null,
+      officialName: 'Posto 0101',
       hours: null,
       services: [],
       updatedAt: null,
@@ -146,6 +148,57 @@ describe('Horário e serviços do posto (ADR 0033) (e2e)', () => {
       .body as Station;
     expect(station.hours).toEqual(HOURS);
     expect(station.services).toEqual(['calibrador', 'borracharia']);
+  });
+
+  it('o posto escolhe o nome no app (ADR 0035)', async () => {
+    const named = (
+      await http()
+        .put(`/v1/portal/stations/${stationA}/info`)
+        .set(auth(owner))
+        .send({
+          displayName: '  Posto do Trevo  ',
+          hours: HOURS,
+          services: ['calibrador'],
+        })
+        .expect(200)
+    ).body as StationInfo;
+    expect(named).toMatchObject({
+      displayName: 'Posto do Trevo',
+      officialName: 'Posto 0101',
+    });
+    let station = (await http().get(`/v1/stations/${stationA}`).expect(200))
+      .body as Station;
+    expect(station.name).toBe('Posto do Trevo');
+
+    // Sem o campo, mantém o nome.
+    await http()
+      .put(`/v1/portal/stations/${stationA}/info`)
+      .set(auth(owner))
+      .send({ hours: HOURS, services: ['calibrador', 'borracharia'] })
+      .expect(200);
+    station = (await http().get(`/v1/stations/${stationA}`).expect(200))
+      .body as Station;
+    expect(station.name).toBe('Posto do Trevo');
+
+    await http()
+      .put(`/v1/portal/stations/${stationA}/info`)
+      .set(auth(owner))
+      .send({ displayName: 'X', hours: HOURS, services: [] })
+      .expect(400);
+
+    // Nulo volta ao nome oficial.
+    await http()
+      .put(`/v1/portal/stations/${stationA}/info`)
+      .set(auth(owner))
+      .send({
+        displayName: null,
+        hours: HOURS,
+        services: ['calibrador', 'borracharia'],
+      })
+      .expect(200);
+    station = (await http().get(`/v1/stations/${stationA}`).expect(200))
+      .body as Station;
+    expect(station.name).toBe('Posto 0101');
   });
 
   it('valida o horário e o papel no posto', async () => {

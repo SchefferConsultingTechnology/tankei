@@ -6,8 +6,14 @@
 export function stationDisplayName(
   tradeName: string | null,
   legalName: string,
+  /** Nome escolhido pelo posto no portal (ADR 0035): tem preferência. */
+  displayName?: string | null,
 ): string {
-  return tradeName?.trim() || readable(stripLegalSuffix(legalName));
+  return (
+    displayName?.trim() ||
+    tradeName?.trim() ||
+    readable(stripLegalSuffix(legalName))
+  );
 }
 
 /** Bandeira legível: "BANDEIRA BRANCA" → "Bandeira Branca". */

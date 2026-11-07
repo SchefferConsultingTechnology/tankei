@@ -64,6 +64,7 @@ export class NetworkService {
         .select({
           id: stations.id,
           tradeName: stations.tradeName,
+          displayName: stations.displayName,
           legalName: stations.legalName,
           city: stations.city,
           municipalityName: municipalities.name,
@@ -85,7 +86,7 @@ export class NetworkService {
     const units = rows
       .map((row) => ({
         id: row.id,
-        name: stationDisplayName(row.tradeName, row.legalName),
+        name: stationDisplayName(row.tradeName, row.legalName, row.displayName),
         city: row.municipalityName ?? cityDisplayName(row.city),
         state: row.state,
         fuels: FUEL_TYPES.filter((fuel) =>

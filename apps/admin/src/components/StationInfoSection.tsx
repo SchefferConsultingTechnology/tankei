@@ -19,6 +19,7 @@ import { StationInfoEditor } from './StationInfoEditor';
 
 function summary(info: StationInfo): string {
   const parts = [
+    info.displayName ? `No app: ${info.displayName}` : null,
     info.hours
       ? `Seg–sex ${describeDay(info.hours.dias_uteis)}`
       : 'Horário não informado',
@@ -29,7 +30,7 @@ function summary(info: StationInfo): string {
   if (info.updatedBy) {
     parts.push(info.updatedBy === 'posto' ? 'pelo posto' : 'pela equipe');
   }
-  return parts.join(' · ');
+  return parts.filter(Boolean).join(' · ');
 }
 
 /**
@@ -52,7 +53,9 @@ export function StationInfoSection({
     <Accordion variant="outlined" disableGutters>
       <AccordionSummary expandIcon={<ExpandMoreOutlined />}>
         <div>
-          <Typography sx={{ fontWeight: 700 }}>Horário e serviços</Typography>
+          <Typography sx={{ fontWeight: 700 }}>
+            Nome no app, horário e serviços
+          </Typography>
           {info.data && (
             <Typography variant="body2" color="text.secondary">
               {summary(info.data)}
@@ -81,7 +84,7 @@ export function StationInfoSection({
             }
             onSave={(body) =>
               update.mutate(body, {
-                onSuccess: () => onNotice('Horário e serviços salvos.'),
+                onSuccess: () => onNotice('Dados do posto salvos.'),
               })
             }
           />

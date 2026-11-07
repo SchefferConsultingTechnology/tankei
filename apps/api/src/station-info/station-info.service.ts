@@ -11,6 +11,7 @@ import type { AuthenticatedUser } from '../auth/tokens.service';
 import { DRIZZLE, type Database } from '../database/database.module';
 import { stationInfoVersions, stations } from '../database/schema';
 import { AccessService } from '../organizations/access.service';
+import { stationDisplayName } from '../stations/display-name';
 
 export interface CurrentStationInfo {
   hours: OpeningHours | null;
@@ -93,17 +94,47 @@ export class StationInfoService {
     source: 'posto' | 'equipe',
     userId: string,
   ): Promise<StationInfo> {
-    await this.db.insert(stationInfoVersions).values({
-      stationId,
-      hours: body.hours,
-      services: body.services,
-      source,
-      userId,
+    // Nome no app (ADR 0035): ausente mantém o atual; nulo volta ao oficial.
+    const [station] = await this.db
+      .select({ displayName: stations.displayName })
+      .from(stations)
+      .where(eq(stations.id, stationId));
+    const displayName =
+      body.displayName === undefined
+        ? (station?.displayName ?? null)
+        : body.displayName;
+    await this.db.transaction(async (tx) => {
+      await tx.insert(stationInfoVersions).values({
+        stationId,
+        hours: body.hours,
+        services: body.services,
+        displayName,
+        source,
+        userId,
+      });
+      await tx
+        .update(stations)
+        .set({ displayName })
+        .where(eq(stations.id, stationId));
     });
     return this.info(stationId);
   }
 
   private async info(stationId: string): Promise<StationInfo> {
+    const [station] = await this.db
+      .select({
+        tradeName: stations.tradeName,
+        legalName: stations.legalName,
+        displayName: stations.displayName,
+      })
+      .from(stations)
+      .where(eq(stations.id, stationId));
+    const names = {
+      displayName: station?.displayName ?? null,
+      officialName: station
+        ? stationDisplayName(station.tradeName, station.legalName)
+        : '',
+    };
     const [row] = await this.db
       .select({
         hours: stationInfoVersions.hours,
@@ -116,9 +147,16 @@ export class StationInfoService {
       .orderBy(desc(stationInfoVersions.createdAt))
       .limit(1);
     if (!row) {
-      return { hours: null, services: [], updatedAt: null, updatedBy: null };
+      return {
+        ...names,
+        hours: null,
+        services: [],
+        updatedAt: null,
+        updatedBy: null,
+      };
     }
     return {
+      ...names,
       hours: row.hours ?? null,
       services: known(row.services),
       updatedAt: row.createdAt.toISOString(),

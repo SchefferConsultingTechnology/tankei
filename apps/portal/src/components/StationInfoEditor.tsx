@@ -72,9 +72,12 @@ export function StationInfoEditor({
   const [informHours, setInformHours] = useState(info.hours !== null);
   const [hours, setHours] = useState<OpeningHours>(info.hours ?? DEFAULT_HOURS);
   const [services, setServices] = useState<StationService[]>(info.services);
+  const [name, setName] = useState(info.displayName ?? '');
+  const nameTrim = name.trim();
+  const nameValid = nameTrim === '' || nameTrim.length >= 3;
 
   const parsed = openingHoursSchema.safeParse(hours);
-  const valid = !informHours || parsed.success;
+  const valid = (!informHours || parsed.success) && nameValid;
   const status =
     informHours && parsed.success ? openingStatus(parsed.data, state) : null;
 
@@ -85,6 +88,7 @@ export function StationInfoEditor({
     event.preventDefault();
     if (!valid) return;
     onSave({
+      displayName: nameTrim || null,
       hours: informHours && parsed.success ? parsed.data : null,
       services: STATION_SERVICES.filter((s) => services.includes(s)),
     });
@@ -92,6 +96,26 @@ export function StationInfoEditor({
 
   return (
     <Stack component="form" spacing={2.5} onSubmit={submit}>
+      <Paper variant="outlined" sx={{ p: 2 }}>
+        <Stack spacing={1.5}>
+          <Typography sx={{ fontWeight: 700 }}>Nome no app</Typography>
+          <TextField
+            label="Nome como o posto é conhecido"
+            placeholder={info.officialName}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={!canEdit}
+            error={!nameValid}
+            helperText={
+              !nameValid
+                ? 'Use pelo menos 3 caracteres.'
+                : `Em branco, o app mostra o nome do cadastro da ANP: ${info.officialName}.`
+            }
+            fullWidth
+            slotProps={{ htmlInput: { maxLength: 60 } }}
+          />
+        </Stack>
+      </Paper>
       <Paper variant="outlined" sx={{ p: 2 }}>
         <Stack spacing={2}>
           <Stack

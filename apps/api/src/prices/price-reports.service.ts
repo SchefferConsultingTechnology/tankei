@@ -114,6 +114,7 @@ export class PriceReportsService {
         state: stations.state,
         displayMode: stations.displayMode,
         tradeName: stations.tradeName,
+        displayName: stations.displayName,
         legalName: stations.legalName,
         latitude: sql<number | null>`ST_Y(${stations.location})`,
         longitude: sql<number | null>`ST_X(${stations.location})`,
@@ -224,6 +225,7 @@ export class PriceReportsService {
       const stationName = stationDisplayName(
         station.tradeName,
         station.legalName,
+        station.displayName,
       );
       await this.detectBurst(stationId, stationName, request.fuelType, now);
       this.mail.background(() =>

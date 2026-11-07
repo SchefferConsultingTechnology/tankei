@@ -120,6 +120,7 @@ export class EngagementService implements OnModuleInit {
       .select({
         alert: priceAlerts,
         tradeName: stations.tradeName,
+        displayName: stations.displayName,
         legalName: stations.legalName,
       })
       .from(priceAlerts)
@@ -129,11 +130,11 @@ export class EngagementService implements OnModuleInit {
     const current = await this.prices.currentPrices([
       ...new Set(rows.map((r) => r.alert.stationId)),
     ]);
-    return rows.map(({ alert, tradeName, legalName }) => ({
+    return rows.map(({ alert, tradeName, legalName, displayName }) => ({
       id: alert.id,
       station: {
         id: alert.stationId,
-        name: stationDisplayName(tradeName, legalName),
+        name: stationDisplayName(tradeName, legalName, displayName),
       },
       fuelType: alert.fuelType,
       maxPrice: alert.maxPrice,
@@ -243,6 +244,7 @@ export class EngagementService implements OnModuleInit {
     const [station] = await this.db
       .select({
         tradeName: stations.tradeName,
+        displayName: stations.displayName,
         legalName: stations.legalName,
         address: stations.address,
       })
@@ -256,7 +258,11 @@ export class EngagementService implements OnModuleInit {
       this.mail.notify(
         [alert.email!],
         priceAlertMail({
-          stationName: stationDisplayName(station.tradeName, station.legalName),
+          stationName: stationDisplayName(
+            station.tradeName,
+            station.legalName,
+            station.displayName,
+          ),
           fuelLabel: FUEL_LABELS[fuelType],
           price: current.price,
           maxPrice: alert.maxPrice,

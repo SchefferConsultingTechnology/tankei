@@ -52,6 +52,7 @@ const stationColumns = {
   id: stations.id,
   legalName: stations.legalName,
   tradeName: stations.tradeName,
+  displayName: stations.displayName,
   brand: stations.brand,
   address: stations.address,
   district: stations.district,
@@ -75,6 +76,7 @@ interface StationRow {
   id: string;
   legalName: string;
   tradeName: string | null;
+  displayName: string | null;
   brand: string;
   address: string;
   district: string | null;
@@ -284,7 +286,7 @@ export class StationsService {
 
     return rows.map((row) => ({
       id: row.id,
-      name: stationDisplayName(row.tradeName, row.legalName),
+      name: stationDisplayName(row.tradeName, row.legalName, row.displayName),
       brand: brandDisplayName(row.brand),
       address: row.address,
       district: row.district,
