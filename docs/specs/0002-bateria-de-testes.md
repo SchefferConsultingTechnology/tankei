@@ -120,6 +120,7 @@ Conferir de ponta a ponta, no ambiente publicado (Render e Supabase) e no celula
 - [ ] **App:**
   - escala do IQP (pílula "IQP N/100", medidor, "Como ler o IQP") em 360 e 412 dp, claro e escuro;
   - TalkBack anunciando "Índice de qualidade N de 100".
+- [ ] **Tela ligada:** com o app aberto a tela não apaga; desligando "Manter a tela ligada" em Conta, volta a apagar no tempo do celular; em segundo plano, apaga normalmente.
 - [ ] **Perfis:** fluxo completo com cada papel (proprietário, gestor, operador, somente leitura), conferindo o que cada um vê e pode fazer.
 
 ### 9. Caminho do dono do posto (ADR 0031)

@@ -12,6 +12,7 @@ import { googleErrorMessage } from '@/auth/google';
 import { Avatar } from '@/components/Avatar';
 import { CarProfileForm } from '@/components/CarProfileForm';
 import { ContributionCard } from '@/components/ContributionCard';
+import { KeepScreenOnSwitch } from '@/components/KeepScreenOnSwitch';
 import { ThemeChooser } from '@/components/ThemeChooser';
 import { createStyles, useTheme } from '@/appearance';
 import { fontSize, radius, spacing } from '@/theme';
@@ -75,6 +76,9 @@ export default function AccountScreen() {
         <View style={styles.appearance}>
           <ThemeChooser />
         </View>
+        <View style={styles.appearance}>
+          <KeepScreenOnSwitch />
+        </View>
       </ScrollView>
     );
   }
@@ -116,6 +120,9 @@ export default function AccountScreen() {
       <HowItWorksLink />
       <View style={styles.appearance}>
         <ThemeChooser />
+      </View>
+      <View style={styles.appearance}>
+        <KeepScreenOnSwitch />
       </View>
     </ScrollView>
   );
