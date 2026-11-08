@@ -184,6 +184,13 @@ Conferir de ponta a ponta, no ambiente publicado (Render e Supabase) e no celula
   - a ficha mostra a seção "Convênios";
   - todo cartão mostra "Ver detalhes do posto ›".
 
+### 12. Dashboard de adesão (ADR 0037)
+
+- [ ] **Períodos:** 30 dias, 90 dias, 12 meses, "Este ano" e datas livres; o agrupamento muda de dia para semana e para mês.
+- [ ] **Filtro por UF:** os totais batem com uma contagem manual no admin (Redes).
+- [ ] **Tabela:** "Tabela" mostra os mesmos números do gráfico.
+- [ ] **Temas e celular:** claro e escuro, e no celular sem rolagem lateral.
+
 ## Resultado
 
 Registrar no fim deste arquivo: data, quem testou, o que passou e os problemas encontrados (com issue ou commit da correção).

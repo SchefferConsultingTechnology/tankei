@@ -1,4 +1,5 @@
 import GavelOutlined from '@mui/icons-material/GavelOutlined';
+import InsightsOutlined from '@mui/icons-material/InsightsOutlined';
 import HandshakeOutlined from '@mui/icons-material/HandshakeOutlined';
 import HowToRegOutlined from '@mui/icons-material/HowToRegOutlined';
 import HubOutlined from '@mui/icons-material/HubOutlined';
@@ -20,6 +21,9 @@ import { ClaimsQueuePage } from './pages/ClaimsQueuePage';
 import { LoginPage } from './pages/LoginPage';
 
 // Cada tela é carregada quando aberta (ADR 0022).
+const DashboardPage = lazy(() =>
+  import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })),
+);
 const AgreementsPage = lazy(() =>
   import('./pages/AgreementsPage').then((m) => ({
     default: m.AgreementsPage,
@@ -58,6 +62,13 @@ const ParametersPage = lazy(() =>
 /** Menu da administração. */
 const sidebar = (
   <>
+    <List dense subheader={<ListSubheader>Visão geral</ListSubheader>}>
+      <NavItem
+        to="/painel"
+        label="Adesão de postos"
+        icon={<InsightsOutlined fontSize="small" />}
+      />
+    </List>
     <List dense subheader={<ListSubheader>Conteúdo</ListSubheader>}>
       <NavItem
         to="/moderacao"
@@ -147,6 +158,7 @@ export function App() {
           <Route path="/redes" element={<NetworksPage />} />
           <Route path="/redes/:networkId" element={<NetworkDetailPage />} />
           <Route path="/convenios" element={<AgreementsPage />} />
+          <Route path="/painel" element={<DashboardPage />} />
           <Route path="/parametros" element={<ParametersPage />} />
           <Route path="/moderacao" element={<ModerationPage />} />
           <Route path="/imagens" element={<MediaPage />} />

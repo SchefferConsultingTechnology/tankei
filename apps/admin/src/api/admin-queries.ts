@@ -16,6 +16,8 @@ import {
   parameterChangeSchema,
   stationInfoSchema,
   adminAgreementSchema,
+  adhesionDashboardSchema,
+  type AdhesionDashboardQuery,
   type CreateAgreement,
   type UpdateAgreement,
   type UpdateStationInfo,
@@ -29,6 +31,23 @@ import { authorizedRequest } from './session';
 
 /** Resposta sem corpo (204). */
 const empty = z.undefined();
+
+// ---------- Dashboard de adesão (ADR 0037) ----------
+
+export function useAdhesionDashboard(query: AdhesionDashboardQuery) {
+  const params = new URLSearchParams({ from: query.from, to: query.to });
+  if (query.state) params.set('state', query.state);
+  if (query.municipality) params.set('municipality', query.municipality);
+  return useQuery({
+    queryKey: ['admin', 'dashboard', 'adhesion', params.toString()],
+    placeholderData: keepPreviousData,
+    queryFn: () =>
+      authorizedRequest(
+        `/admin/dashboard/adhesion?${params.toString()}`,
+        adhesionDashboardSchema,
+      ),
+  });
+}
 
 // ---------- Convênios (ADR 0034) ----------
 

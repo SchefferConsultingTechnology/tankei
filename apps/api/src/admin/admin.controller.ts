@@ -12,6 +12,9 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
+  adhesionDashboardQuerySchema,
+  adhesionDashboardSchema,
+  type AdhesionDashboard,
   adminNetworkQuerySchema,
   adminNetworkSchema,
   adminNetworkSummarySchema,
@@ -35,6 +38,7 @@ import { CurrentUser, Roles } from '../auth/decorators';
 import type { AuthenticatedUser } from '../auth/tokens.service';
 import { OrganizationsService } from '../organizations/organizations.service';
 import { AdminService } from './admin.service';
+import { DashboardService } from './dashboard.service';
 
 class AdminStationSearchDto extends createZodDto(adminStationSearchSchema) {}
 class AdminStationSummaryDto extends createZodDto(adminStationSummarySchema) {}
@@ -204,5 +208,27 @@ export class AdminOfficialDivergencesController {
   @ZodResponse({ status: 200, type: [OfficialDivergenceDto] })
   list(): Promise<OfficialDivergence[]> {
     return this.admin.officialDivergences();
+  }
+}
+
+class AdhesionDashboardDto extends createZodDto(adhesionDashboardSchema) {}
+class AdhesionDashboardQueryDto extends createZodDto(
+  adhesionDashboardQuerySchema,
+) {}
+
+/** Dashboard de adesão (ADR 0037). */
+@ApiTags('Administração')
+@ApiBearerAuth()
+@Roles('admin')
+@Controller('admin/dashboard')
+export class AdminDashboardController {
+  constructor(private readonly dashboard: DashboardService) {}
+
+  @Get('adhesion')
+  @ZodResponse({ status: 200, type: AdhesionDashboardDto })
+  adhesion(
+    @Query() query: AdhesionDashboardQueryDto,
+  ): Promise<AdhesionDashboard> {
+    return this.dashboard.adhesion(query);
   }
 }
