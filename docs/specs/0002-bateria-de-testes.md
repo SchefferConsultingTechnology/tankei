@@ -191,6 +191,13 @@ Conferir de ponta a ponta, no ambiente publicado (Render e Supabase) e no celula
 - [ ] **Tabela:** "Tabela" mostra os mesmos números do gráfico.
 - [ ] **Temas e celular:** claro e escuro, e no celular sem rolagem lateral.
 
+### 13. Dashboard de engajamento (ADR 0038)
+
+- [ ] **Totais:** informes e avaliações batem com uma contagem manual de um posto conhecido; preço informado pelo posto não entra.
+- [ ] **Regiões:** sem UF, aparecem os estados; com UF, as cidades. A tabela ordena por coluna.
+- [ ] **Oportunidades:** só regiões com pelo menos 20 postos e menos de 10% de cobertura.
+- [ ] **Temas e celular:** claro e escuro, e no celular sem rolagem lateral (só a tabela rola).
+
 ## Resultado
 
 Registrar no fim deste arquivo: data, quem testou, o que passou e os problemas encontrados (com issue ou commit da correção).

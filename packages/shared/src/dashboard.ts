@@ -100,3 +100,61 @@ export const adhesionDashboardSchema = z.object({
   ),
 });
 export type AdhesionDashboard = z.infer<typeof adhesionDashboardSchema>;
+
+// ---------- Engajamento dos usuários (ADR 0038) ----------
+
+/** Mesmos filtros do dashboard de adesão. */
+export const engagementDashboardQuerySchema = adhesionDashboardQuerySchema;
+export type EngagementDashboardQuery = AdhesionDashboardQuery;
+
+const engagementCounts = z.object({
+  priceReports: z
+    .number()
+    .int()
+    .describe('Informes de preço feitos por motoristas.'),
+  reviews: z.number().int().describe('Avaliações de postos.'),
+  activeUsers: z
+    .number()
+    .int()
+    .describe('Motoristas que informaram preço ou avaliaram.'),
+});
+
+export const engagementDashboardSchema = z.object({
+  period: adhesionDashboardSchema.shape.period,
+  kpis: engagementCounts.extend({
+    stationsInScope: z.number().int(),
+    stationsWithPrices: z
+      .number()
+      .int()
+      .describe('Postos que receberam preço de motoristas no período.'),
+    stationsWithReviews: z.number().int(),
+    stationsWithAny: z
+      .number()
+      .int()
+      .describe('Postos com preço ou avaliação de motoristas no período.'),
+    previous: engagementCounts.describe(
+      'Os mesmos números no período anterior de mesma duração.',
+    ),
+  }),
+  series: z.array(
+    z.object({
+      start: z.iso.date(),
+      priceReports: z.number().int(),
+      reviews: z.number().int(),
+    }),
+  ),
+  regions: z.object({
+    level: z
+      .enum(['estado', 'cidade'])
+      .describe('Por estado sem filtro de UF; por cidade com UF escolhida.'),
+    rows: z.array(
+      engagementCounts.extend({
+        name: z.string(),
+        state: z.string(),
+        stations: z.number().int().describe('Postos ativos na ANP.'),
+        stationsWithAny: z.number().int(),
+      }),
+    ),
+  }),
+});
+export type EngagementDashboard = z.infer<typeof engagementDashboardSchema>;

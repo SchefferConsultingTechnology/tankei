@@ -5,6 +5,8 @@ import {
   type AdhesionDashboardQuery,
   type ClaimOrigin,
   type DashboardGranularity,
+  type EngagementDashboard,
+  type EngagementDashboardQuery,
 } from '@tankei/shared';
 import { sql, type SQL } from 'drizzle-orm';
 import { DRIZZLE, type Database } from '../database/database.module';
@@ -24,7 +26,8 @@ const UPDATING_WINDOW_DAYS = 7;
 export class DashboardService {
   constructor(@Inject(DRIZZLE) private readonly db: Database) {}
 
-  async adhesion(query: AdhesionDashboardQuery): Promise<AdhesionDashboard> {
+  /** Período, agrupamento e recorte comuns aos dashboards. */
+  private window(query: AdhesionDashboardQuery) {
     const days =
       Math.round((Date.parse(query.to) - Date.parse(query.from)) / DAY_MS) + 1;
     const granularity: DashboardGranularity =
@@ -47,10 +50,22 @@ export class DashboardService {
       sql` and `,
     );
 
-    const one = async <T>(q: SQL): Promise<T> =>
-      (await this.db.execute(q)).rows[0] as T;
-    const many = async <T>(q: SQL): Promise<T[]> =>
-      (await this.db.execute(q)).rows as T[];
+    return { days, granularity, unit, start, end, prevStart, scope };
+  }
+
+  private async one<T>(q: SQL): Promise<T> {
+    return (await this.db.execute(q)).rows[0] as T;
+  }
+
+  private async many<T>(q: SQL): Promise<T[]> {
+    return (await this.db.execute(q)).rows as T[];
+  }
+
+  async adhesion(query: AdhesionDashboardQuery): Promise<AdhesionDashboard> {
+    const { granularity, unit, start, end, prevStart, scope } =
+      this.window(query);
+    const one = <T>(q: SQL) => this.one<T>(q);
+    const many = <T>(q: SQL) => this.many<T>(q);
 
     const [kpi, claimKpi, series, funnel, byCity, byOrigin] = await Promise.all(
       [
@@ -189,6 +204,154 @@ export class DashboardService {
         origin,
         claims: originCount.get(origin) ?? 0,
       })),
+    };
+  }
+
+  /**
+   * Engajamento dos motoristas (ADR 0038): informes de preço (origem
+   * "usuario") e avaliações no período, por estado ou por cidade.
+   */
+  async engagement(
+    query: EngagementDashboardQuery,
+  ): Promise<EngagementDashboard> {
+    const { granularity, unit, start, end, prevStart, scope } =
+      this.window(query);
+    const byCity = Boolean(query.state);
+
+    // Interações (preço de motorista ou avaliação) de um intervalo.
+    const interactions = (from: SQL, to: SQL) => sql`
+      select pr.station_id, pr.reporter_user_id as user_id, 'preco' as kind, pr.reported_at as at
+      from price_reports pr
+      where pr.source = 'usuario' and pr.reported_at >= ${from} and pr.reported_at < ${to}
+      union all
+      select r.station_id, r.user_id, 'avaliacao' as kind, r.created_at as at
+      from reviews r
+      where r.created_at >= ${from} and r.created_at < ${to}`;
+
+    const counts = (from: SQL, to: SQL) =>
+      this.one<{
+        price_reports: number;
+        reviews: number;
+        active_users: number;
+        with_prices: number;
+        with_reviews: number;
+        with_any: number;
+      }>(sql`
+        select
+          count(*) filter (where i.kind = 'preco')::int as price_reports,
+          count(*) filter (where i.kind = 'avaliacao')::int as reviews,
+          count(distinct i.user_id)::int as active_users,
+          count(distinct i.station_id) filter (where i.kind = 'preco')::int as with_prices,
+          count(distinct i.station_id) filter (where i.kind = 'avaliacao')::int as with_reviews,
+          count(distinct i.station_id)::int as with_any
+        from (${interactions(from, to)}) i
+        join stations s on s.id = i.station_id
+        where ${scope}`);
+
+    const region = byCity ? sql`coalesce(m.name, s.city)` : sql`s.state`;
+
+    const [current, previous, scopeSize, series, regions] = await Promise.all([
+      counts(start, end),
+      counts(prevStart, start),
+      this.one<{ n: number }>(
+        sql`select count(*)::int as n from stations s where ${scope}`,
+      ),
+      this.many<{ start: string; price_reports: number; reviews: number }>(sql`
+        with buckets as (
+          select generate_series(
+            date_trunc(${unit}, ${query.from}::date::timestamp),
+            date_trunc(${unit}, ${query.to}::date::timestamp),
+            ('1 ' || ${unit})::interval
+          ) as bucket
+        ),
+        events as (
+          select date_trunc(${unit}, i.at at time zone ${TZ}) as bucket, i.kind
+          from (${interactions(start, end)}) i
+          join stations s on s.id = i.station_id
+          where ${scope}
+        )
+        select to_char(b.bucket, 'YYYY-MM-DD') as start,
+          count(e.kind) filter (where e.kind = 'preco')::int as price_reports,
+          count(e.kind) filter (where e.kind = 'avaliacao')::int as reviews
+        from buckets b left join events e on e.bucket = b.bucket
+        group by b.bucket order by b.bucket`),
+      this.many<{
+        name: string;
+        state: string;
+        stations: number;
+        with_any: number;
+        price_reports: number;
+        reviews: number;
+        active_users: number;
+      }>(sql`
+        with i as (${interactions(start, end)}),
+        per_station as (
+          select station_id,
+            count(*) filter (where kind = 'preco')::int as price_reports,
+            count(*) filter (where kind = 'avaliacao')::int as reviews
+          from i group by station_id
+        ),
+        users_by_region as (
+          select ${region} as name, s.state, count(distinct i.user_id)::int as active_users
+          from i join stations s on s.id = i.station_id
+          left join municipalities m on m.code = s.municipality_code
+          where ${scope}
+          group by 1, 2
+        )
+        select ${region} as name, s.state,
+          count(*)::int as stations,
+          count(ps.station_id)::int as with_any,
+          coalesce(sum(ps.price_reports), 0)::int as price_reports,
+          coalesce(sum(ps.reviews), 0)::int as reviews,
+          coalesce(max(u.active_users), 0)::int as active_users
+        from stations s
+        left join municipalities m on m.code = s.municipality_code
+        left join per_station ps on ps.station_id = s.id
+        left join users_by_region u on u.name = ${region} and u.state = s.state
+        where ${scope}
+        group by 1, 2
+        -- Cidades com interação primeiro; depois as maiores, sem interação
+        -- (oportunidade de marketing). Estados: todos.
+        order by (count(ps.station_id) > 0) desc, stations desc, 1
+        limit ${byCity ? 60 : 30}`),
+    ]);
+
+    return {
+      period: { from: query.from, to: query.to, granularity },
+      kpis: {
+        priceReports: current.price_reports,
+        reviews: current.reviews,
+        activeUsers: current.active_users,
+        stationsInScope: scopeSize.n,
+        stationsWithPrices: current.with_prices,
+        stationsWithReviews: current.with_reviews,
+        stationsWithAny: current.with_any,
+        previous: {
+          priceReports: previous.price_reports,
+          reviews: previous.reviews,
+          activeUsers: previous.active_users,
+        },
+      },
+      series: series.map((p) => ({
+        start: p.start,
+        priceReports: p.price_reports,
+        reviews: p.reviews,
+      })),
+      regions: {
+        level: byCity ? 'cidade' : 'estado',
+        rows: regions.map((r) => ({
+          name:
+            byCity && r.name === r.name.toUpperCase()
+              ? cityDisplayName(r.name)
+              : r.name,
+          state: r.state,
+          stations: r.stations,
+          stationsWithAny: r.with_any,
+          priceReports: r.price_reports,
+          reviews: r.reviews,
+          activeUsers: r.active_users,
+        })),
+      },
     };
   }
 }

@@ -17,6 +17,8 @@ import {
   stationInfoSchema,
   adminAgreementSchema,
   adhesionDashboardSchema,
+  engagementDashboardSchema,
+  type EngagementDashboardQuery,
   type AdhesionDashboardQuery,
   type CreateAgreement,
   type UpdateAgreement,
@@ -45,6 +47,20 @@ export function useAdhesionDashboard(query: AdhesionDashboardQuery) {
       authorizedRequest(
         `/admin/dashboard/adhesion?${params.toString()}`,
         adhesionDashboardSchema,
+      ),
+  });
+}
+
+export function useEngagementDashboard(query: EngagementDashboardQuery) {
+  const params = new URLSearchParams({ from: query.from, to: query.to });
+  if (query.state) params.set('state', query.state);
+  return useQuery({
+    queryKey: ['admin', 'dashboard', 'engagement', params.toString()],
+    placeholderData: keepPreviousData,
+    queryFn: () =>
+      authorizedRequest(
+        `/admin/dashboard/engagement?${params.toString()}`,
+        engagementDashboardSchema,
       ),
   });
 }

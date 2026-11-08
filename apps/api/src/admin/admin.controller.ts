@@ -15,6 +15,9 @@ import {
   adhesionDashboardQuerySchema,
   adhesionDashboardSchema,
   type AdhesionDashboard,
+  engagementDashboardQuerySchema,
+  engagementDashboardSchema,
+  type EngagementDashboard,
   adminNetworkQuerySchema,
   adminNetworkSchema,
   adminNetworkSummarySchema,
@@ -215,14 +218,26 @@ class AdhesionDashboardDto extends createZodDto(adhesionDashboardSchema) {}
 class AdhesionDashboardQueryDto extends createZodDto(
   adhesionDashboardQuerySchema,
 ) {}
+class EngagementDashboardDto extends createZodDto(engagementDashboardSchema) {}
+class EngagementDashboardQueryDto extends createZodDto(
+  engagementDashboardQuerySchema,
+) {}
 
-/** Dashboard de adesão (ADR 0037). */
+/** Dashboards do admin (ADR 0037 e 0038). */
 @ApiTags('Administração')
 @ApiBearerAuth()
 @Roles('admin')
 @Controller('admin/dashboard')
 export class AdminDashboardController {
   constructor(private readonly dashboard: DashboardService) {}
+
+  @Get('engagement')
+  @ZodResponse({ status: 200, type: EngagementDashboardDto })
+  engagement(
+    @Query() query: EngagementDashboardQueryDto,
+  ): Promise<EngagementDashboard> {
+    return this.dashboard.engagement(query);
+  }
 
   @Get('adhesion')
   @ZodResponse({ status: 200, type: AdhesionDashboardDto })

@@ -1,6 +1,10 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import type { AdhesionDashboard, LoginResponse } from '@tankei/shared';
+import type {
+  AdhesionDashboard,
+  EngagementDashboard,
+  LoginResponse,
+} from '@tankei/shared';
 import { randomUUID } from 'node:crypto';
 import { eq, sql } from 'drizzle-orm';
 import request from 'supertest';
@@ -11,6 +15,8 @@ import { IDENTITY_VERIFIERS } from './../src/auth/identity/identity-verifiers.pr
 import { DRIZZLE, type Database } from './../src/database/database.module';
 import {
   organizationMembers,
+  priceReports,
+  reviews,
   organizations,
   organizationStations,
   stationClaimDecisions,
@@ -22,7 +28,7 @@ import { createFakeIdentityProvider } from './support/fake-identity-provider';
 
 // Banco compartilhado: UF (RS) e CNPJs (6400…) só deste arquivo; o filtro por
 // UF isola os números dos outros testes.
-describe('Dashboard de adesão (ADR 0037) (e2e)', () => {
+describe('Dashboards do admin (ADR 0037 e 0038) (e2e)', () => {
   const google = createFakeIdentityProvider('google');
   let app: INestApplication<App>;
   let db: Database;
@@ -190,6 +196,98 @@ describe('Dashboard de adesão (ADR 0037) (e2e)', () => {
     expect(year.kpis).toMatchObject({
       adheredInPeriod: 2,
       adheredTotal: 3,
+    });
+  });
+
+  it('conta o engajamento dos motoristas por estado e por cidade', async () => {
+    const [pa] = await db
+      .select({ id: stations.id })
+      .from(stations)
+      .where(eq(stations.cnpj, '64000000000101'));
+    const [canoas] = await db
+      .select({ id: stations.id })
+      .from(stations)
+      .where(eq(stations.cnpj, '64000000000401'));
+    const driver = await login('Motorista RS');
+    const other = await login('Motorista RS 2');
+    const at = new Date('2026-05-10T12:00:00-03:00');
+    await db.insert(priceReports).values([
+      {
+        stationId: pa.id,
+        fuelType: 'gasolina_comum',
+        price: 6.19,
+        source: 'usuario',
+        reporterUserId: driver.user.id,
+        reportedAt: at,
+      },
+      {
+        stationId: pa.id,
+        fuelType: 'etanol',
+        price: 4.29,
+        source: 'usuario',
+        reporterUserId: other.user.id,
+        reportedAt: at,
+      },
+      // Preço do posto não conta como engajamento de motorista.
+      {
+        stationId: canoas.id,
+        fuelType: 'gasolina_comum',
+        price: 6.09,
+        source: 'posto',
+        reporterUserId: driver.user.id,
+        reportedAt: at,
+      },
+    ]);
+    await db.insert(reviews).values({
+      stationId: canoas.id,
+      userId: driver.user.id,
+      answers: { atendimento: 5 },
+      createdAt: at,
+    });
+
+    const byCity = (
+      await http()
+        .get(
+          '/v1/admin/dashboard/engagement?from=2026-05-01&to=2026-05-31&state=RS',
+        )
+        .set(auth(admin))
+        .expect(200)
+    ).body as EngagementDashboard;
+    expect(byCity.kpis).toMatchObject({
+      priceReports: 2,
+      reviews: 1,
+      activeUsers: 2,
+      stationsWithPrices: 1,
+      stationsWithReviews: 1,
+      stationsWithAny: 2,
+      stationsInScope: 4,
+    });
+    expect(byCity.regions.level).toBe('cidade');
+    expect(
+      byCity.regions.rows.find((r) => r.name === 'Porto Alegre'),
+    ).toMatchObject({
+      stations: 2,
+      stationsWithAny: 1,
+      priceReports: 2,
+      activeUsers: 2,
+    });
+    expect(byCity.regions.rows.find((r) => r.name === 'Canoas')).toMatchObject({
+      stations: 2,
+      stationsWithAny: 1,
+      reviews: 1,
+    });
+    expect(byCity.series.reduce((sum, p) => sum + p.priceReports, 0)).toBe(2);
+
+    const byState = (
+      await http()
+        .get('/v1/admin/dashboard/engagement?from=2026-05-01&to=2026-05-31')
+        .set(auth(admin))
+        .expect(200)
+    ).body as EngagementDashboard;
+    expect(byState.regions.level).toBe('estado');
+    expect(byState.regions.rows.find((r) => r.state === 'RS')).toMatchObject({
+      stations: 4,
+      stationsWithAny: 2,
     });
   });
 });
