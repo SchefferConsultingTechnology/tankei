@@ -12,6 +12,7 @@ import { Link, Navigate } from 'react-router';
 import { useMyInvitations } from '../api/queries';
 import { InvitationsBanner } from '../components/InvitationsBanner';
 import { ClaimsPage } from './ClaimsPage';
+import { PageLoading } from '../components/PageLoading';
 
 /**
  * Início do portal (ADR 0021): convites pendentes primeiro; sem rede, os
@@ -24,7 +25,7 @@ export function StationsPage({ user }: { user: Me }) {
   const orgs = user.organizations;
 
   if (invitations.isPending) {
-    return <Typography color="text.secondary">Carregando…</Typography>;
+    return <PageLoading />;
   }
 
   if (orgs.length === 0) {

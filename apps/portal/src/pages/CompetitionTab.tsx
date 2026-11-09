@@ -22,6 +22,7 @@ import {
 import { useState, type ReactNode } from 'react';
 import { useCompetition } from '../api/queries';
 import { PriceTag } from '../components/PriceTag';
+import { PageLoading } from '../components/PageLoading';
 
 /**
  * Concorrência na região (ADR 0012 e 0020): só o que o app já mostra
@@ -33,7 +34,7 @@ export function CompetitionTab({ stationId }: { stationId: string }) {
   const competition = useCompetition(stationId, radius);
 
   if (competition.isPending) {
-    return <Typography color="text.secondary">Carregando…</Typography>;
+    return <PageLoading />;
   }
   if (competition.isError) {
     return <Alert severity="error">{competition.error.message}</Alert>;

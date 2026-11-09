@@ -44,6 +44,7 @@ import { ApiError } from '../api/client';
 import { useTeam, useTeamActions } from '../api/queries';
 import { useAuth } from '../auth/AuthProvider';
 import { usePortalContext } from './station-context';
+import { PageLoading } from '../components/PageLoading';
 
 type Actions = ReturnType<typeof useTeamActions>;
 type Unit = { id: string; name: string };
@@ -90,7 +91,7 @@ export function TeamPage() {
   const [notice, setNotice] = useState<string | null>(null);
 
   if (team.isPending) {
-    return <Typography color="text.secondary">Carregando…</Typography>;
+    return <PageLoading />;
   }
   if (team.isError) return <Alert severity="error">{team.error.message}</Alert>;
   const { members, invitations, stations } = team.data;

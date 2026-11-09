@@ -245,9 +245,7 @@ function EditDialog({
               Histórico
             </Typography>
             {history.isPending && (
-              <Typography variant="body2" color="text.secondary">
-                Carregando…
-              </Typography>
+              <PageLoading />
             )}
             <List dense disablePadding>
               {history.data?.map((change) => (

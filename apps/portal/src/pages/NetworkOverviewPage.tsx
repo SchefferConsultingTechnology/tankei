@@ -43,6 +43,7 @@ import { ApiError } from '../api/client';
 import { useBulkPrice, useOverview } from '../api/queries';
 import { PriceTag } from '../components/PriceTag';
 import { usePortalContext } from './station-context';
+import { PageLoading } from '../components/PageLoading';
 
 type Unit = OrganizationOverview['stations'][number];
 type Result = BulkPriceResult['results'][number];
@@ -61,7 +62,7 @@ export function NetworkOverviewPage() {
   const [fuel, setFuel] = useState<FuelType | null>(null);
 
   if (overview.isPending) {
-    return <Typography color="text.secondary">Carregando…</Typography>;
+    return <PageLoading />;
   }
   if (overview.isError) {
     return <Alert severity="error">{overview.error.message}</Alert>;

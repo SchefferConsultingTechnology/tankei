@@ -29,6 +29,7 @@ import { usePriceHistory } from '../api/queries';
 import { ContestDialog } from '../components/ContestDialog';
 import { atStationText } from '../components/report-text';
 import { useCan, useStationContext } from './station-context';
+import { PageLoading } from '../components/PageLoading';
 
 const PERIODS = [7, 30, 90] as const;
 
@@ -120,7 +121,7 @@ export function PriceHistoryPage() {
       </Stack>
 
       {history.isPending && (
-        <Typography color="text.secondary">Carregando…</Typography>
+        <PageLoading />
       )}
       {history.isError && (
         <Alert severity="error">{history.error.message}</Alert>

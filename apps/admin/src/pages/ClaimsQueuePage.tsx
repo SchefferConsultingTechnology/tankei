@@ -38,6 +38,7 @@ import {
 import { useState, type ReactNode } from 'react';
 import { ApiError } from '../api/client';
 import { useClaims, useDecideClaim } from '../api/queries';
+import { PageLoading } from '../components/PageLoading';
 
 /** Formas que o administrador registra à mão (e-CNPJ e carta virão automáticas). */
 const MANUAL_METHODS: VerificationMethod[] = [
@@ -114,7 +115,7 @@ export function ClaimsQueuePage() {
       </Tabs>
 
       {claims.isPending && (
-        <Typography color="text.secondary">Carregando…</Typography>
+        <PageLoading />
       )}
       {claims.isError && <Alert severity="error">{claims.error.message}</Alert>}
       {claims.isSuccess && claims.data.length === 0 && (

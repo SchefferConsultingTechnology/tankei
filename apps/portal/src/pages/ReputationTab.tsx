@@ -14,13 +14,14 @@ import { CONFIDENCE_LABELS, IQP_EXPLANATION } from '@tankei/shared';
 import type { ReactNode } from 'react';
 import { useReputation } from '../api/queries';
 import { IqpGauge } from '../components/IqpGauge';
+import { PageLoading } from '../components/PageLoading';
 
 /** IQP do posto por dimensão comparado à média da cidade (ADR 0012). */
 export function ReputationTab({ stationId }: { stationId: string }) {
   const reputation = useReputation(stationId);
 
   if (reputation.isPending) {
-    return <Typography color="text.secondary">Carregando…</Typography>;
+    return <PageLoading />;
   }
   if (reputation.isError) {
     return <Alert severity="error">{reputation.error.message}</Alert>;

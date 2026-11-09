@@ -38,6 +38,7 @@ import {
   type NewPromotion,
 } from '../api/queries';
 import { useCan, useStationContext } from './station-context';
+import { PageLoading } from '../components/PageLoading';
 
 const ORDER: PromotionStatus[] = ['vigente', 'agendada', 'encerrada'];
 
@@ -112,7 +113,7 @@ export function PromotionsPage() {
       </Stack>
 
       {promotions.isPending && (
-        <Typography color="text.secondary">Carregando…</Typography>
+        <PageLoading />
       )}
       {promotions.isError && (
         <Alert severity="error">{promotions.error.message}</Alert>

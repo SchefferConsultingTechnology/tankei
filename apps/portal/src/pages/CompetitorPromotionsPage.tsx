@@ -13,6 +13,7 @@ import {
 } from '@tankei/shared';
 import { useCompetition } from '../api/queries';
 import { useStationContext } from './station-context';
+import { PageLoading } from '../components/PageLoading';
 
 type Offer = { fuel: string; price: number; label: string; endsAt: string };
 
@@ -22,7 +23,7 @@ export function CompetitorPromotionsPage() {
   const competition = useCompetition(station.id);
 
   if (competition.isPending) {
-    return <Typography color="text.secondary">Carregando…</Typography>;
+    return <PageLoading />;
   }
   if (competition.isError) {
     return <Alert severity="error">{competition.error.message}</Alert>;

@@ -303,7 +303,7 @@ export function PortalShell({ user }: { user: Me }) {
   return (
     <Layout sidebar={sidebar}>
       {stationId && station.isPending && (
-        <Typography color="text.secondary">Carregando…</Typography>
+        <PageLoading />
       )}
       {stationId && station.isError && (
         <Alert severity="error">{station.error.message}</Alert>

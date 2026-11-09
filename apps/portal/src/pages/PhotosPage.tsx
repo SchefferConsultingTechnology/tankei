@@ -22,6 +22,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { ApiError } from '../api/client';
 import { useAddPhoto, useRemovePhoto, useStationPhotos } from '../api/queries';
 import { useCan, useStationContext } from './station-context';
+import { PageLoading } from '../components/PageLoading';
 
 function errorText(error: unknown): string | null {
   if (!error) return null;
@@ -82,7 +83,7 @@ export function PhotosPage() {
         </Alert>
       )}
       {photos.isPending && (
-        <Typography color="text.secondary">Carregando…</Typography>
+        <PageLoading />
       )}
       {photos.isError && <Alert severity="error">{photos.error.message}</Alert>}
       {data?.photos.length === 0 && (

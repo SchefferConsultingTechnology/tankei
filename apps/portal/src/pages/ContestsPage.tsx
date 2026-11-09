@@ -16,6 +16,7 @@ import {
 } from '@tankei/shared';
 import { useStationModeration } from '../api/queries';
 import { useStationContext } from './station-context';
+import { PageLoading } from '../components/PageLoading';
 
 const STATUS_COLOR: Record<
   ModerationStatus,
@@ -57,7 +58,7 @@ export function ContestsPage() {
       </Box>
 
       {cases.isPending && (
-        <Typography color="text.secondary">Carregando…</Typography>
+        <PageLoading />
       )}
       {cases.isError && <Alert severity="error">{cases.error.message}</Alert>}
       {cases.data?.length === 0 && (
