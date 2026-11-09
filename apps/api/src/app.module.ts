@@ -21,6 +21,7 @@ import { AgreementsModule } from './agreements/agreements.module';
 import { StationInfoModule } from './station-info/station-info.module';
 import { StationsModule } from './stations/stations.module';
 import { UsersModule } from './users/users.module';
+import { VisitsModule } from './visits/visits.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { UsersModule } from './users/users.module';
     MailModule,
     StationsModule,
     StationInfoModule,
+    VisitsModule,
     AgreementsModule,
     PricesModule,
     UsersModule,

@@ -15,6 +15,7 @@ import { Avatar } from '@/components/Avatar';
 import { KeepScreenOnProvider } from '@/keep-awake';
 import { SpeedometerProvider } from '@/speedometer';
 import { PlaceProvider } from '@/place';
+import { VisitsProvider } from '@/visits';
 import {
   createStyles,
   ThemePreferenceProvider,
@@ -136,6 +137,7 @@ function App() {
         <KeepScreenOnProvider>
         <SpeedometerProvider>
         <PlaceProvider>
+        <VisitsProvider>
           <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
           <Stack
             screenOptions={{
@@ -185,6 +187,7 @@ function App() {
               options={{ title: 'Conta', presentation: 'modal' }}
             />
           </Stack>
+        </VisitsProvider>
         </PlaceProvider>
         </SpeedometerProvider>
         </KeepScreenOnProvider>

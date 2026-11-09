@@ -1,6 +1,6 @@
 # Spec 0003: Interações dos motoristas com o posto, no portal
 
-- **Status:** proposta (aguarda as decisões do fim do documento)
+- **Status:** implementada (2026-11-09). Os ajustes feitos na implementação estão no ADR 0039.
 - **Data:** 2026-11-08
 - **Relacionados:** ADR 0009 (dados pessoais e LGPD), ADR 0006 (parâmetros), ADR 0021 (papéis no posto), ADR 0038 (dashboard de engajamento no admin), spec 0004 (site do posto)
 
@@ -44,7 +44,7 @@ Registrar as visitas dos motoristas ao posto no app, de forma anônima, e mostra
 1. O toque no cartão cria uma visita com estes dados:
    - `id` (UUID gerado no aparelho);
    - `stationId`;
-   - `source`: `mapa`, `lista`, `busca`, `link` ou `site`;
+   - `source`: `mapa`, `lista`, `favoritos`, `link` ou `site`;
    - `openedAt`;
    - `drivingMode`: se o modo direção estava ativo.
 2. "Ver detalhes do posto" na mesma visita marca `detailOpenedAt` e começa a medir o tempo na ficha. Abrir a ficha direto (sem cartão) cria a visita já com a ficha aberta.
@@ -78,7 +78,7 @@ Na tela Conta, um interruptor **"Compartilhar estatísticas de uso com os postos
 | `id` | uuid (PK) | gerado no aparelho |
 | `station_id` | uuid | |
 | `visitor_id` | uuid | aleatório por instalação; não é a conta |
-| `source` | enum | `mapa`, `lista`, `busca`, `link`, `site` |
+| `source` | enum | `mapa`, `lista`, `favoritos`, `link`, `site` |
 | `driving_mode` | boolean | |
 | `opened_at` | timestamptz | data e hora do aparelho; descartada se estiver mais de 1 dia no futuro |
 | `detail_opened_at` | timestamptz, nulo | |
@@ -98,6 +98,8 @@ Regras da tabela:
 - As colunas novas e nulas não mexem no histórico.
 
 ### Retenção e agregação
+
+*Adiada (ADR 0039): entra antes de a tabela completar um ano de dados.*
 
 - Uma tarefa diária (`@nestjs/schedule`) consolida as visitas em `station_visit_daily`, uma linha por posto, dia e origem, com:
   - visitas;
@@ -134,7 +136,7 @@ Regras da tabela:
 **Gráficos e quadros:**
 - Gráfico de barras com as visitas por dia ou semana.
 - Funil da visita: cartão aberto → ficha aberta → informou preço / avaliou. Mostra o que o autor pediu: **quantos tocaram e não contribuíram**.
-- Origem das visitas: mapa, lista, busca, link compartilhado, site do posto.
+- Origem das visitas: mapa, lista, favoritos, link compartilhado, site do posto.
 - Quando os motoristas olham: grade de dia da semana por faixa de hora.
 - Ações: rotas traçadas, compartilhamentos, ligações.
 
@@ -177,9 +179,9 @@ O app lê `flush_seconds` e `max_detail_seconds` em `GET /v1/config`.
 8. A tabela de visitas não guarda conta nem coordenadas. A exclusão da conta não precisa mexer nela.
 9. A carga fictícia (`pnpm demo:visits`, ADR 0036) preenche a tela para visualização no banco de teste.
 
-## Decisões pendentes
+## Decisões
 
-1. **Plano:** a tela Visitas é de todos os postos aderidos ou só de quem assina? Sugestão: indicadores básicos para todos, e funil, horários e origem só para assinantes.
-2. **Interruptor ligado por padrão** (legítimo interesse) ou pedido de consentimento? Entra na pauta jurídica.
+1. **Plano (decidido em 2026-11-09):** só para assinantes; os planos ainda serão revisados. Até a assinatura existir, a equipe libera por posto no admin (ADR 0039).
+2. **Interruptor ligado por padrão** (legítimo interesse): implementado assim. A confirmação está na pauta jurídica (item 5).
 3. **Comparação com a cidade** na fase B: ajuda a vender, mas expõe a média dos concorrentes.
 4. **Impressões** (fase B): contar quantas vezes o posto apareceu no mapa ou na lista, agregadas no aparelho por dia.

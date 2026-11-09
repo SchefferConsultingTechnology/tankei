@@ -36,6 +36,8 @@ export const reviews = pgTable(
       .notNull()
       .references(() => users.id),
     answers: jsonb().$type<ReviewAnswers>().notNull(),
+    // Visita do app em que a avaliação foi feita (spec 0003), sem chave estrangeira.
+    visitId: uuid(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

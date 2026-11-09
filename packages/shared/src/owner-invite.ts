@@ -23,6 +23,21 @@ export const appConfigSchema = z.object({
     .describe(
       'Segundos até o cartão do mapa fechar sozinho (parâmetro app.map_card_close_seconds, ADR 0033). 0 = não fecha.',
     ),
+  visitsFlushSeconds: z
+    .number()
+    .int()
+    .default(60)
+    .describe('Envio das visitas pelo app (parâmetro analytics.flush_seconds).'),
+  visitsMaxDetailSeconds: z
+    .number()
+    .int()
+    .default(600)
+    .describe('Teto do tempo na ficha (parâmetro analytics.max_detail_seconds).'),
+  visitsMaxQueueDays: z
+    .number()
+    .int()
+    .default(7)
+    .describe('Validade da visita não enviada (parâmetro analytics.max_queue_days).'),
 });
 export type AppConfig = z.infer<typeof appConfigSchema>;
 

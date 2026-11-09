@@ -36,6 +36,7 @@ import { useBottomPadding } from '@/hooks/useBottomPadding';
 import { useFuelPreference } from '@/hooks/useFuelPreference';
 import { PILOT_CITY_CENTER, useUserLocation } from '@/hooks/useUserLocation';
 import { usePlace } from '@/place';
+import { visits } from '@/visits';
 import {
   availableFuels,
   distanceMeters,
@@ -74,7 +75,10 @@ export default function HomeScreen() {
   const closeSeconds = config.data?.mapCardCloseSeconds ?? 0;
   useEffect(() => {
     if (!selectedId || closeSeconds <= 0) return;
-    const timer = setTimeout(() => setSelectedId(null), closeSeconds * 1000);
+    const timer = setTimeout(() => {
+      setSelectedId(null);
+      visits.cardClosed('tempo');
+    }, closeSeconds * 1000);
     return () => clearTimeout(timer);
   }, [selectedId, selectTick, closeSeconds]);
   const userLocation =
@@ -169,8 +173,12 @@ export default function HomeScreen() {
       ? { ...listed, ...fresh.data }
       : listed;
 
-  const open = (station: ListedStation) =>
-    router.push({ pathname: '/station/[id]', params: { id: station.id } });
+  // A origem vai para a ficha: conta na visita (spec 0003).
+  const open = (station: ListedStation, origem: 'mapa' | 'lista') =>
+    router.push({
+      pathname: '/station/[id]',
+      params: { id: station.id, origem },
+    });
   const report = (station: ListedStation) =>
     router.push({ pathname: '/station/[id]/preco', params: { id: station.id } });
 
@@ -208,15 +216,19 @@ export default function HomeScreen() {
             onSelect={(station) => {
               setSelectedId(station.id);
               setSelectTick((tick) => tick + 1);
+              visits.cardOpened(station.id, 'mapa', heading !== null);
             }}
-            onDeselect={() => setSelectedId(null)}
+            onDeselect={() => {
+              setSelectedId(null);
+              visits.cardClosed('toque_fora');
+            }}
           />
           {selected && (
             <View style={[styles.mapCard, cardPadding]} pointerEvents="box-none">
               <StationCard
                 station={selected}
                 fuel={fuel}
-                onPress={() => open(selected)}
+                onPress={() => open(selected, 'mapa')}
                 onReport={() => report(selected)}
                 detailed
                 style={styles.mapCardShadow}
@@ -243,7 +255,7 @@ export default function HomeScreen() {
       <StationList
         stations={stations}
         fuel={fuel}
-        onSelect={open}
+        onSelect={(station) => open(station, 'lista')}
         onReport={report}
       />
     );

@@ -24,6 +24,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { authorizedRequest } from '@/auth/session';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useBottomPadding } from '@/hooks/useBottomPadding';
+import { visits } from '@/visits';
 import { createStyles, useTheme } from '@/appearance';
 import { fontSize, radius, spacing } from '@/theme';
 
@@ -58,7 +59,7 @@ export default function ReviewScreen() {
     mutationFn: () =>
       authorizedRequest(`/stations/${id}/reviews`, reviewResponseSchema, {
         method: 'POST',
-        body: { ratings, priceAsAdvertised },
+        body: { ratings, priceAsAdvertised, visitId: visits.visitIdFor(id) },
       }),
     onSuccess: (response: ReviewResponse) => {
       // O IQP é recalculado na hora: ficha, mapa e lista mudam.

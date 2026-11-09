@@ -3,12 +3,19 @@ import {
   IQP_EXPLANATION,
   IQP_SCALE_MAX,
   STATION_MODE_NOTICES,
+  VISIT_SOURCES,
+  type VisitSource,
   type Station,
   type StationIqp,
 } from '@tankei/shared';
 import { SymbolView } from 'expo-symbols';
-import { useState } from 'react';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  router,
+  Stack,
+  useFocusEffect,
+  useLocalSearchParams,
+} from 'expo-router';
 import {
   ActivityIndicator,
   Alert,
@@ -42,11 +49,13 @@ import { CONFIDENCE_LABELS, describePrice, priceNote } from '@/format';
 import { priceFor } from '@/stations';
 import { createStyles, useTheme } from '@/appearance';
 import { fontSize, radius, spacing } from '@/theme';
+import { visits } from '@/visits';
 
 export default function StationScreen() {
   const styles = useStyles();
   const { colors } = useTheme();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, origem } = useLocalSearchParams<{ id: string; origem?: string }>();
+  useVisit(id, origem);
   const station = useStation(id);
   const iqp = useStationIqp(id);
   const showcase = useStationShowcase(id);
@@ -91,7 +100,10 @@ export default function StationScreen() {
         {data.location && (
           <PrimaryButton
             label="Traçar rota"
-            onPress={() => chooseNavigationApp(data.location!)}
+            onPress={() => {
+              visits.action(data.id, 'route');
+              chooseNavigationApp(data.location!);
+            }}
           />
         )}
       </View>
@@ -298,6 +310,30 @@ function HowToRead({ version }: { version: string }) {
         </View>
       )}
     </View>
+  );
+}
+
+/**
+ * Visita à ficha (spec 0003): começa ao abrir, conta o tempo só com a ficha
+ * em primeiro plano (outra tela por cima pausa) e termina ao sair.
+ */
+function useVisit(stationId: string, origem: string | undefined) {
+  const source: VisitSource = (VISIT_SOURCES as readonly string[]).includes(
+    origem ?? '',
+  )
+    ? (origem as VisitSource)
+    : 'link';
+  useEffect(() => {
+    visits.detailOpened(stationId, source);
+    return () => visits.detailLeft(stationId);
+    // A origem só vale na abertura.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stationId]);
+  useFocusEffect(
+    useCallback(() => {
+      visits.detailFocus(stationId, true);
+      return () => visits.detailFocus(stationId, false);
+    }, [stationId]),
   );
 }
 

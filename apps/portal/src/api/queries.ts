@@ -31,6 +31,8 @@ import {
   type SetStationAgreement,
   type UpdateStationInfo,
   stationPromotionSchema,
+  stationFeaturesSchema,
+  stationVisitsSchema,
   type BulkPrice,
   createClaimSchema,
   type CreateInvitation,
@@ -557,5 +559,32 @@ export function useDisputeClaim(stationId: string) {
       queryClient.invalidateQueries({
         queryKey: ['portal', stationId, 'claims'],
       }),
+  });
+}
+
+/** Recursos do plano liberados para o posto (spec 0003). */
+export function useStationFeatures(id: string) {
+  return useQuery({
+    queryKey: ['portal', id, 'features'],
+    queryFn: () =>
+      authorizedRequest(`/portal/stations/${id}/features`, stationFeaturesSchema),
+  });
+}
+
+/** Visitas dos motoristas ao posto no período (spec 0003). */
+export function useStationVisits(
+  id: string,
+  range: { from: string; to: string },
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: ['portal', id, 'visits', range.from, range.to],
+    enabled,
+    queryFn: () =>
+      authorizedRequest(
+        `/portal/stations/${id}/visits?from=${range.from}&to=${range.to}`,
+        stationVisitsSchema,
+      ),
+    placeholderData: keepPreviousData,
   });
 }

@@ -30,6 +30,7 @@
     "demo:seed": "nest build && node dist/scripts/seed-demo.js",
     "demo:adhesion": "nest build && node dist/scripts/seed-adhesion-demo.js",
     "demo:engagement": "nest build && node dist/scripts/seed-engagement-demo.js",
+    "demo:visits": "nest build && node dist/scripts/seed-visits-demo.js",
     "import:ibge": "nest build && node dist/scripts/import-ibge.js"
   },
   "dependencies": {

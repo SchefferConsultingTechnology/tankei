@@ -28,6 +28,11 @@ import {
   type ParameterKey,
   type SetStationMode,
 } from '@tankei/shared';
+import {
+  stationFeaturesSchema,
+  type SetStationFeature,
+  type StationFeature,
+} from '@tankei/shared';
 import { z } from 'zod';
 import { authorizedRequest } from './session';
 
@@ -134,6 +139,38 @@ export function useUpdateAdminStationInfo(stationId: string) {
       }),
     onSuccess: (data) =>
       queryClient.setQueryData(['admin', 'stations', stationId, 'info'], data),
+  });
+}
+
+/** Recursos do plano do posto (spec 0003), liberados pela equipe. */
+export function useStationFeatures(stationId: string) {
+  return useQuery({
+    queryKey: ['admin', 'stations', stationId, 'features'],
+    queryFn: () =>
+      authorizedRequest(
+        `/admin/stations/${stationId}/features`,
+        stationFeaturesSchema,
+      ),
+  });
+}
+
+export function useSetStationFeature(stationId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      feature,
+      ...body
+    }: SetStationFeature & { feature: StationFeature }) =>
+      authorizedRequest(
+        `/admin/stations/${stationId}/features/${feature}`,
+        stationFeaturesSchema,
+        { method: 'PUT', body },
+      ),
+    onSuccess: (data) =>
+      queryClient.setQueryData(
+        ['admin', 'stations', stationId, 'features'],
+        data,
+      ),
   });
 }
 

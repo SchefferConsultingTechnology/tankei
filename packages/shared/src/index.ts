@@ -19,3 +19,4 @@ export * from './owner-invite';
 export * from './station-info';
 export * from './agreement';
 export * from './dashboard';
+export * from './visits';

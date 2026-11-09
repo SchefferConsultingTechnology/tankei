@@ -47,6 +47,11 @@ export class AppService {
       mapCardCloseSeconds: await this.parameters.get(
         'app.map_card_close_seconds',
       ),
+      visitsFlushSeconds: await this.parameters.get('analytics.flush_seconds'),
+      visitsMaxDetailSeconds: await this.parameters.get(
+        'analytics.max_detail_seconds',
+      ),
+      visitsMaxQueueDays: await this.parameters.get('analytics.max_queue_days'),
     };
   }
 }

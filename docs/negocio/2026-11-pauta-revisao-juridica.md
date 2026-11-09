@@ -46,6 +46,18 @@ Pontos levantados no desenvolvimento que precisam de parecer antes de seguir. Ca
 
 **Pergunta:** revisar termos de uso e política de privacidade (LGPD) para o app, o portal e os e-mails antes do piloto com postos reais.
 
+## 5. Estatísticas de visitas aos postos (ADR 0039)
+
+**O que existe:**
+- O app registra visitas anônimas aos postos (toque, ficha, tempo na ficha), sem conta e sem localização.
+- Usa um identificador aleatório por instalação.
+- O posto assinante vê só totais, e números abaixo de 5 aparecem como "menos de 5".
+- O registro começa ligado, e o motorista desliga em Conta.
+
+**Perguntas:**
+- Legítimo interesse basta, com o aviso na política e o interruptor, ou é preciso pedir consentimento antes?
+- O identificador aleatório por instalação é dado pessoal para a LGPD? Que prazo de guarda usar?
+
 ## Resultado
 
 Registrar aqui o parecer, a data e o que muda no produto (com o ADR correspondente).

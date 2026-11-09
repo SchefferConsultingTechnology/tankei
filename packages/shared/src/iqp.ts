@@ -107,6 +107,10 @@ export const reviewRequestSchema = z
       .describe(
         'O preço na bomba era o anunciado? null quando a pessoa não sabe ou não abasteceu.',
       ),
+    visitId: z
+      .uuid()
+      .optional()
+      .describe('Visita do app em que a avaliação foi feita (spec 0003).'),
   })
   .refine(
     (review) =>

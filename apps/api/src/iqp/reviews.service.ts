@@ -80,6 +80,7 @@ export class ReviewsService {
         stationId,
         userId: user.id,
         answers: toAnswers(request),
+        visitId: request.visitId ?? null,
         createdAt: now,
       })
       .returning({ id: reviews.id });

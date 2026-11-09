@@ -198,6 +198,17 @@ Conferir de ponta a ponta, no ambiente publicado (Render e Supabase) e no celula
 - [ ] **Oportunidades:** só regiões com pelo menos 20 postos e menos de 10% de cobertura.
 - [ ] **Temas e celular:** claro e escuro, e no celular sem rolagem lateral (só a tabela rola).
 
+### 14. Visitas ao posto (spec 0003, ADR 0039)
+
+- [ ] **Cartão:** tocar num posto do mapa e deixar o cartão fechar sozinho gera uma visita sem ficha. Em até 1 minuto ela chega à API.
+- [ ] **Ficha:** abrir a ficha, ficar 30 s, ir para segundo plano por 2 min e voltar por mais 10 s registra cerca de 40 s na ficha.
+- [ ] **Contribuição:** informar preço pela ficha (e pelo botão do cartão) liga o informe à visita. O mesmo vale para a avaliação.
+- [ ] **Sem conexão:** as visitas ficam na fila e são enviadas quando a conexão volta, sem duplicar.
+- [ ] **Interruptor:** desligado em Conta, nenhuma visita é registrada.
+- [ ] **Portal sem o recurso:** aparece "Disponível na assinatura do portal". Liberado no admin, os números aparecem.
+- [ ] **Anonimato:** com poucas visitas, aparece "menos de 5" e o gráfico agrupa por semana.
+- [ ] **Temas e celular:** claro e escuro, e no celular sem rolagem lateral.
+
 ## Resultado
 
 Registrar no fim deste arquivo: data, quem testou, o que passou e os problemas encontrados (com issue ou commit da correção).

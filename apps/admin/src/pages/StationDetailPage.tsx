@@ -33,6 +33,7 @@ import { Notice } from '../components/Notice';
 import { PageHeader } from '../components/PageHeader';
 import { PageLoading } from '../components/PageLoading';
 import { StationInfoSection } from '../components/StationInfoSection';
+import { StationFeaturesSection } from '../components/StationFeaturesSection';
 import { StationModeSection } from '../components/StationModeSection';
 
 function Section({
@@ -226,6 +227,7 @@ export function StationDetailPage() {
         onNotice={setNotice}
       />
       <StationModeSection station={s} onNotice={setNotice} />
+      <StationFeaturesSection stationId={s.id} onNotice={setNotice} />
 
       {adding && (
         <AddManagerDialog

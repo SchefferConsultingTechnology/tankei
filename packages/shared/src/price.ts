@@ -69,6 +69,10 @@ export const priceReportRequestSchema = z.object({
     })
     .optional()
     .describe('Preço promocional com período. Só para gestores do posto.'),
+  visitId: z
+    .uuid()
+    .optional()
+    .describe('Visita do app em que o informe foi feito (spec 0003).'),
 });
 export type PriceReportRequest = z.output<typeof priceReportRequestSchema>;
 

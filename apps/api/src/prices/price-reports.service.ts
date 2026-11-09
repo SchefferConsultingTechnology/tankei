@@ -206,6 +206,7 @@ export class PriceReportsService {
         promotionLabel: request.promotion?.label,
         promotionStartsAt: request.promotion?.startsAt,
         promotionEndsAt: request.promotion?.endsAt,
+        visitId: request.visitId ?? null,
         reportedAt: now,
       })
       .returning({ id: priceReports.id });

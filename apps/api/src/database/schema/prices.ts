@@ -57,6 +57,9 @@ export const priceReports = pgTable(
     promotionLabel: text(),
     promotionStartsAt: timestamp({ withTimezone: true }),
     promotionEndsAt: timestamp({ withTimezone: true }),
+    // Visita do app em que o informe foi feito (spec 0003). Sem chave
+    // estrangeira: a visita pode chegar depois do informe.
+    visitId: uuid(),
     reportedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

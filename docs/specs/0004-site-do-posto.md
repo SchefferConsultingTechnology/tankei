@@ -147,8 +147,8 @@ O site é uma vitrine do que já existe na plataforma, não uma segunda fonte de
 
 ## Decisões pendentes
 
-1. **Página básica para todos?** Proposta: todo posto ganha uma página pública simples (sem personalização), útil para o link de compartilhar do app e para o Google. O contrato libera a personalização, o QR Code e, depois, o subdomínio e o domínio próprio. A outra opção é só quem assina ter página.
+1. **Página básica para todos? (aceita em 2026-11-09)** Proposta: todo posto ganha uma página pública simples (sem personalização), útil para o link de compartilhar do app e para o Google. O contrato libera a personalização, o QR Code e, depois, o subdomínio e o domínio próprio. A outra opção é só quem assina ter página.
 2. **Planos:** o site entra em qual plano, e o domínio próprio é um adicional? Depende da etapa 3 do plano financeiro.
 3. **IQP no site:** o posto pode **ocultar** o bloco do IQP no próprio site (sem nunca alterar a nota)? Ocultar é comum em sites de empresa, mas esconder uma nota baixa enfraquece a confiança na plataforma. Sugestão: o bloco é obrigatório, como o de preços.
-4. **Logo próprio do posto:** depende da pergunta 3 da pauta jurídica (posto de bandeira que envia a marca da distribuidora como se fosse o logo).
+4. **Logo próprio do posto (2026-11-09):** nada a implementar agora. Quando o jurídico definir o texto (pauta, item 3), entra como um checkbox de aceite no envio do logo ("declaro ter o direito de uso desta imagem").
 5. **Domínio do Tankei** para os endereços das fases A e B (mesma pendência do site oficial).

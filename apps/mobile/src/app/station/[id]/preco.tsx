@@ -26,6 +26,7 @@ import { useBottomPadding } from '@/hooks/useBottomPadding';
 import { useFuelPreference } from '@/hooks/useFuelPreference';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { priceFor } from '@/stations';
+import { visits } from '@/visits';
 import { createStyles, useTheme } from '@/appearance';
 import { fontSize, radius, spacing } from '@/theme';
 
@@ -72,7 +73,8 @@ export default function ReportPriceScreen() {
     }) =>
       authorizedRequest(`/stations/${id}/prices`, priceReportResponseSchema, {
         method: 'POST',
-        body: input,
+        // A visita em que o informe foi feito (spec 0003).
+        body: { ...input, visitId: visits.visitIdFor(id) },
       }),
   });
 

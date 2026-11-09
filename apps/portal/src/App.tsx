@@ -67,6 +67,9 @@ const StationInfoPage = lazy(() =>
     default: m.StationInfoPage,
   })),
 );
+const VisitsPage = lazy(() =>
+  import('./pages/VisitsPage').then((m) => ({ default: m.VisitsPage })),
+);
 const ReputationTab = lazy(() =>
   import('./pages/ReputationTab').then((m) => ({ default: m.ReputationTab })),
 );
@@ -151,6 +154,7 @@ export function App() {
         <Route path="precos/contestacoes" element={<ContestsPage />} />
         <Route path="precos/convenios" element={<AgreementsPage />} />
         <Route path="posto/horario" element={<StationInfoPage />} />
+        <Route path="posto/visitas" element={<VisitsPage />} />
         <Route path="divulgacao/promocoes" element={<PromotionsPage />} />
         <Route path="divulgacao/fotos" element={<PhotosPage />} />
         <Route path="concorrencia" element={<RegionRoute />} />

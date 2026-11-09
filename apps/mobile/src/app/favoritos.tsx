@@ -64,7 +64,10 @@ export default function FavoritesScreen() {
           station={station}
           fuel={fuel}
           onPress={() =>
-            router.push({ pathname: '/station/[id]', params: { id: station.id } })
+            router.push({
+              pathname: '/station/[id]',
+              params: { id: station.id, origem: 'favoritos' },
+            })
           }
         />
       ))}

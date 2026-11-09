@@ -42,6 +42,7 @@ export const PARAMETER_GROUP_LABELS: Record<string, string> = {
   review: 'Avaliações',
   app: 'App',
   agreement: 'Convênios',
+  analytics: 'Visitas ao posto',
 };
 
 /**
@@ -251,6 +252,34 @@ export const PARAMETER_DEFINITIONS = {
     label: 'Desconto máximo de convênio (R$ por litro)',
     description:
       'Maior desconto em R$ por litro que o posto pode cadastrar num convênio (ADR 0034).',
+  },
+  'analytics.flush_seconds': {
+    schema: z.number().int().min(10).max(3600),
+    unit: 'seconds',
+    label: 'Envio das visitas pelo app',
+    description:
+      'De quanto em quanto tempo o app envia as visitas registradas (spec 0003). Também envia ao ir para segundo plano.',
+  },
+  'analytics.max_queue_days': {
+    schema: z.number().int().min(1).max(60),
+    unit: 'days',
+    label: 'Validade da visita não enviada',
+    description:
+      'Visitas guardadas no aparelho há mais que isso (sem conexão) são descartadas, no app e na API.',
+  },
+  'analytics.max_detail_seconds': {
+    schema: z.number().int().min(30).max(7200),
+    unit: 'seconds',
+    label: 'Tempo máximo na ficha',
+    description:
+      'Teto do tempo contado numa visita à ficha do posto, para não contar uma ficha esquecida aberta.',
+  },
+  'analytics.min_bucket': {
+    schema: z.number().int().min(1).max(50),
+    unit: 'count',
+    label: 'Mínimo para mostrar uma contagem',
+    description:
+      'Abaixo deste número, o portal mostra "menos de N" em vez do valor, para o posto não identificar um motorista (spec 0003).',
   },
 } satisfies Record<
   string,

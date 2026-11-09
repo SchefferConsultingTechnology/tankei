@@ -13,6 +13,7 @@ import { Avatar } from '@/components/Avatar';
 import { CarProfileForm } from '@/components/CarProfileForm';
 import { ContributionCard } from '@/components/ContributionCard';
 import { KeepScreenOnSwitch } from '@/components/KeepScreenOnSwitch';
+import { ShareVisitsSwitch } from '@/components/ShareVisitsSwitch';
 import { SpeedometerChooser } from '@/components/SpeedometerChooser';
 import { ThemeChooser } from '@/components/ThemeChooser';
 import { createStyles, useTheme } from '@/appearance';
@@ -83,6 +84,9 @@ export default function AccountScreen() {
         <View style={styles.appearance}>
           <SpeedometerChooser />
         </View>
+        <View style={styles.appearance}>
+          <ShareVisitsSwitch />
+        </View>
       </ScrollView>
     );
   }
@@ -130,6 +134,9 @@ export default function AccountScreen() {
       </View>
       <View style={styles.appearance}>
         <SpeedometerChooser />
+      </View>
+      <View style={styles.appearance}>
+        <ShareVisitsSwitch />
       </View>
     </ScrollView>
   );
