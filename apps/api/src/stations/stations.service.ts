@@ -37,6 +37,7 @@ import {
 import { IqpService } from '../iqp/iqp.service';
 import { PriceReportsService } from '../prices/price-reports.service';
 import { AgreementsService } from '../agreements/agreements.service';
+import { ChargingService } from '../charging/charging.service';
 import { StationInfoService } from '../station-info/station-info.service';
 import {
   brandDisplayName,
@@ -96,6 +97,7 @@ export class StationsService {
     private readonly iqp: IqpService,
     private readonly stationInfo: StationInfoService,
     private readonly agreements: AgreementsService,
+    private readonly charging: ChargingService,
   ) {}
 
   /**
@@ -250,6 +252,7 @@ export class StationsService {
       managedRows,
       info,
       agreementsByStation,
+      chargingByStation,
     ] = await Promise.all([
       this.priceReports.currentPrices(ids, now),
       this.iqp.latest(ids),
@@ -281,6 +284,7 @@ export class StationsService {
         .where(inArray(organizationStations.stationId, ids)),
       this.stationInfo.current(ids),
       this.agreements.current(ids),
+      this.charging.current(ids),
     ]);
     const managed = new Set(managedRows.map((r) => r.stationId));
 
@@ -302,6 +306,7 @@ export class StationsService {
       mode: row.displayMode === 'oculto' ? 'normal' : row.displayMode,
       iqp: this.iqp.summary(iqpScores.get(row.id)),
       managed: managed.has(row.id),
+      charging: chargingByStation.get(row.id) ?? null,
       hours: info.get(row.id)?.hours ?? null,
       services: info.get(row.id)?.services ?? [],
       // Preços ocultos (ADR 0028): sem convênios também.

@@ -209,6 +209,16 @@ Conferir de ponta a ponta, no ambiente publicado (Render e Supabase) e no celula
 - [ ] **Anonimato:** com poucas visitas, aparece "menos de 5" e o gráfico agrupa por semana.
 - [ ] **Temas e celular:** claro e escuro, e no celular sem rolagem lateral.
 
+### 15. Recarga elétrica (ADR 0041)
+
+- [ ] **Portal:** cadastrar um ponto DC e um AC em Posto › Recarga elétrica. Recarga AC e DC aparecem em Preços atuais; informar R$/kWh. Fora da faixa (R$ 0,50 a R$ 6,00), o valor é recusado.
+- [ ] **Sem recarga:** "Salvar: o posto não tem recarga" tira a Recarga AC/DC dos preços e do app.
+- [ ] **App, ficha:** a seção "⚡ Recarga elétrica" mostra potência, conector, acesso, pagamento e taxas. O cartão mostra o chip de recarga.
+- [ ] **App, seletor:** com Recarga DC escolhida, o mapa e a lista mostram só postos com DC, do menor para o maior R$/kWh.
+- [ ] **Sugestão:** um motorista avisa que o posto tem recarga e não aparece; um segundo confirma e aparece "Informado por motoristas". Posto com cadastro oficial não mostra o botão.
+- [ ] **Admin:** descartar a sugestão com motivo; a recarga some do app.
+- [ ] **Meu carro:** elétrico com CCS2 mostra "✓ Serve no seu carro" no ponto CCS2 e "Conector diferente" no Tipo 2.
+
 ## Resultado
 
 Registrar no fim deste arquivo: data, quem testou, o que passou e os problemas encontrados (com issue ou commit da correção).

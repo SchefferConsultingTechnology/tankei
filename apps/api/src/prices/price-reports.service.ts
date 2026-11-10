@@ -12,6 +12,7 @@ import {
 import {
   FUEL_LABELS,
   FUEL_TYPES,
+  isCharging,
   type CurrentPrice,
   type FuelType,
   type PriceReportRequest,
@@ -148,10 +149,21 @@ export class PriceReportsService {
     }
 
     const sold = await this.stationSells(stationId, request.fuelType);
+    if (!sold && isCharging(request.fuelType)) {
+      // Recarga (ADR 0041): o tipo vem dos pontos cadastrados ou confirmados.
+      throw new UnprocessableEntityException(
+        isManager
+          ? 'Cadastre os pontos de recarga em Dados do posto antes de informar o preço.'
+          : `Este posto não tem ${fuelLabel.toLowerCase()} informada.`,
+      );
+    }
     if (!sold && !isManager) {
       throw new UnprocessableEntityException(
         `Este posto não vende ${fuelLabel.toLowerCase()}.`,
       );
+    }
+    if (isCharging(request.fuelType)) {
+      await this.assertChargingPriceInRange(request.price);
     }
 
     if (!isManager) {
@@ -471,6 +483,20 @@ export class PriceReportsService {
       throw new BadRequestException(
         `A promoção pode durar no máximo ${maxDays} dias.`,
       );
+    }
+  }
+
+  /** A ANP não tem referência para recarga: limites fixos em parâmetro. */
+  private async assertChargingPriceInRange(price: number) {
+    const min = await this.parameters.get('price.ev_min_kwh');
+    const max = await this.parameters.get('price.ev_max_kwh');
+    if (price < min || price > max) {
+      throw new UnprocessableEntityException({
+        statusCode: 422,
+        error: 'Unprocessable Entity',
+        code: 'PRICE_OUT_OF_RANGE',
+        message: `Preço de recarga fora da faixa aceita (${money.format(min)} a ${money.format(max)} por kWh). Confira o valor.`,
+      });
     }
   }
 

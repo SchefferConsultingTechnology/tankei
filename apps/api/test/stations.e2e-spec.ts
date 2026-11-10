@@ -188,6 +188,7 @@ describe('StationsController (e2e)', () => {
         hours: null,
         services: [],
         agreements: [],
+        charging: null,
         managed: false,
         activePromotions: [],
       });

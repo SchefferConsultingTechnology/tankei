@@ -191,11 +191,21 @@ const SERVICE_ICONS: Record<
  * Aberto agora e serviços (ADR 0033), numa linha. Sem horário informado, não
  * diz nada sobre aberto ou fechado.
  */
+/** "Recarga DC 60 kW" ou "Recarga AC e DC" (ADR 0041). */
+function chargingSummary(station: ListedStation): string | null {
+  const chargers = station.charging?.chargers ?? [];
+  if (chargers.length === 0) return null;
+  const currents = [...new Set(chargers.map((c) => c.current.toUpperCase()))];
+  const power = Math.max(0, ...chargers.map((c) => c.powerKw ?? 0));
+  return `Recarga ${currents.join(' e ')}${power > 0 ? ` até ${power.toLocaleString('pt-BR')} kW` : ''}`;
+}
+
 function StationFacts({ station }: { station: ListedStation }) {
   const styles = useStyles();
   const { colors } = useTheme();
   const status = openingStatus(station.hours, station.state);
-  if (!status && station.services.length === 0) return null;
+  const charging = chargingSummary(station);
+  if (!status && station.services.length === 0 && !charging) return null;
   return (
     <View style={styles.factsColumn}>
       {status && (
@@ -217,8 +227,13 @@ function StationFacts({ station }: { station: ListedStation }) {
           </Text>
         </View>
       )}
-      {station.services.length > 0 && (
+      {(station.services.length > 0 || charging) && (
         <View style={styles.facts}>
+          {charging && (
+            <View style={styles.serviceChip}>
+              <Text style={styles.serviceText}>⚡ {charging}</Text>
+            </View>
+          )}
           {station.services.map((service) => (
         <View key={service} style={styles.serviceChip}>
           <SymbolView

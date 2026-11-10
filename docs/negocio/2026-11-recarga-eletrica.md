@@ -1,7 +1,7 @@
 # Estudo: recarga de veículos elétricos nos postos
 
 - **Data:** 2026-11-06
-- **Situação:** estudo para implementação. As escolhas marcadas como **decisão pendente** viram ADR depois de aprovadas.
+- **Situação:** implementado em 2026-11-09 (ADR 0041). As quatro decisões abaixo foram aprovadas como recomendado.
 - **Relacionado:** ADR 0006 (parâmetros), 0024 (confiança nos preços), 0028 (modos de exibição), 0029 (recursos do consumidor), 0031 (caminho do dono).
 
 ## Por que agora
@@ -110,7 +110,7 @@ Nova tabela `station_chargers`, com uma linha por tipo de ponto do posto:
 - **Reserva e pagamento pelo Tankei.**
 - **Importação da base aberta [Open Charge Map](https://openchargemap.org):** licença CC BY-SA, exige atribuição. Daria uma carga inicial de pontos, mas a revisão jurídica precisa avaliar a licença antes.
 
-## Decisões pendentes (para amanhã)
+## Decisões (aprovadas em 2026-11-09)
 
 1. **Comparar só R$/kWh** e tratar taxas e cobrança por tempo como observação? *Recomendado.*
 2. **Recarga AC e DC como dois "combustíveis"**, reaproveitando informes, confiança e alertas? *Recomendado.*

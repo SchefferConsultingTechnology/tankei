@@ -34,6 +34,7 @@ import { PageHeader } from '../components/PageHeader';
 import { PageLoading } from '../components/PageLoading';
 import { StationInfoSection } from '../components/StationInfoSection';
 import { StationFeaturesSection } from '../components/StationFeaturesSection';
+import { StationChargingSection } from '../components/StationChargingSection';
 import { StationModeSection } from '../components/StationModeSection';
 
 function Section({
@@ -226,6 +227,7 @@ export function StationDetailPage() {
         state={s.state}
         onNotice={setNotice}
       />
+      <StationChargingSection stationId={s.id} onNotice={setNotice} />
       <StationModeSection station={s} onNotice={setNotice} />
       <StationFeaturesSection stationId={s.id} onNotice={setNotice} />
 

@@ -43,6 +43,7 @@ export const PARAMETER_GROUP_LABELS: Record<string, string> = {
   app: 'App',
   agreement: 'Convênios',
   analytics: 'Visitas ao posto',
+  charger: 'Recarga elétrica',
 };
 
 /**
@@ -252,6 +253,27 @@ export const PARAMETER_DEFINITIONS = {
     label: 'Desconto máximo de convênio (R$ por litro)',
     description:
       'Maior desconto em R$ por litro que o posto pode cadastrar num convênio (ADR 0034).',
+  },
+  'price.ev_min_kwh': {
+    schema: z.number().positive().max(20),
+    unit: 'reais',
+    label: 'Recarga: menor preço por kWh aceito',
+    description:
+      'Abaixo deste valor (R$/kWh), o informe de preço de recarga é recusado como erro de digitação (ADR 0041). A ANP não tem referência para recarga.',
+  },
+  'price.ev_max_kwh': {
+    schema: z.number().positive().max(50),
+    unit: 'reais',
+    label: 'Recarga: maior preço por kWh aceito',
+    description:
+      'Acima deste valor (R$/kWh), o informe de preço de recarga é recusado (ADR 0041).',
+  },
+  'charger.min_confirmations': {
+    schema: z.number().int().min(1).max(20),
+    unit: 'count',
+    label: 'Confirmações para mostrar recarga sugerida',
+    description:
+      'Quantos consumidores diferentes precisam dizer que o posto tem recarga (AC ou DC) para o ponto aparecer no app, quando o posto não cadastrou (ADR 0041).',
   },
   'analytics.flush_seconds': {
     schema: z.number().int().min(10).max(3600),

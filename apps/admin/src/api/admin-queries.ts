@@ -29,6 +29,9 @@ import {
   type SetStationMode,
 } from '@tankei/shared';
 import {
+  chargingAdminSchema,
+  type DismissChargerSuggestions,
+  type SetChargers,
   stationFeaturesSchema,
   type SetStationFeature,
   type StationFeature,
@@ -171,6 +174,46 @@ export function useSetStationFeature(stationId: string) {
         ['admin', 'stations', stationId, 'features'],
         data,
       ),
+  });
+}
+
+/** Recarga elétrica do posto (ADR 0041): cadastro e sugestões. */
+export function useAdminCharging(stationId: string) {
+  return useQuery({
+    queryKey: ['admin', 'stations', stationId, 'charging'],
+    queryFn: () =>
+      authorizedRequest(
+        `/admin/stations/${stationId}/charging`,
+        chargingAdminSchema,
+      ),
+  });
+}
+
+export function useSetAdminCharging(stationId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: SetChargers) =>
+      authorizedRequest(
+        `/admin/stations/${stationId}/charging`,
+        chargingAdminSchema,
+        { method: 'PUT', body },
+      ),
+    onSuccess: (data) =>
+      queryClient.setQueryData(['admin', 'stations', stationId, 'charging'], data),
+  });
+}
+
+export function useDismissChargerSuggestions(stationId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: DismissChargerSuggestions) =>
+      authorizedRequest(
+        `/admin/stations/${stationId}/charging/dismiss`,
+        chargingAdminSchema,
+        { method: 'POST', body },
+      ),
+    onSuccess: (data) =>
+      queryClient.setQueryData(['admin', 'stations', stationId, 'charging'], data),
   });
 }
 

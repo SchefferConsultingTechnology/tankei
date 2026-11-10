@@ -22,6 +22,7 @@ import {
   describePrice,
   FUEL_LABELS,
   FUEL_TYPES,
+  FUEL_UNITS,
   formatPrice,
   formatUntil,
   type CurrentPrice,
@@ -169,6 +170,12 @@ export function PricesTab({
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography sx={{ fontWeight: 700 }}>
                     {FUEL_LABELS[fuel]}
+                    {FUEL_UNITS[fuel] === 'kWh' && (
+                      <Typography component="span" color="text.secondary">
+                        {' '}
+                        (por kWh)
+                      </Typography>
+                    )}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {price ? describePrice(price) : 'Sem preço informado'}
@@ -368,8 +375,8 @@ function PriceDialog({
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>
           <TextField
-            label="Novo preço por litro"
-            placeholder="6,29"
+            label={`Novo preço por ${FUEL_UNITS[fuel] === 'L' ? 'litro' : FUEL_UNITS[fuel]}`}
+            placeholder={FUEL_UNITS[fuel] === 'kWh' ? '2,90' : '6,29'}
             value={text}
             onChange={(event) => setText(event.target.value)}
             error={invalidText}

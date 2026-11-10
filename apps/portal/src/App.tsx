@@ -67,6 +67,9 @@ const StationInfoPage = lazy(() =>
     default: m.StationInfoPage,
   })),
 );
+const ChargingPage = lazy(() =>
+  import('./pages/ChargingPage').then((m) => ({ default: m.ChargingPage })),
+);
 const VisitsPage = lazy(() =>
   import('./pages/VisitsPage').then((m) => ({ default: m.VisitsPage })),
 );
@@ -154,6 +157,7 @@ export function App() {
         <Route path="precos/contestacoes" element={<ContestsPage />} />
         <Route path="precos/convenios" element={<AgreementsPage />} />
         <Route path="posto/horario" element={<StationInfoPage />} />
+        <Route path="posto/recarga" element={<ChargingPage />} />
         <Route path="posto/visitas" element={<VisitsPage />} />
         <Route path="divulgacao/promocoes" element={<PromotionsPage />} />
         <Route path="divulgacao/fotos" element={<PhotosPage />} />

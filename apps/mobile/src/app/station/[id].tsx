@@ -36,6 +36,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { DetourSavingsCard } from '@/components/DetourSavings';
 import { OwnerInvite } from '@/components/OwnerInvite';
 import { StationAgreements } from '@/components/StationAgreements';
+import { StationCharging } from '@/components/StationCharging';
 import { StationHours } from '@/components/StationHours';
 import { IqpGauge } from '@/components/IqpGauge';
 import { useFuelPreference } from '@/hooks/useFuelPreference';
@@ -109,6 +110,7 @@ export default function StationScreen() {
       </View>
 
       <StationHours station={data} />
+      <StationCharging station={data} />
 
       {promotions.length > 0 && (
         <View style={styles.section}>

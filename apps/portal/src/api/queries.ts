@@ -32,6 +32,8 @@ import {
   type UpdateStationInfo,
   stationPromotionSchema,
   stationFeaturesSchema,
+  chargingAdminSchema,
+  type SetChargers,
   stationVisitsSchema,
   type BulkPrice,
   createClaimSchema,
@@ -586,5 +588,27 @@ export function useStationVisits(
         stationVisitsSchema,
       ),
     placeholderData: keepPreviousData,
+  });
+}
+
+/** Pontos de recarga do posto e sugestões de motoristas (ADR 0041). */
+export function useCharging(id: string) {
+  return useQuery({
+    queryKey: ['portal', id, 'charging'],
+    queryFn: () =>
+      authorizedRequest(`/portal/stations/${id}/charging`, chargingAdminSchema),
+  });
+}
+
+export function useSetCharging(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: SetChargers) =>
+      authorizedRequest(`/portal/stations/${id}/charging`, chargingAdminSchema, {
+        method: 'PUT',
+        body,
+      }),
+    onSuccess: (data) =>
+      queryClient.setQueryData(['portal', id, 'charging'], data),
   });
 }

@@ -1,4 +1,4 @@
-import type { CurrentPrice } from '@tankei/shared';
+import { isCharging, type CurrentPrice } from '@tankei/shared';
 import { Text, View } from 'react-native';
 import { formatPrice } from '@/format';
 import { createStyles, useTheme } from '@/appearance';
@@ -31,7 +31,9 @@ export function PriceTag({ price, size = 'sm', highlighted = false }: Props) {
           { color: highlighted ? colors.surface : color },
         ]}
       >
-        {price ? `R$ ${formatPrice(price.price)}` : '—'}
+        {price
+          ? `R$ ${formatPrice(price.price)}${isCharging(price.fuelType) ? '/kWh' : ''}`
+          : '—'}
       </Text>
     </View>
   );

@@ -1,4 +1,9 @@
-import { FUEL_LABELS, type FuelType, type Station } from '@tankei/shared';
+import {
+  FUEL_LABELS,
+  isCharging,
+  type FuelType,
+  type Station,
+} from '@tankei/shared';
 import { Text, View } from 'react-native';
 import { useNearbyStations } from '@/api/queries';
 import { createStyles } from '@/appearance';
@@ -34,7 +39,14 @@ export function DetourSavingsCard({
   const [car] = useCarProfile();
 
   const thisPrice = priceFor(station, fuel)?.price;
-  if (!coords || !station.location || thisPrice === undefined || !nearby.data) {
+  // Recarga (ADR 0041): a conta é por tanque em litros; não se aplica ao kWh.
+  if (
+    isCharging(fuel) ||
+    !coords ||
+    !station.location ||
+    thisPrice === undefined ||
+    !nearby.data
+  ) {
     return null;
   }
 

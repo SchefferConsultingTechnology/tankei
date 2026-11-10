@@ -6,6 +6,7 @@ import HandshakeOutlined from '@mui/icons-material/HandshakeOutlined';
 import PhotoLibraryOutlined from '@mui/icons-material/PhotoLibraryOutlined';
 import ScheduleOutlined from '@mui/icons-material/ScheduleOutlined';
 import InsightsOutlined from '@mui/icons-material/InsightsOutlined';
+import EvStationOutlined from '@mui/icons-material/EvStationOutlined';
 import GroupOutlined from '@mui/icons-material/GroupOutlined';
 import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
 import HowToRegOutlined from '@mui/icons-material/HowToRegOutlined';
@@ -81,6 +82,11 @@ const UNIT_MENU: {
         label: 'Dados do posto',
         to: 'posto/horario',
         icon: <ScheduleOutlined fontSize="small" />,
+      },
+      {
+        label: 'Recarga elétrica',
+        to: 'posto/recarga',
+        icon: <EvStationOutlined fontSize="small" />,
       },
       {
         label: 'Visitas',

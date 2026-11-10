@@ -20,3 +20,4 @@ export * from './station-info';
 export * from './agreement';
 export * from './dashboard';
 export * from './visits';
+export * from './charging';

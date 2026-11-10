@@ -5,6 +5,7 @@ import { currentPriceSchema } from './price';
 import { nullable, numericString } from './validation';
 import { stationAgreementSchema } from './agreement';
 import { STATION_SERVICES, storedOpeningHoursSchema } from './station-info';
+import { stationChargingSchema } from './charging';
 
 /** Limites da busca por proximidade, em metros. */
 export const NEARBY_DEFAULT_RADIUS_M = 5_000;
@@ -94,6 +95,10 @@ export const stationSchema = z.object({
     .describe(
       'Convênios vigentes com desconto (ADR 0034). O preço em prices é sempre o sem desconto.',
     ),
+  charging: nullable(
+    stationChargingSchema,
+    'Pontos de recarga elétrica (ADR 0041); nulo se o posto não tem ou ninguém informou.',
+  ).default(null),
   managed: z
     .boolean()
     .default(false)

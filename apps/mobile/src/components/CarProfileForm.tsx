@@ -1,7 +1,13 @@
+import { CONNECTOR_LABELS, CONNECTORS, type Connector } from '@tankei/shared';
 import { useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { Pressable, Text, TextInput, View } from 'react-native';
 import { createStyles, useTheme } from '@/appearance';
-import { useCarProfile, type CarProfile } from '@/hooks/useCarProfile';
+import {
+  POWERTRAIN_LABELS,
+  POWERTRAINS,
+  useCarProfile,
+  type CarProfile,
+} from '@/hooks/useCarProfile';
 import { fontSize, radius, spacing } from '@/theme';
 
 function parse(text: string): number | null {
@@ -37,6 +43,7 @@ function Form({
   function save(next: { tank?: string; gasoline?: string; ethanol?: string }) {
     const t = parse(next.tank ?? tank);
     setCar({
+      ...car,
       tankLiters: t !== null && t <= 200 ? Math.round(t) : car.tankLiters,
       kmPerLiterGasoline: parse(next.gasoline ?? gasoline),
       kmPerLiterEthanol: parse(next.ethanol ?? ethanol),
@@ -47,9 +54,39 @@ function Form({
     <View style={styles.box}>
       <Text style={styles.title}>Meu carro</Text>
       <Text style={styles.muted}>
-        Fica só neste aparelho. Usado na calculadora etanol x gasolina e no
-        “vale a pena ir até lá?”.
+        Fica só neste aparelho. Usado na calculadora etanol x gasolina, no
+        “vale a pena ir até lá?” e para destacar a recarga compatível.
       </Text>
+      <View style={styles.chips}>
+        {POWERTRAINS.map((p) => (
+          <Chip
+            key={p}
+            label={POWERTRAIN_LABELS[p]}
+            selected={car.powertrain === p}
+            onPress={() => setCar({ ...car, powertrain: p })}
+          />
+        ))}
+      </View>
+      {car.powertrain !== 'combustao' && (
+        <>
+          <Text style={styles.label}>Conectores de recarga do carro</Text>
+          <View style={styles.chips}>
+            {CONNECTORS.map((c) => (
+              <Chip
+                key={c}
+                label={CONNECTOR_LABELS[c]}
+                selected={car.connectors.includes(c)}
+                onPress={() => setCar({ ...car, connectors: toggle(car.connectors, c) })}
+              />
+            ))}
+          </View>
+          <Text style={styles.muted}>
+            Na dúvida: Tipo 2 é a tomada da recarga lenta (AC) e CCS2 a da
+            rápida (DC) na maioria dos carros vendidos no Brasil.
+          </Text>
+        </>
+      )}
+      {car.powertrain !== 'eletrico' && (
       <View style={styles.row}>
         <Field
           label="Tanque (L)"
@@ -72,7 +109,36 @@ function Form({
           onDone={() => save({})}
         />
       </View>
+      )}
     </View>
+  );
+}
+
+function toggle(list: Connector[], c: Connector): Connector[] {
+  return list.includes(c) ? list.filter((x) => x !== c) : [...list, c];
+}
+
+function Chip({
+  label,
+  selected,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const styles = useStyles();
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[styles.chip, selected && styles.chipSelected]}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+    >
+      <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -114,6 +180,18 @@ const useStyles = createStyles((colors) => ({
   title: { color: colors.text, fontSize: fontSize.lg, fontWeight: '700' },
   muted: { color: colors.textMuted, fontSize: fontSize.sm },
   row: { flexDirection: 'row', gap: spacing.sm },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  chip: {
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.surface,
+  },
+  chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  chipText: { color: colors.text, fontSize: fontSize.sm, fontWeight: '600' },
+  chipTextSelected: { color: colors.primaryText },
   field: { flex: 1, gap: 2 },
   label: { color: colors.textMuted, fontSize: fontSize.sm },
   input: {

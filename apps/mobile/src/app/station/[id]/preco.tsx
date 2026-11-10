@@ -2,6 +2,8 @@ import {
   priceReportResponseSchema,
   type FuelType,
   type PriceReportResponse,
+  FUEL_UNITS,
+  isCharging,
 } from '@tankei/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -171,9 +173,13 @@ export default function ReportPriceScreen() {
       </Text>
 
       <View>
-        <Text style={styles.label}>Preço na bomba</Text>
+        <Text style={styles.label}>
+          {isCharging(fuel) ? 'Preço por kWh' : 'Preço na bomba'}
+        </Text>
         <Text style={styles.muted}>
-          Digite os números como na bomba, com as três casas decimais.
+          {isCharging(fuel)
+            ? 'Digite os números do preço por kWh, com três casas (2,900). Taxas por sessão ou por tempo parado não entram.'
+            : 'Digite os números como na bomba, com as três casas decimais.'}
         </Text>
       </View>
       <View style={styles.priceBox}>
@@ -193,9 +199,11 @@ export default function ReportPriceScreen() {
           keyboardType="number-pad"
           returnKeyType="send"
           autoFocus
-          accessibilityLabel="Preço por litro"
+          accessibilityLabel={`Preço por ${FUEL_UNITS[fuel] === 'L' ? 'litro' : FUEL_UNITS[fuel]}`}
         />
-        <Text style={styles.unit}>{fuel === 'gnv' ? '/m³' : '/litro'}</Text>
+        <Text style={styles.unit}>
+          {FUEL_UNITS[fuel] === 'L' ? '/litro' : `/${FUEL_UNITS[fuel]}`}
+        </Text>
       </View>
 
       {report.isError && !confirmationPending && (

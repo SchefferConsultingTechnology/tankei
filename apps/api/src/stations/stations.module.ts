@@ -1,4 +1,5 @@
 import { AgreementsModule } from '../agreements/agreements.module';
+import { ChargingModule } from '../charging/charging.module';
 import { StationInfoModule } from '../station-info/station-info.module';
 import { Module } from '@nestjs/common';
 import { IqpModule } from '../iqp/iqp.module';
@@ -16,6 +17,7 @@ import { StationsService } from './stations.service';
     MunicipalitiesModule,
     StationInfoModule,
     AgreementsModule,
+    ChargingModule,
   ],
   controllers: [StationsController],
   providers: [AnpRevendedoresClient, AnpImportService, StationsService],

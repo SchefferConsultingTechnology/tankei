@@ -44,7 +44,8 @@ describe('Visitas ao posto (spec 0003) (e2e)', () => {
   const today = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Sao_Paulo',
   }).format(new Date());
-  const weekAgo = new Date(Date.now() - 6 * 86_400_000)
+  // 6 dias antes de hoje, contados no fuso de Brasília (como a API).
+  const weekAgo = new Date(Date.parse(`${today}T12:00:00Z`) - 6 * 86_400_000)
     .toISOString()
     .slice(0, 10);
 

@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { Connector } from '@tankei/shared';
 import { useCallback, useEffect, useState } from 'react';
 
 /**
@@ -6,7 +7,20 @@ import { useCallback, useEffect, useState } from 'react';
  * calculadora etanol x gasolina e o "vale a pena ir até lá?". Sem consumo
  * informado, a calculadora usa a regra dos 70%.
  */
+/** Motorização (ADR 0041): elétrico e híbrido plug-in usam recarga. */
+export const POWERTRAINS = ['combustao', 'eletrico', 'hibrido_plugin'] as const;
+export type Powertrain = (typeof POWERTRAINS)[number];
+
+export const POWERTRAIN_LABELS: Record<Powertrain, string> = {
+  combustao: 'Combustão',
+  eletrico: 'Elétrico',
+  hibrido_plugin: 'Híbrido plug-in',
+};
+
 export interface CarProfile {
+  powertrain: Powertrain;
+  /** Conectores que o carro aceita (elétrico ou híbrido plug-in). */
+  connectors: Connector[];
   tankLiters: number;
   /** km/l com gasolina; nulo se a pessoa não informou. */
   kmPerLiterGasoline: number | null;
@@ -17,6 +31,8 @@ export interface CarProfile {
 const STORAGE_KEY = 'tankei:car';
 
 export const DEFAULT_CAR: CarProfile = {
+  powertrain: 'combustao',
+  connectors: [],
   tankLiters: 40,
   kmPerLiterGasoline: null,
   kmPerLiterEthanol: null,
