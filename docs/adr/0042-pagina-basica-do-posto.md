@@ -75,7 +75,7 @@ Blocos sem conteúdo não aparecem.
 
 ### Mapa
 
-- O mapa é estático, sem JavaScript: uma grade de 3×3 blocos do OpenStreetMap com um marcador. Abaixo dele ficam os botões de rota no Google Maps e no Waze.
+- O mapa é estático, sem JavaScript: uma grade de 5×3 blocos do OpenStreetMap com um marcador. Abaixo dele ficam os botões de rota no Google Maps e no Waze.
 - A política de uso do OpenStreetMap permite pouco tráfego, com a atribuição exibida.
 - Em produção, avaliar um provedor de blocos de mapa (MapTiler, Stadia ou o próprio Google) antes de liberar o site em escala.
 

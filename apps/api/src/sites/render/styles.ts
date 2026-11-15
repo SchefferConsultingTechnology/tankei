@@ -79,7 +79,7 @@ ul.rows > li:first-child { border-top: 0; padding-top: 0; }
 .bar > span { display: block; height: 100%; background: var(--primary); }
 .dims { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 10px; }
 .map { position: relative; height: 220px; overflow: hidden; border-radius: 12px; background: var(--divider); }
-.map .grid { position: absolute; width: 768px; height: 768px; }
+.map .grid { position: absolute; width: 1280px; height: 768px; }
 .map .grid img { position: absolute; width: 256px; height: 256px; max-width: none; }
 .map .pin {
   position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -22px 0 0 -11px;

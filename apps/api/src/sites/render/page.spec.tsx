@@ -187,11 +187,11 @@ describe('SEO e mapa', () => {
     ]);
   });
 
-  it('põe o posto dentro do bloco central da grade 3×3', () => {
+  it('põe o posto dentro do bloco central da grade 5×3', () => {
     const map = mapTiles(-27.28, -50.58);
-    expect(map.tiles).toHaveLength(9);
-    expect(map.pointX).toBeGreaterThanOrEqual(256);
-    expect(map.pointX).toBeLessThan(512);
+    expect(map.tiles).toHaveLength(15);
+    expect(map.pointX).toBeGreaterThanOrEqual(512);
+    expect(map.pointX).toBeLessThan(768);
     expect(map.pointY).toBeGreaterThanOrEqual(256);
     expect(map.pointY).toBeLessThan(512);
   });

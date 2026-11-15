@@ -89,17 +89,18 @@ export const MAP_ZOOM = 16;
 const TILE = 256;
 
 export interface MapTiles {
-  /** Imagens 3×3 em volta do posto, linha a linha. */
+  /** Imagens 5×3 em volta do posto, linha a linha. */
   tiles: { url: string; left: number; top: number }[];
-  /** Posição do posto dentro da grade de 768×768 px. */
+  /** Posição do posto dentro da grade de 1280×768 px. */
   pointX: number;
   pointY: number;
 }
 
 /**
  * Mapa sem JavaScript (spec 0004: página leve, sem mapa interativo): uma
- * grade de 3×3 blocos do OpenStreetMap em volta do posto, deslocada por CSS
- * para o posto ficar no centro.
+ * grade de 5×3 blocos do OpenStreetMap em volta do posto, deslocada por CSS
+ * para o posto ficar no centro. Cinco colunas cobrem ao menos 512 px de cada
+ * lado do posto (o quadro tem até ~730 px de largura e 220 px de altura).
  */
 export function mapTiles(lat: number, lng: number, zoom = MAP_ZOOM): MapTiles {
   const n = 2 ** zoom;
@@ -111,18 +112,18 @@ export function mapTiles(lat: number, lng: number, zoom = MAP_ZOOM): MapTiles {
   const cy = Math.floor(y);
   const tiles: MapTiles['tiles'] = [];
   for (let dy = -1; dy <= 1; dy++) {
-    for (let dx = -1; dx <= 1; dx++) {
+    for (let dx = -2; dx <= 2; dx++) {
       const tx = (((cx + dx) % n) + n) % n;
       tiles.push({
         url: `https://tile.openstreetmap.org/${zoom}/${tx}/${cy + dy}.png`,
-        left: (dx + 1) * TILE,
+        left: (dx + 2) * TILE,
         top: (dy + 1) * TILE,
       });
     }
   }
   return {
     tiles,
-    pointX: Math.round((x - (cx - 1)) * TILE),
+    pointX: Math.round((x - (cx - 2)) * TILE),
     pointY: Math.round((y - (cy - 1)) * TILE),
   };
 }
