@@ -197,6 +197,13 @@
       "when": 1794266424163,
       "tag": "0027_charging",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1794780300978,
+      "tag": "0028_station_site",
+      "breakpoints": true
     }
   ]
 }

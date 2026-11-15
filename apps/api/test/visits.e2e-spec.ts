@@ -205,13 +205,13 @@ describe('Visitas ao posto (spec 0003) (e2e)', () => {
       .set(auth(admin))
       .send({ active: true, note: 'Teste e2e' })
       .expect(200);
-    expect((features.body as StationFeatures).features).toEqual([
+    expect((features.body as StationFeatures).features).toContainEqual(
       expect.objectContaining({
         feature: 'visitas',
         active: true,
         note: 'Teste e2e',
       }),
-    ]);
+    );
     await http()
       .put(`/v1/admin/stations/${stationId}/features/outra`)
       .set(auth(admin))

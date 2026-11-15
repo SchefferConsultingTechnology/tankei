@@ -16,3 +16,4 @@ export * from './station-info';
 export * from './agreements';
 export * from './visits';
 export * from './charging';
+export * from './sites';

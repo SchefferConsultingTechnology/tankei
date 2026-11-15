@@ -79,6 +79,11 @@ services:
         value: "5548999040445"
       - key: ADMIN_URL
         value: https://tankei-admin.onrender.com
+      # Página do posto (spec 0004, ADR 0042): a própria API serve /p/<slug>.
+      # Trocar pelo domínio do Tankei quando ele for escolhido. Sem
+      # SITE_INDEXING=1, as páginas ficam fora do Google (ambiente de teste).
+      - key: SITE_URL
+        value: https://tankei-api.onrender.com
 
   # Portal do posto (ADR 0018) e administração (ADR 0019): sites estáticos.
   # As rotas são do navegador (React Router): tudo volta para o index.html.

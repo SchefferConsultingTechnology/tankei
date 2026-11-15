@@ -15,6 +15,7 @@ import { MailModule } from './mail/mail.module';
 import { ModerationModule } from './moderation/moderation.module';
 import { ParametersModule } from './parameters/parameters.module';
 import { ShowcaseModule } from './showcase/showcase.module';
+import { SitesModule } from './sites/sites.module';
 import { PortalModule } from './portal/portal.module';
 import { PricesModule } from './prices/prices.module';
 import { AgreementsModule } from './agreements/agreements.module';
@@ -49,6 +50,7 @@ import { VisitsModule } from './visits/visits.module';
     ModerationModule,
     ShowcaseModule,
     EngagementModule,
+    SitesModule,
   ],
   controllers: [AppController],
   providers: [

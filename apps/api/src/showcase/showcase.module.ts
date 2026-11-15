@@ -19,6 +19,6 @@ import { StorageService } from './storage.service';
     AdminMediaController,
   ],
   providers: [ShowcaseService, StorageService, ImageService],
-  exports: [StorageService],
+  exports: [StorageService, ShowcaseService],
 })
 export class ShowcaseModule {}

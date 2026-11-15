@@ -44,6 +44,7 @@ export const PARAMETER_GROUP_LABELS: Record<string, string> = {
   agreement: 'Convênios',
   analytics: 'Visitas ao posto',
   charger: 'Recarga elétrica',
+  site: 'Site do posto',
 };
 
 /**
@@ -302,6 +303,13 @@ export const PARAMETER_DEFINITIONS = {
     label: 'Mínimo para mostrar uma contagem',
     description:
       'Abaixo deste número, o portal mostra "menos de N" em vez do valor, para o posto não identificar um motorista (spec 0003).',
+  },
+  'site.cache_seconds': {
+    schema: z.number().int().min(30).max(600),
+    unit: 'seconds',
+    label: 'Cache da página do posto',
+    description:
+      'Por quanto tempo o navegador e o Google podem reutilizar a página do posto (spec 0004). Um preço novo aparece no site em até esse tempo.',
   },
 } satisfies Record<
   string,

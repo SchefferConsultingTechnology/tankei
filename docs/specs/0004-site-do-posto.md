@@ -1,6 +1,6 @@
 # Spec 0004: Site do posto na plataforma
 
-- **Status:** proposta (aguarda as decisões do fim do documento e o plano financeiro, etapa 3)
+- **Status:** em implementação. A página básica de todo posto foi entregue em 2026-11-15 (ADR 0042: HTML gerado pela própria API, sem `apps/site`). Faltam o editor no portal, o admin e o QR Code. As decisões 2, 4 e 5 continuam em aberto; a 3 segue a sugestão (IQP obrigatório) até o autor decidir.
 - **Data:** 2026-11-08
 - **Relacionados:**
   - ADR 0003 (preço exibido), ADR 0004 (IQP), ADR 0021 (papéis no posto);

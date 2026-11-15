@@ -219,6 +219,15 @@ Conferir de ponta a ponta, no ambiente publicado (Render e Supabase) e no celula
 - [ ] **Admin:** descartar a sugestão com motivo; a recarga some do app.
 - [ ] **Meu carro:** elétrico com CCS2 mostra "✓ Serve no seu carro" no ponto CCS2 e "Conector diferente" no Tipo 2.
 
+### 16. Página do posto (spec 0004, ADR 0042)
+
+- [ ] **Endereço:** `GET /v1/stations/<id>/site` devolve o link; `/p/<slug>` abre no celular e no computador, nos temas claro e escuro.
+- [ ] **Igual ao app:** preços com o mesmo selo e idade, promoções, convênios, horário ("aberto agora" na hora local) e IQP.
+- [ ] **Modos:** com preços ocultos, a página fica sem preços e mostra o aviso; com o posto oculto, aparece "Página indisponível".
+- [ ] **Nome novo:** trocar o nome no app pelo portal; o endereço antigo redireciona para o novo.
+- [ ] **WhatsApp:** colar o link mostra o nome, o endereço e a primeira foto.
+- [ ] **Google:** com `SITE_INDEXING=1` (só homologação), o `sitemap.xml` lista os postos com o recurso "Site do posto" liberado no admin e a página passa no teste de dados estruturados do Google.
+
 ## Resultado
 
 Registrar no fim deste arquivo: data, quem testou, o que passou e os problemas encontrados (com issue ou commit da correção).

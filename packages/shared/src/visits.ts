@@ -177,11 +177,14 @@ export type StationVisits = z.infer<typeof stationVisitsSchema>;
  * Recursos liberados por posto. Enquanto o Mercado Pago não existe, a equipe
  * libera pelo admin; depois, a assinatura passa a liberar.
  */
-export const STATION_FEATURES = ['visitas'] as const;
+export const STATION_FEATURES = ['visitas', 'site'] as const;
 export type StationFeature = (typeof STATION_FEATURES)[number];
 
 export const STATION_FEATURE_LABELS: Record<StationFeature, string> = {
   visitas: 'Visitas no portal',
+  // Por enquanto só põe a página no sitemap.xml (ADR 0042); a
+  // personalização vem na próxima entrega.
+  site: 'Site do posto',
 };
 
 export const stationFeatureStateSchema = z.object({

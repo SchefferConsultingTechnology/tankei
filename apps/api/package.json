@@ -7,12 +7,12 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "eslint \"{src,test}/**/*.ts\"",
+    "lint": "eslint \"{src,test}/**/*.{ts,tsx}\"",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -46,6 +46,8 @@
     "jsonwebtoken": "9.0.3",
     "nestjs-zod": "5.5.0",
     "pg": "8.23.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "read-excel-file": "9.3.12",
     "reflect-metadata": "^0.2.2",
     "resend": "6.28.1",
@@ -65,6 +67,8 @@
     "@types/multer": "^2.3.0",
     "@types/node": "^24.0.0",
     "@types/pg": "8.23.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@types/supertest": "^7.0.0",
     "drizzle-kit": "0.31.11",
     "eslint": "^9.18.0",
@@ -86,12 +90,13 @@
     "moduleFileExtensions": [
       "js",
       "json",
-      "ts"
+      "ts",
+      "tsx"
     ],
     "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
+    "testRegex": ".*\\.spec\\.tsx?$",
     "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
+      "^.+\\.(t|j)sx?$": "ts-jest"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"

@@ -5,7 +5,10 @@ import { ZodError } from 'zod';
 
 /** Configuração compartilhada entre main.ts e os testes e2e. */
 export function configureApp(app: INestApplication): void {
-  app.setGlobalPrefix('v1');
+  // A página do posto e os arquivos do Google ficam na raiz (spec 0004).
+  app.setGlobalPrefix('v1', {
+    exclude: ['p/:slug', 'sitemap.xml', 'robots.txt'],
+  });
   app.enableCors();
 
   // OpenAPI 3.1 representa campos nulos corretamente a partir do Zod.
