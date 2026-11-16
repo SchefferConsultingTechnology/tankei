@@ -24,9 +24,12 @@ export function renderPage(element: ReactElement): string {
   return `<!doctype html>${renderToStaticMarkup(element)}`;
 }
 
-function sitemap(config: SiteConfig, paths: string[]): string {
+function sitemap(config: SiteConfig, paths: string[], date: string): string {
   const urls = paths
-    .map((path) => `  <url><loc>${config.url}${path}</loc></url>`)
+    .map(
+      (path) =>
+        `  <url><loc>${config.url}${path}</loc><lastmod>${date}</lastmod></url>`,
+    )
     .join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 }
@@ -38,7 +41,11 @@ function robots(config: SiteConfig): string {
 }
 
 /** Gera o site estático em outDir (ADR 0043). */
-export function buildSite(config: SiteConfig, outDir: string): string[] {
+export function buildSite(
+  config: SiteConfig,
+  outDir: string,
+  buildDate = new Date(),
+): string[] {
   rmSync(outDir, { recursive: true, force: true });
   mkdirSync(outDir, { recursive: true });
   cpSync(join(__dirname, '..', 'public'), outDir, { recursive: true });
@@ -59,7 +66,11 @@ export function buildSite(config: SiteConfig, outDir: string): string[] {
   // O sitemap só lista as páginas quando a indexação está ligada.
   write(
     'sitemap.xml',
-    sitemap(config, config.indexing ? pages.map(([path]) => path) : []),
+    sitemap(
+      config,
+      config.indexing ? pages.map(([path]) => path) : [],
+      buildDate.toISOString().slice(0, 10),
+    ),
   );
   write('robots.txt', robots(config));
   return written;

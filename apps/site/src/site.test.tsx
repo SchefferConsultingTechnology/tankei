@@ -28,13 +28,48 @@ const PAGES = [
 ];
 
 describe('site oficial', () => {
-  it('gera todas as páginas, sem JavaScript', () => {
+  it('gera todas as páginas, sem JavaScript executável', () => {
     const { read } = build();
     for (const page of PAGES) {
       const html = read(page);
       assert.match(html, /^<!doctype html><html lang="pt-BR">/);
-      assert.doesNotMatch(html, /<script/);
+      // Só dados estruturados (JSON-LD), que o navegador não executa.
+      const scripts = html.match(/<script[^>]*>/g) ?? [];
+      for (const tag of scripts) {
+        assert.equal(tag, '<script type="application/ld+json">', page);
+      }
     }
+  });
+
+  it('dados estruturados válidos em cada página', () => {
+    const { read } = build({ CONTACT_EMAIL: 'contato@site.test' });
+    const types = (page: string) =>
+      [
+        ...read(page).matchAll(
+          /<script type="application\/ld\+json">(.*?)<\/script>/g,
+        ),
+      ].map(([, json]) => (JSON.parse(json) as { '@type': string })['@type']);
+    assert.deepEqual(types('index.html'), ['Organization', 'WebSite']);
+    assert.deepEqual(types('como-funciona/index.html'), [
+      'FAQPage',
+      'BreadcrumbList',
+    ]);
+    assert.deepEqual(types('para-postos/index.html'), ['BreadcrumbList']);
+    assert.deepEqual(types('404.html'), []);
+    assert.match(read('index.html'), /"email":"contato@site.test"/);
+  });
+
+  it('sitemap com a data do build', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'tankei-site-'));
+    buildSite(
+      loadConfig({ SITE_URL: 'https://site.test', SITE_INDEXING: '1' }),
+      dir,
+      new Date('2026-11-16T12:00:00Z'),
+    );
+    assert.match(
+      readFileSync(join(dir, 'sitemap.xml'), 'utf8'),
+      /<loc>https:\/\/site.test\/<\/loc><lastmod>2026-11-16<\/lastmod>/,
+    );
   });
 
   it('todo link interno aponta para uma página ou arquivo gerado', () => {

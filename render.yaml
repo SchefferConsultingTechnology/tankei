@@ -84,6 +84,9 @@ services:
       # SITE_INDEXING=1, as páginas ficam fora do Google (ambiente de teste).
       - key: SITE_URL
         value: https://tankei-api.onrender.com
+      # Site oficial (ADR 0043): links do rodapé das páginas dos postos.
+      - key: OFFICIAL_SITE_URL
+        value: https://tankei-site.onrender.com
 
   # Portal do posto (ADR 0018) e administração (ADR 0019): sites estáticos.
   # As rotas são do navegador (React Router): tudo volta para o index.html.

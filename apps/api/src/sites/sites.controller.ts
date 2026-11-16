@@ -89,6 +89,7 @@ export class SitePagesController {
         renderStationPage(result.data, {
           url: siteUrl(base, result.data.slug),
           indexing: indexing(),
+          officialSiteUrl: process.env.OFFICIAL_SITE_URL?.replace(/\/+$/, ''),
         }),
       );
   }

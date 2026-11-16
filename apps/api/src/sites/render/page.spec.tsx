@@ -153,8 +153,48 @@ describe('página do posto', () => {
       '<meta property="og:image" content="https://img.test/capa.webp"/>',
     );
     expect(html).toContain(
-      '<meta property="og:title" content="Posto Zulu · Curitibanos-SC"/>',
+      '<meta property="og:title" content="Posto Zulu em Curitibanos-SC: preço da gasolina hoje"/>',
     );
+  });
+});
+
+describe('SEO da página do posto', () => {
+  it('título com o posto, a cidade e o preço de hoje', () => {
+    expect(page(station())).toContain(
+      '<title>Posto Zulu em Curitibanos-SC: preço da gasolina hoje</title>',
+    );
+  });
+
+  it('descrição começa pelos preços atuais', () => {
+    expect(page(station())).toContain(
+      '<meta name="description" content="Gasolina comum R$ 6,29. Posto Zulu:',
+    );
+  });
+
+  it('com preços ocultos, nem título nem descrição citam preço', () => {
+    const html = page(station({ mode: 'precos_ocultos', prices: [] }));
+    expect(html).toContain(
+      '<title>Posto Zulu em Curitibanos-SC · Tankei</title>',
+    );
+    expect(html).not.toMatch(/<meta name="description" content="[^"]*R\$/);
+  });
+
+  it('rodapé liga ao site oficial quando configurado', () => {
+    const html = renderStationPage(
+      {
+        station: station(),
+        iqp,
+        showcase: { photos: [], promotions: [] },
+        slug: 'posto-zulu-curitibanos',
+      },
+      {
+        url: 'https://exemplo.test/p/posto-zulu-curitibanos',
+        indexing: false,
+        officialSiteUrl: 'https://tankei.test',
+      },
+    );
+    expect(html).toContain('<a href="https://tankei.test/">Tankei</a>');
+    expect(html).toContain('href="https://tankei.test/como-funciona/"');
   });
 });
 

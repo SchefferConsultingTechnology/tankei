@@ -91,6 +91,20 @@ O autor decidiu fazer o site com o que já está decidido.
   - a indexação, o sitemap e a origem do pedido saem certos;
   - privacidade e termos têm o aviso de minuta.
 
+### SEO técnico (2026-11-16)
+
+- **Títulos e descrições** com os termos buscados ("preço da gasolina", "perto de você", "recarga elétrica"), com até cerca de 60 e 160 caracteres.
+- **Dados estruturados (JSON-LD):**
+  - `Organization` e `WebSite` no início;
+  - `BreadcrumbList` (Início › página) nas páginas internas;
+  - `FAQPage` em "Como funciona", com as mesmas perguntas e respostas visíveis na página.
+- **Sem JavaScript executável:** o único `<script>` permitido é o de dados (`application/ld+json`), que o navegador não executa. O teste confere isso em todas as páginas.
+- **Sitemap** com a data do build (`lastmod`).
+- **Páginas dos postos (ADR 0042):**
+  - título com posto, cidade e "preço da gasolina hoje" (ou "preços de combustível hoje"); com preços ocultos, sem citar preço;
+  - descrição que começa pelos preços atuais, para o resultado da busca;
+  - rodapé com links para o site oficial (`OFFICIAL_SITE_URL`), para o Google ligar os dois.
+
 ## Achados para o lançamento
 
 - **Exclusão da conta pelo app:** a API tem a exclusão (`DELETE /v1/me`), mas o app não tem a tela. A Google Play exige a exclusão dentro do app e um endereço na web para pedir a exclusão. Por enquanto, a minuta orienta a pedir por e-mail.

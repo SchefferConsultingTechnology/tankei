@@ -37,6 +37,8 @@ export interface RenderOptions {
   url: string;
   /** false no ambiente de teste: a página não deve aparecer no Google. */
   indexing: boolean;
+  /** Site oficial do Tankei (ADR 0043), para os links do rodapé; vazio omite. */
+  officialSiteUrl?: string;
   now?: Date;
 }
 
@@ -48,7 +50,7 @@ export function renderStationPage(
   const { station, showcase } = data;
   const now = options.now ?? new Date();
   const cover = showcase.photos[0] ?? null;
-  const title = `${station.name} · ${station.city}-${station.state}`;
+  const title = pageTitle(station);
   const description = describeStation(data);
 
   return document(
@@ -110,7 +112,7 @@ export function renderStationPage(
           <Directions data={data} />
           <InTheApp data={data} />
         </main>
-        <Footer />
+        <Footer siteUrl={options.officialSiteUrl} />
       </body>
     </html>,
   );
@@ -148,8 +150,24 @@ function describeStation({ station }: StationPageData): string {
   const where = [station.address, station.district, station.city]
     .filter(Boolean)
     .join(', ');
-  const hasPrices = station.prices.length > 0;
-  return `${station.name}: ${hasPrices ? 'preços atualizados, ' : ''}horário e avaliações. ${where} - ${station.state}.`;
+  // Os preços de hoje no resultado da busca (os três primeiros na ordem do
+  // app), quando o posto mostra preços.
+  const prices = FUEL_TYPES.flatMap((fuel) => {
+    const price = station.prices.find((p) => p.fuelType === fuel);
+    return price ? [`${FUEL_LABELS[fuel]} R$ ${formatPrice(price.price)}`] : [];
+  }).slice(0, 3);
+  const pricesText = prices.length > 0 ? `${prices.join(', ')}. ` : '';
+  return `${pricesText}${station.name}: endereço, horário e avaliação de quem abastece. ${where} - ${station.state}.`;
+}
+
+/** Título com o que se busca: posto, cidade e preço de hoje. */
+function pageTitle(station: StationPageData['station']): string {
+  const place = `${station.name} em ${station.city}-${station.state}`;
+  if (station.mode === 'precos_ocultos') return `${place} · Tankei`;
+  const fuel = station.prices.some((p) => p.fuelType === 'gasolina_comum')
+    ? 'preço da gasolina hoje'
+    : 'preços de combustível hoje';
+  return `${place}: ${fuel}`;
 }
 
 // ---------- Blocos ----------
@@ -517,10 +535,19 @@ function InTheApp({ data }: { data: StationPageData }) {
 }
 
 /** Rodapé fixo: o posto não pode remover (spec 0004). */
-function Footer() {
+function Footer({ siteUrl }: { siteUrl?: string }) {
   return (
     <footer id="sobre-os-dados">
-      <p>Dados de preço e avaliação: Tankei.</p>
+      <p>
+        Dados de preço e avaliação:{' '}
+        {siteUrl ? <a href={`${siteUrl}/`}>Tankei</a> : 'Tankei'}.
+        {siteUrl && (
+          <>
+            {' '}
+            <a href={`${siteUrl}/como-funciona/`}>Como funciona</a>
+          </>
+        )}
+      </p>
       <details>
         <summary>Como funcionam os preços e o IQP</summary>
         <p>

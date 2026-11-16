@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { SiteConfig } from './config';
+import { breadcrumbLd, safeJson, type JsonLd } from './seo';
 import { SITE_CSS } from './styles';
 
 /** Páginas do site, na ordem do menu. */
@@ -17,6 +18,10 @@ export interface PageProps {
   description: string;
   /** Página sem lugar no Google (ex.: 404). */
   noindex?: boolean;
+  /** Nome curto na trilha de navegação (Início › nome); padrão: title. */
+  crumb?: string;
+  /** Dados estruturados além da trilha de navegação. */
+  jsonLd?: JsonLd[];
   children: ReactNode;
 }
 
@@ -27,10 +32,23 @@ export function Page({
   title,
   description,
   noindex,
+  crumb,
+  jsonLd = [],
   children,
 }: PageProps) {
   const url = `${config.url}${path}`;
   const fullTitle = path === '/' ? title : `${title} · Tankei`;
+  const structured = [
+    ...jsonLd,
+    ...(path === '/' || noindex
+      ? []
+      : [
+          breadcrumbLd(config, [
+            { name: 'Início', path: '/' },
+            { name: crumb ?? title, path },
+          ]),
+        ]),
+  ];
   return (
     <html lang="pt-BR">
       <head>
@@ -56,6 +74,13 @@ export function Page({
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="theme-color" content="#012049" />
         <style dangerouslySetInnerHTML={{ __html: SITE_CSS }} />
+        {structured.map((data, i) => (
+          <script
+            key={i}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: safeJson(data) }}
+          />
+        ))}
       </head>
       <body>
         <a className="skip" href="#conteudo">

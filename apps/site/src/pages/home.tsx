@@ -6,6 +6,7 @@ import {
 } from '@tankei/shared';
 import type { SiteConfig } from '../config';
 import { Page } from '../layout';
+import { organizationLd, websiteLd } from '../seo';
 
 /** Ordem dos selos: do mais para o menos confiável, e a promoção no fim. */
 export const BADGE_ORDER: PriceBadge[] = [
@@ -58,8 +59,9 @@ export function HomePage({ config }: { config: SiteConfig }) {
     <Page
       config={config}
       path="/"
-      title="Tankei: preço de combustível e qualidade do posto"
-      description="Compare o preço da gasolina, do etanol, do diesel e da recarga elétrica nos postos perto de você e veja a nota de qualidade dada por quem abastece."
+      title="Tankei: preço da gasolina, etanol e diesel perto de você"
+      description="Compare o preço da gasolina, do etanol, do diesel e da recarga elétrica nos postos perto de você, com a origem de cada preço e a nota de quem abastece."
+      jsonLd={[organizationLd(config), websiteLd(config)]}
     >
       <div className="hero">
         <div className="wrap hero-grid">

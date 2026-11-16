@@ -72,7 +72,8 @@ export function StationsPage({ config }: { config: SiteConfig }) {
     <Page
       config={config}
       path="/para-postos/"
-      title="Para postos"
+      title="Portal do posto: preços, horário e promoções em dia"
+      crumb="Para postos"
       description="O seu posto já está no Tankei. Pelo portal, mantenha preços, horário, promoções e fotos em dia e acompanhe a concorrência e a opinião dos clientes."
     >
       <div className="hero">

@@ -15,6 +15,7 @@ import {
 import type { ReactNode } from 'react';
 import type { SiteConfig } from '../config';
 import { Page } from '../layout';
+import { faqLd } from '../seo';
 import { BADGE_ORDER } from './home';
 
 /**
@@ -42,7 +43,7 @@ const FLOW = [
   },
 ] as const;
 
-const FAQ: { q: string; a: string }[] = [
+export const FAQ: { q: string; a: string }[] = [
   {
     q: 'O Tankei é pago?',
     a: 'Não. O app é gratuito para motoristas.',
@@ -95,8 +96,10 @@ export function HowItWorksPage({ config }: { config: SiteConfig }) {
     <Page
       config={config}
       path="/como-funciona/"
-      title="Como funciona"
-      description="De onde vêm os preços no Tankei, o que significam os selos, o aviso de outro valor, como funciona o IQP, as promoções e as regras para quem informa preços."
+      title="Como funciona: preços com origem e nota do posto"
+      crumb="Como funciona"
+      description="De onde vêm os preços de combustível no Tankei, o que significam os selos, como funciona a nota de qualidade (IQP) dos postos e as perguntas frequentes."
+      jsonLd={[faqLd(FAQ)]}
     >
       <div className="hero">
         <div className="wrap">
