@@ -30,6 +30,7 @@ const ORIGIN_SHORT: Record<ClaimOrigin, string> = {
   portal: 'Portal',
   app_dono: 'App (responsável)',
   app_convite: 'App (convite)',
+  site: 'Site do Tankei',
 };
 
 /**

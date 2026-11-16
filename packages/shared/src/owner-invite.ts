@@ -42,13 +42,14 @@ export const appConfigSchema = z.object({
 export type AppConfig = z.infer<typeof appConfigSchema>;
 
 /** De onde veio o pedido de acesso. */
-export const CLAIM_ORIGINS = ['portal', 'app_dono', 'app_convite'] as const;
+export const CLAIM_ORIGINS = ['portal', 'app_dono', 'app_convite', 'site'] as const;
 export type ClaimOrigin = (typeof CLAIM_ORIGINS)[number];
 
 export const CLAIM_ORIGIN_LABELS: Record<ClaimOrigin, string> = {
   portal: 'Portal',
   app_dono: 'Veio do app (responsável)',
   app_convite: 'Veio do app (convite)',
+  site: 'Veio do site do Tankei',
 };
 
 interface InviteStation {

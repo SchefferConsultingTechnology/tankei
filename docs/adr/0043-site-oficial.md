@@ -1,0 +1,58 @@
+# ADR 0043: Site oficial do Tankei
+
+- **Status:** aceito
+- **Data:** 2026-11-16
+- **Complementa:**
+  - ADR 0030 (como funciona)
+  - ADR 0031 (caminho do dono do posto)
+  - ADR 0036 (ambiente de teste)
+  - ADR 0042 (página do posto)
+
+## Contexto
+
+O Tankei não tinha um site. Os textos de "Como funciona" (ADR 0030) já estavam no `@tankei/shared` pensando nele. Ainda faltam decisões que o autor não pode tomar agora:
+- o domínio;
+- os planos e os preços para postos;
+- o parecer jurídico sobre privacidade e termos.
+
+O autor decidiu fazer o site com o que já está decidido.
+
+## Decisão
+
+### Conteúdo
+
+- **Público:** motoristas e postos.
+- **Páginas:**
+  - **Início:** o que o app faz, os selos de preço e as regras que não mudam;
+  - **Como funciona:** os mesmos textos do app (`HOW_IT_WORKS` e `BADGE_DESCRIPTIONS`);
+  - **Para postos:** o que o portal oferece, como assumir o posto e as regras iguais para todos. Não fala de preço nem de plano (ADR 0031). O botão leva a `/acesso?origem=site` no portal;
+  - **Privacidade** e **Termos de uso:** minutas, com o aviso "Minuta em revisão jurídica" no topo. Os pontos em aberto ficam entre colchetes (razão social, encarregado, bases legais, prazos e foro). As minutas descrevem só o que o sistema faz hoje (ADR 0009, 0024, 0026, 0029 e 0039).
+- **App nas lojas:** como o app ainda não foi publicado, os botões aparecem como "Em breve: Google Play / App Store". O site não coleta dados (nada de lista de espera).
+- **Origem do pedido de acesso:** nova origem `site` (`claim_origin`), para medir o canal no painel de adesão.
+
+### Técnica
+
+- **App novo `apps/site`:**
+  - páginas em React, geradas como HTML no build (`renderToStaticMarkup`), com o `tsx`;
+  - sem JavaScript no navegador;
+  - CSS próprio com as cores da marca e tema claro e escuro;
+  - a mesma abordagem da página do posto (ADR 0042).
+- **Hospedagem:** serviço estático no Render (`tankei-site`). Site estático não dorme no plano gratuito, ao contrário da API.
+- **Configuração por variável de ambiente, no build:** `SITE_URL`, `PORTAL_URL`, `SUPPORT_WHATSAPP`, `CONTACT_EMAIL` e `SITE_INDEXING`.
+- **Fora do Google no ambiente de teste:** sem `SITE_INDEXING=1`, as páginas vão com `noindex`, o `robots.txt` bloqueia tudo e o sitemap sai vazio.
+- **Testes:** `node:test` com o `tsx`. Conferem que:
+  - todo link interno existe;
+  - nenhuma página tem script;
+  - a indexação, o sitemap e a origem do pedido saem certos;
+  - privacidade e termos têm o aviso de minuta.
+
+## Achados para o lançamento
+
+- **Exclusão da conta pelo app:** a API tem a exclusão (`DELETE /v1/me`), mas o app não tem a tela. A Google Play exige a exclusão dentro do app e um endereço na web para pedir a exclusão. Por enquanto, a minuta orienta a pedir por e-mail.
+- **Login com Apple:** a API aceita, mas o app só oferece o Google. A minuta cita só o Google.
+
+## Próximas etapas
+
+- **Páginas de preço por cidade** ("Preço da gasolina em Curitibanos"), com links para as páginas dos postos. Ficam para quando houver dados reais e o domínio.
+- **Domínio do Tankei** (spec 0004, decisão 5): unir o site oficial e as páginas dos postos no mesmo endereço.
+- **Textos finais** de privacidade e termos, depois do parecer jurídico (pauta, item 4).

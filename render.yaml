@@ -151,3 +151,38 @@ services:
         value: https://tankei-api.onrender.com/v1
       - key: VITE_GOOGLE_CLIENT_ID
         value: 881187129858-3elfcgukc2u988u5gc5sqfvjqv0hd334.apps.googleusercontent.com
+
+  # Site oficial do Tankei (ADR 0043): páginas estáticas geradas no build, sem
+  # JavaScript. Site estático não dorme no plano gratuito. Trocar SITE_URL
+  # pelo domínio do Tankei quando ele for escolhido; SITE_INDEXING=1 só na
+  # homologação e na produção (ADR 0036).
+  - type: web
+    name: tankei-site
+    runtime: static
+    branch: development
+    rootDir: .
+    buildCommand: >-
+      npx --yes pnpm@10.18.3 install --frozen-lockfile &&
+      npx --yes pnpm@10.18.3 --filter "@tankei/site..." run build
+    staticPublishPath: ./apps/site/dist
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - apps/site/**
+        - packages/shared/**
+        - pnpm-lock.yaml
+    headers:
+      - path: /*.png
+        name: Cache-Control
+        value: public, max-age=86400
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: SITE_URL
+        value: https://tankei-site.onrender.com
+      - key: PORTAL_URL
+        value: https://tankei-portal.onrender.com
+      - key: SUPPORT_WHATSAPP
+        value: "5548999040445"
+      - key: CONTACT_EMAIL
+        value: scheffer.consulting.technology@gmail.com

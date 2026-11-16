@@ -1,0 +1,24 @@
+{
+  "name": "@tankei/site",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Site oficial do Tankei (ADR 0043): páginas estáticas geradas com React no build",
+  "scripts": {
+    "build": "tsx src/build.tsx",
+    "preview": "tsx src/build.tsx && npx --yes serve@14.2.4 dist -l 4173",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/site.test.tsx"
+  },
+  "dependencies": {
+    "@tankei/shared": "workspace:*",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "tsx": "4.20.6",
+    "typescript": "~5.9.3"
+  }
+}

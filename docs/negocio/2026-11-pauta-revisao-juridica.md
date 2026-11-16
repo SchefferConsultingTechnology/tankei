@@ -46,6 +46,8 @@ Pontos levantados no desenvolvimento que precisam de parecer antes de seguir. Ca
 
 **Pergunta:** revisar termos de uso e política de privacidade (LGPD) para o app, o portal e os e-mails antes do piloto com postos reais.
 
+**Minutas prontas para revisão (ADR 0043):** `/privacidade/` e `/termos/` no site oficial (`apps/site/src/pages/legal.tsx`). Os pontos em aberto estão entre colchetes: razão social e CNPJ, encarregado, bases legais, transferência internacional, prazo de guarda das visitas, idade mínima, limites de responsabilidade e foro.
+
 ## 5. Estatísticas de visitas aos postos (ADR 0039)
 
 **O que existe:**

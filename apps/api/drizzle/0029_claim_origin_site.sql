@@ -1,0 +1,1 @@
+ALTER TYPE "public"."claim_origin" ADD VALUE 'site';
