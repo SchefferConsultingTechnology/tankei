@@ -36,7 +36,7 @@ O autor decidiu fazer o site com o que já está decidido.
   Imagens geradas por IA, se o autor quiser, entram no mesmo lugar.
 - **Foto da seção "Cada preço mostra de onde veio" (2026-11-16):**
   - imagem gerada pelo autor no ChatGPT (geração de imagens), em 16/11/2026, com o prompt 3 do roteiro de imagens (mão segurando o celular ao lado da bomba);
-  - a tela genérica foi trocada por um print real do app (mapa de Curitibanos, gasolina comum), feito no emulador com a API de teste e encaixado com correção de perspectiva;
+  - a tela genérica foi trocada por um print real do app (mapa de Curitibanos, gasolina comum), feito no emulador com a API de teste e encaixado com correção de perspectiva; o encaixe foi refeito com a área da tela detectada na foto (bordas ajustadas por reta, cantos arredondados e o desfoque da foto);
   - a lista não foi usada porque mostra nomes e bandeiras de postos reais com preços fictícios do ambiente de teste;
   - a foto substitui a ilustração dos cartões de preço; o topo do início continua com o celular desenhado;
   - a matriz fica em `apps/site/art/preco-origem.jpg`, e as versões publicadas ficam em `public/img/`: WebP de 560 e 900 px e o JPEG de 1200×630, usado também como prévia de links (`og:image`).
