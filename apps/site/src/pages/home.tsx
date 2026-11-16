@@ -8,7 +8,7 @@ import type { SiteConfig } from '../config';
 import {
   EvChargerIllustration,
   IqpGaugeIllustration,
-  PriceOriginIllustration,
+  PhoneMapIllustration,
   StationIllustration,
 } from '../illustrations';
 import { Page } from '../layout';
@@ -93,16 +93,7 @@ export function HomePage({ config }: { config: SiteConfig }) {
               </a>
             </div>
           </div>
-          <img
-            className="hero-photo"
-            src="/img/hero-app-posto-900.webp"
-            srcSet="/img/hero-app-posto-560.webp 560w, /img/hero-app-posto-900.webp 900w"
-            sizes="(min-width: 860px) 440px, calc(100vw - 32px)"
-            width={900}
-            height={900}
-            fetchPriority="high"
-            alt="Mão segurando um celular com o mapa de preços do Tankei aberto, ao lado de uma bomba de combustível"
-          />
+          <PhoneMapIllustration />
         </div>
       </div>
 
@@ -183,7 +174,16 @@ export function HomePage({ config }: { config: SiteConfig }) {
               ))}
             </ul>
           </div>
-          <PriceOriginIllustration />
+          <img
+            className="photo"
+            src="/img/preco-origem-900.webp"
+            srcSet="/img/preco-origem-560.webp 560w, /img/preco-origem-900.webp 900w"
+            sizes="(min-width: 860px) 440px, calc(100vw - 32px)"
+            width={900}
+            height={900}
+            loading="lazy"
+            alt="Mão segurando um celular com o mapa de preços do Tankei aberto, ao lado de uma bomba de combustível"
+          />
         </div>
       </section>
 
