@@ -50,6 +50,11 @@ O autor decidiu fazer o site com o que já está decidido.
   - o print do portal saiu do banco de demonstração, com o posto e a rede renomeados para "Posto Exemplo" e "Rede Exemplo", para não mostrar um posto real com números fictícios;
   - a mão na frente do notebook foi preservada da foto original;
   - recorte 4:3 em WebP de 640 e 1000 px, no lugar da ilustração do portal; a matriz fica em `apps/site/art/portal-posto.jpg`.
+- **Foto do topo do início (2026-11-16):**
+  - imagem gerada pelo autor no ChatGPT (geração de imagens), em 16/11/2026, com o prompt 1 do roteiro de imagens (motorista no carro, ao entardecer, num posto da serra);
+  - a tela apagada do celular recebeu um print real do app no tema escuro (mapa de Curitibanos com os preços), encaixado por baixo dos dedos;
+  - a imagem original tem o volante à direita (carro de mão inglesa, que não existe no Brasil); o recorte quadrado pela esquerda tira o volante e o retrovisor;
+  - WebP de 560 e 900 px, no lugar do celular desenhado; a matriz (sem recorte) fica em `apps/site/art/topo-motorista.jpg`.
 - **App nas lojas:** como o app ainda não foi publicado, os botões aparecem como "Em breve: Google Play / App Store". O site não coleta dados (nada de lista de espera).
 - **Origem do pedido de acesso:** nova origem `site` (`claim_origin`), para medir o canal no painel de adesão.
 

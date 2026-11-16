@@ -110,7 +110,6 @@ h3 { font-size: 18px; margin: 0 0 6px; }
 /* Ilustrações */
 .illustration { display: block; width: 100%; height: auto; }
 .hero-grid { display: grid; gap: 32px; align-items: center; }
-.hero-art { max-width: 340px; margin: 0 auto; }
 .photo { width: 100%; max-width: 440px; height: auto; aspect-ratio: 1; object-fit: cover; margin: 0 auto; border-radius: 24px; box-shadow: 0 12px 32px rgba(1, 32, 73, .18); }
 .photo.wide { max-width: 520px; aspect-ratio: 4 / 3; }
 .split { display: grid; gap: 32px; align-items: center; }
@@ -122,7 +121,6 @@ h3 { font-size: 18px; margin: 0 0 6px; }
 .band .illustration.compact { max-width: 220px; margin: 0; }
 @media (min-width: 860px) {
   .hero-grid { grid-template-columns: 1.25fr 1fr; }
-  .hero-art { max-width: 380px; }
   .split { grid-template-columns: 1fr 1fr; gap: 48px; }
   .split.reverse > :first-child { order: 2; }
   .band { flex-wrap: nowrap; }

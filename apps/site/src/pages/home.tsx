@@ -5,11 +5,7 @@ import {
   type PriceBadge,
 } from '@tankei/shared';
 import type { SiteConfig } from '../config';
-import {
-  IqpGaugeIllustration,
-  PhoneMapIllustration,
-  StationIllustration,
-} from '../illustrations';
+import { IqpGaugeIllustration, StationIllustration } from '../illustrations';
 import { Page } from '../layout';
 
 /** Ordem dos selos: do mais para o menos confiável, e a promoção no fim. */
@@ -92,7 +88,16 @@ export function HomePage({ config }: { config: SiteConfig }) {
               </a>
             </div>
           </div>
-          <PhoneMapIllustration />
+          <img
+            className="photo"
+            src="/img/topo-motorista-900.webp"
+            srcSet="/img/topo-motorista-560.webp 560w, /img/topo-motorista-900.webp 900w"
+            sizes="(min-width: 860px) 440px, calc(100vw - 32px)"
+            width={900}
+            height={900}
+            fetchPriority="high"
+            alt="Motorista no carro, ao entardecer, olhando o mapa de preços do Tankei no celular ao lado de um posto na serra, com araucárias ao fundo"
+          />
         </div>
       </div>
 
