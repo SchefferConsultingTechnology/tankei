@@ -133,16 +133,11 @@ export function IqpGaugeIllustration() {
 }
 
 /** Chamada para postos: o posto com bombas, loja e carregador. */
-export function StationIllustration({
-  compact = false,
-}: {
-  compact?: boolean;
-}) {
+export function StationIllustration() {
   return (
     <Svg
       title="Posto de combustível com cobertura, bombas, loja de conveniência e ponto de recarga"
       viewBox="0 0 400 260"
-      className={compact ? 'illustration compact' : 'illustration'}
     >
       <rect
         x={0}

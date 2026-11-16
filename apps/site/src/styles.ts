@@ -118,12 +118,16 @@ h3 { font-size: 18px; margin: 0 0 6px; }
 .points li { padding-left: 30px; position: relative; }
 .points li::before { content: "⚡"; position: absolute; left: 0; top: 0; }
 .note { color: var(--muted); font-size: 15px; margin: 0; }
-.band .illustration.compact { max-width: 220px; margin: 0; }
+.band.with-photo { display: grid; gap: 20px; padding: 16px; }
+.band.with-photo > div { padding: 4px 8px 12px; }
+.band.with-photo .actions { margin-top: 20px; }
+.band-photo { width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 14px; }
 @media (min-width: 860px) {
   .hero-grid { grid-template-columns: 1.25fr 1fr; }
   .split { grid-template-columns: 1fr 1fr; gap: 48px; }
   .split.reverse > :first-child { order: 2; }
   .band { flex-wrap: nowrap; }
+  .band.with-photo { grid-template-columns: 1.15fr 1fr; gap: 32px; align-items: center; }
 }
 
 /* Rodapé */

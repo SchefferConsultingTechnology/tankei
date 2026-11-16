@@ -5,7 +5,7 @@ import {
   type PriceBadge,
 } from '@tankei/shared';
 import type { SiteConfig } from '../config';
-import { IqpGaugeIllustration, StationIllustration } from '../illustrations';
+import { IqpGaugeIllustration } from '../illustrations';
 import { Page } from '../layout';
 
 /** Ordem dos selos: do mais para o menos confiável, e a promoção no fim. */
@@ -227,18 +227,29 @@ export function HomePage({ config }: { config: SiteConfig }) {
 
       <section>
         <div className="wrap">
-          <div className="band">
-            <StationIllustration compact />
+          <div className="band with-photo">
+            <img
+              className="band-photo"
+              src="/img/posto-serra-1000.webp"
+              srcSet="/img/posto-serra-640.webp 640w, /img/posto-serra-1000.webp 1000w"
+              sizes="(min-width: 860px) 560px, calc(100vw - 32px)"
+              width={1000}
+              height={667}
+              loading="lazy"
+              alt="Posto de combustível sem bandeira à beira de uma rodovia na serra, com araucárias ao pôr do sol"
+            />
             <div>
               <h2>É responsável por um posto?</h2>
               <p>
                 O seu posto já está no Tankei. Pelo portal, você mantém preços,
                 horário, promoções, fotos e pontos de recarga em dia.
               </p>
+              <div className="actions">
+                <a className="button" href="/para-postos/">
+                  Conheça o portal do posto
+                </a>
+              </div>
             </div>
-            <a className="button" href="/para-postos/">
-              Conheça o portal do posto
-            </a>
           </div>
         </div>
       </section>
