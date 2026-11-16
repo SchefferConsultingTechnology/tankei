@@ -2,6 +2,7 @@ import type { FuelType } from '@tankei/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker, type Region } from 'react-native-maps';
+import { PUMP_PATH } from './icons';
 import Svg, { Path, Rect } from 'react-native-svg';
 import type { Coordinates } from '@/api/queries';
 import { projectPoint, zoomForSpeed, type Motion } from '@/driving';
@@ -66,10 +67,6 @@ function visibleMeters(zoom: number, lat: number, heightDp: number): number {
     (156_543.03 * Math.cos((lat * Math.PI) / 180)) / Math.pow(2, zoom);
   return metersPerDp * (heightDp || 600);
 }
-
-/** Bomba de combustível (Material "local_gas_station"), 24 × 24. */
-const PUMP_PATH =
-  'M19.77 7.23l.01-.01-3.72-3.72L15 4.56l2.11 2.11c-.94.36-1.61 1.26-1.61 2.33 0 1.38 1.12 2.5 2.5 2.5.36 0 .69-.08 1-.21v7.21c0 .55-.45 1-1 1s-1-.45-1-1V14c0-1.1-.9-2-2-2h-1V5c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v16h10v-7.5h1.5v5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V9c0-.69-.28-1.32-.73-1.77zM12 10H6V5h6v5z';
 
 /** Nome curto para o mapa (sem cortar no meio da palavra quando der). */
 function shortName(name: string, max = 22): string {
@@ -331,17 +328,17 @@ function PriceMarker({
         tracksViewChanges={tracking}
         zIndex={selected ? TOP_Z_INDEX : 0}
         // O ícone fica sobre o ponto; o nome, centralizado embaixo (altura
-        // fixa: ícone 22 + 2 + nome 16 = 40; centro do ícone a 11 do topo).
-        anchor={{ x: 0.5, y: showName ? 11 / 40 : 0.5 }}
+        // fixa: ícone 30 + 2 + nome 16 = 48; centro do ícone a 15 do topo).
+        anchor={{ x: 0.5, y: showName ? 15 / 48 : 0.5 }}
         centerOffset={showName ? { x: 0, y: 9 } : undefined}
         accessibilityLabel={`${station.name}, sem preço no Tankei`}
       >
         <View style={styles.noPriceRow}>
           <View style={[styles.noPrice, selected && styles.noPriceSelected]}>
-            <Svg width={14} height={14} viewBox="0 0 24 24">
+            <Svg width={18} height={18} viewBox="0 0 24 24">
               <Path
                 d={PUMP_PATH}
-                fill={selected ? colors.primary : colors.textMuted}
+                fill={selected ? colors.surface : colors.accent}
               />
             </Svg>
           </View>
@@ -380,18 +377,19 @@ function PriceMarker({
 }
 
 const useStyles = createStyles((colors) => ({
-  // Posto sem preço do combustível escolhido: ícone de bomba, discreto e
-  // tocável; com o mapa aproximado, o nome ao lado.
+  // Posto sem preço do combustível escolhido: bomba no laranja do Tankei,
+  // visível nos dois temas, convidando a informar; com o mapa aproximado, o
+  // nome ao lado.
   noPriceRow: { alignItems: 'center', gap: 2 },
   noPrice: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.surface,
-    borderColor: colors.textMuted,
-    borderWidth: 1.5,
+    borderColor: colors.accent,
+    borderWidth: 2,
   },
   noPriceName: {
     maxWidth: 140,
@@ -425,5 +423,5 @@ const useStyles = createStyles((colors) => ({
     fontSize: fontSize.sm,
     fontWeight: '600',
   },
-  noPriceSelected: { borderColor: colors.primary, borderWidth: 2.5 },
+  noPriceSelected: { backgroundColor: colors.accent, borderColor: colors.surface },
 }));

@@ -34,6 +34,7 @@ import {
 import { useFavorites, useToggleFavorite } from '@/api/engagement';
 import { useAuth } from '@/auth/AuthProvider';
 import { DetourSavingsCard } from '@/components/DetourSavings';
+import { FirstPriceInvite } from '@/components/FirstPriceInvite';
 import { OwnerInvite } from '@/components/OwnerInvite';
 import { StationAgreements } from '@/components/StationAgreements';
 import { StationCharging } from '@/components/StationCharging';
@@ -157,12 +158,21 @@ export default function StationScreen() {
               station={data}
               fuel={data.fuels.includes(fuel) ? fuel : (data.fuels[0] ?? fuel)}
             />
-            <SecondaryButton
-              label="Informar preço"
-              onPress={() =>
-                router.push({ pathname: '/station/[id]/preco', params: { id } })
-              }
-            />
+            {data.prices.length === 0 ? (
+              <FirstPriceInvite
+                stationName={data.name}
+                onPress={() =>
+                  router.push({ pathname: '/station/[id]/preco', params: { id } })
+                }
+              />
+            ) : (
+              <SecondaryButton
+                label="Informar preço"
+                onPress={() =>
+                  router.push({ pathname: '/station/[id]/preco', params: { id } })
+                }
+              />
+            )}
             <View style={styles.actions}>
               <LinkButton
                 label="Avisar quando baixar"

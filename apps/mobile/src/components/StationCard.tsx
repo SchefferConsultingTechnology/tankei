@@ -1,6 +1,7 @@
 import {
   describeDiscount,
   discountedPrice,
+  FUEL_LABELS,
   formatPrice,
   openingStatus,
   STATION_SERVICE_LABELS,
@@ -28,6 +29,7 @@ import {
 } from '@/stations';
 import { createStyles, useTheme } from '@/appearance';
 import { fontSize, radius, spacing } from '@/theme';
+import { FirstPriceInvite } from './FirstPriceInvite';
 import { IqpPill } from './IqpPill';
 import { PriceTag } from './PriceTag';
 
@@ -106,14 +108,11 @@ export function StationCard({
         <IqpPill iqp={station.iqp} />
       </View>
       {!price && station.mode !== 'precos_ocultos' && onReport && (
-        <Pressable
-          style={styles.reportButton}
+        <FirstPriceInvite
+          fuelLabel={FUEL_LABELS[fuel]}
+          stationName={station.name}
           onPress={onReport}
-          accessibilityRole="button"
-          accessibilityLabel={`Informar o preço de ${station.name}`}
-        >
-          <Text style={styles.reportText}>Informar preço</Text>
-        </Pressable>
+        />
       )}
       {price && priceNote(price) && (
         <Text style={styles.note} numberOfLines={1}>
@@ -329,15 +328,6 @@ const useStyles = createStyles((colors, badgeColors) => ({
   name: { color: colors.text, fontSize: fontSize.lg, fontWeight: '600' },
   muted: { color: colors.textMuted, fontSize: fontSize.sm },
   note: { color: colors.warning, fontSize: fontSize.sm, fontWeight: '600' },
-  reportButton: {
-    alignSelf: 'flex-start',
-    borderColor: colors.primary,
-    borderWidth: 1,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
-  },
-  reportText: { color: colors.primary, fontSize: fontSize.sm, fontWeight: '700' },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
