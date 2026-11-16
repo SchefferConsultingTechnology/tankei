@@ -27,6 +27,13 @@ O autor decidiu fazer o site com o que já está decidido.
   - **Como funciona:** os mesmos textos do app (`HOW_IT_WORKS` e `BADGE_DESCRIPTIONS`);
   - **Para postos:** o que o portal oferece, como assumir o posto e as regras iguais para todos. Não fala de preço nem de plano (ADR 0031). O botão leva a `/acesso?origem=site` no portal;
   - **Privacidade** e **Termos de uso:** minutas, com o aviso "Minuta em revisão jurídica" no topo. Os pontos em aberto ficam entre colchetes (razão social, encarregado, bases legais, prazos e foro). As minutas descrevem só o que o sistema faz hoje (ADR 0009, 0024, 0026, 0029 e 0039).
+- **Recarga elétrica (2026-11-16):** o início tem uma seção própria para quem tem carro elétrico, com o que o app faz hoje (ADR 0041): preço por kWh, AC e DC, conector e "Meu carro", e a sugestão de ponto pelo motorista. A seção avisa o que ainda não existe: o status livre ou ocupado do ponto. A página "Para postos" ganhou o cartão "Pontos de recarga".
+- **Ilustrações (2026-11-16):**
+  - desenhos originais em SVG (`src/illustrations.tsx`): o app com o mapa de preços, o carregador com o carro elétrico, os preços com a origem, o medidor do IQP, o posto e o portal;
+  - não usam fotos, marcas de terceiros nem imagens geradas por IA;
+  - nomes, preços e notas são fictícios;
+  - as cores seguem o tema (variáveis `--ill-*` e `--badge-*`).
+  Imagens geradas por IA, se o autor quiser, entram no mesmo lugar.
 - **App nas lojas:** como o app ainda não foi publicado, os botões aparecem como "Em breve: Google Play / App Store". O site não coleta dados (nada de lista de espera).
 - **Origem do pedido de acesso:** nova origem `site` (`claim_origin`), para medir o canal no painel de adesão.
 

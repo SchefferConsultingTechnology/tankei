@@ -5,6 +5,13 @@ import {
   type PriceBadge,
 } from '@tankei/shared';
 import type { SiteConfig } from '../config';
+import {
+  EvChargerIllustration,
+  IqpGaugeIllustration,
+  PhoneMapIllustration,
+  PriceOriginIllustration,
+  StationIllustration,
+} from '../illustrations';
 import { Page } from '../layout';
 
 /** Ordem dos selos: do mais para o menos confiável, e a promoção no fim. */
@@ -42,6 +49,11 @@ const FEATURES = [
     text: 'Guarde os postos do dia a dia e receba um e-mail quando o preço cair até o valor que você escolher.',
   },
   {
+    icon: '⚡',
+    title: 'Recarga elétrica',
+    text: 'Pontos de recarga AC e DC nos postos, com potência, conector e preço por kWh.',
+  },
+  {
     icon: '🛣️',
     title: 'Na estrada',
     text: 'No modo direção, o mapa gira no sentido do carro e mostra mais da estrada à frente, com o horário e os serviços de cada posto.',
@@ -54,29 +66,35 @@ export function HomePage({ config }: { config: SiteConfig }) {
       config={config}
       path="/"
       title="Tankei: preço de combustível e qualidade do posto"
-      description="Compare o preço da gasolina, do etanol e do diesel nos postos perto de você e veja a nota de qualidade dada por quem abastece."
+      description="Compare o preço da gasolina, do etanol, do diesel e da recarga elétrica nos postos perto de você e veja a nota de qualidade dada por quem abastece."
     >
       <div className="hero">
-        <div className="wrap">
-          <p className="eyebrow">App gratuito para motoristas</p>
-          <h1>Preço de combustível e qualidade do posto, por quem abastece</h1>
-          <p className="lead">
-            Veja onde está mais barato perto de você, de onde veio cada preço e
-            como os motoristas avaliam o posto.
-          </p>
-          <div className="actions">
-            <span className="store" aria-label="Google Play: em breve">
-              <small>Em breve</small>
-              <strong>Google Play</strong>
-            </span>
-            <span className="store" aria-label="App Store: em breve">
-              <small>Em breve</small>
-              <strong>App Store</strong>
-            </span>
-            <a className="button ghost" href="/como-funciona/">
-              Como funciona
-            </a>
+        <div className="wrap hero-grid">
+          <div>
+            <p className="eyebrow">App gratuito para motoristas</p>
+            <h1>
+              Preço de combustível e qualidade do posto, por quem abastece
+            </h1>
+            <p className="lead">
+              Veja onde está mais barato perto de você, da gasolina à recarga
+              elétrica, de onde veio cada preço e como os motoristas avaliam o
+              posto.
+            </p>
+            <div className="actions">
+              <span className="store" aria-label="Google Play: em breve">
+                <small>Em breve</small>
+                <strong>Google Play</strong>
+              </span>
+              <span className="store" aria-label="App Store: em breve">
+                <small>Em breve</small>
+                <strong>App Store</strong>
+              </span>
+              <a className="button ghost" href="/como-funciona/">
+                Como funciona
+              </a>
+            </div>
           </div>
+          <PhoneMapIllustration />
         </div>
       </div>
 
@@ -101,56 +119,100 @@ export function HomePage({ config }: { config: SiteConfig }) {
         </div>
       </section>
 
-      <section>
-        <div className="wrap">
-          <h2>Cada preço mostra de onde veio</h2>
-          <p className="intro">
-            Postos e motoristas informam os preços. Você sempre vê a origem e há
-            quanto tempo o preço foi informado, para saber o quanto confiar.
-          </p>
-          <ul className="badges">
-            {BADGE_ORDER.map((badge) => (
-              <li key={badge}>
-                <span className={`badge badge-${badge}`}>
-                  {BADGE_LABELS[badge]}
-                </span>
-                : {BADGE_DESCRIPTIONS[badge]}
+      <section id="recarga-eletrica">
+        <div className="wrap split">
+          <div>
+            <h2>Recarga para carros elétricos</h2>
+            <p className="intro">
+              O Tankei também mostra os pontos de recarga nos postos, com o
+              preço por kWh informado pelo posto ou por motoristas.
+            </p>
+            <ul className="points">
+              <li>
+                Escolha Recarga AC ou Recarga DC e veja os postos com recarga,
+                do menor para o maior preço por kWh.
               </li>
-            ))}
-          </ul>
+              <li>
+                Cada ponto mostra a potência, o conector, se é aberto ao público
+                ou só para clientes, a forma de pagamento e as taxas extras.
+              </li>
+              <li>
+                Cadastre o seu carro elétrico em &quot;Meu carro&quot; e veja na
+                hora se o conector do ponto serve no seu carro.
+              </li>
+              <li>
+                O posto tem recarga e não aparece? Avise pelo app: quando outros
+                motoristas confirmam, o ponto passa a aparecer.
+              </li>
+            </ul>
+            <p className="note">
+              Taxas por sessão ou por tempo aparecem como observação e não
+              entram na comparação de preço. Por enquanto, o app não mostra se o
+              ponto está livre ou ocupado.
+            </p>
+          </div>
+          <EvChargerIllustration />
         </div>
       </section>
 
       <section>
-        <div className="wrap">
-          <h2>Regras que não mudam</h2>
-          <p className="intro">{IQP_SUMMARY}</p>
-          <ul className="rules">
-            <li>
-              Preço não entra na nota do posto, e nada que é pago (planos,
-              anúncios, parcerias) altera a nota ou a ordem por menor preço.
-            </li>
-            <li>
-              Nenhum preço ou avaliação é apagado: correções viram um registro
-              novo, e o histórico fica guardado.
-            </li>
-            <li>
-              O posto não esconde preço informado por motoristas. Se discordar,
-              ele contesta, e a equipe Tankei analisa.
-            </li>
-            <li>A sua localização é usada só na busca e nunca é guardada.</li>
-          </ul>
+        <div className="wrap split reverse">
+          <div>
+            <h2>Cada preço mostra de onde veio</h2>
+            <p className="intro">
+              Postos e motoristas informam os preços. Você sempre vê a origem e
+              há quanto tempo o preço foi informado, para saber o quanto
+              confiar.
+            </p>
+            <ul className="badges">
+              {BADGE_ORDER.map((badge) => (
+                <li key={badge}>
+                  <span className={`badge badge-${badge}`}>
+                    {BADGE_LABELS[badge]}
+                  </span>
+                  : {BADGE_DESCRIPTIONS[badge]}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <PriceOriginIllustration />
+        </div>
+      </section>
+
+      <section>
+        <div className="wrap split">
+          <div>
+            <h2>Regras que não mudam</h2>
+            <p className="intro">{IQP_SUMMARY}</p>
+            <ul className="rules">
+              <li>
+                Preço não entra na nota do posto, e nada que é pago (planos,
+                anúncios, parcerias) altera a nota ou a ordem por menor preço.
+              </li>
+              <li>
+                Nenhum preço ou avaliação é apagado: correções viram um registro
+                novo, e o histórico fica guardado.
+              </li>
+              <li>
+                O posto não esconde preço informado por motoristas. Se
+                discordar, ele contesta, e a equipe Tankei analisa.
+              </li>
+              <li>A sua localização é usada só na busca e nunca é guardada.</li>
+            </ul>
+          </div>
+          <IqpGaugeIllustration />
         </div>
       </section>
 
       <section>
         <div className="wrap">
           <div className="band">
+            <StationIllustration compact />
             <div>
               <h2>É responsável por um posto?</h2>
               <p>
                 O seu posto já está no Tankei. Pelo portal, você mantém preços,
-                horário, promoções e fotos em dia.
+                horário, promoções, fotos e pontos de recarga em dia.
               </p>
             </div>
             <a className="button" href="/para-postos/">

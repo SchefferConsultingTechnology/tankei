@@ -1,5 +1,6 @@
 import { whatsappLink } from '@tankei/shared';
 import type { SiteConfig } from '../config';
+import { PortalIllustration, StationIllustration } from '../illustrations';
 import { Page } from '../layout';
 
 const BENEFITS = [
@@ -16,7 +17,12 @@ const BENEFITS = [
   {
     icon: '🕒',
     title: 'Horário, serviços e convênios',
-    text: 'Mostre quando o posto está aberto, os serviços (calibragem, borracharia, recarga elétrica) e os convênios que aceita.',
+    text: 'Mostre quando o posto está aberto, os serviços (calibragem, borracharia) e os convênios que aceita.',
+  },
+  {
+    icon: '🔌',
+    title: 'Pontos de recarga',
+    text: 'Cadastre os carregadores (AC ou DC, conector, potência, acesso e pagamento) e informe o preço por kWh.',
   },
   {
     icon: '📊',
@@ -70,24 +76,27 @@ export function StationsPage({ config }: { config: SiteConfig }) {
       description="O seu posto já está no Tankei. Pelo portal, mantenha preços, horário, promoções e fotos em dia e acompanhe a concorrência e a opinião dos clientes."
     >
       <div className="hero">
-        <div className="wrap">
-          <p className="eyebrow">Portal do posto</p>
-          <h1>O seu posto já está no Tankei</h1>
-          <p className="lead">
-            Todo posto do cadastro da ANP aparece no app. Pelo portal, você
-            garante que os motoristas vejam o preço certo, o horário, as
-            promoções e o que o posto oferece.
-          </p>
-          <div className="actions">
-            <a className="button" href={claimUrl}>
-              Pedir acesso ao portal
-            </a>
-            {whatsapp && (
-              <a className="button ghost" href={whatsapp} rel="noopener">
-                Falar com a equipe no WhatsApp
+        <div className="wrap hero-grid">
+          <div>
+            <p className="eyebrow">Portal do posto</p>
+            <h1>O seu posto já está no Tankei</h1>
+            <p className="lead">
+              Todo posto do cadastro da ANP aparece no app. Pelo portal, você
+              garante que os motoristas vejam o preço certo, o horário, as
+              promoções e o que o posto oferece.
+            </p>
+            <div className="actions">
+              <a className="button" href={claimUrl}>
+                Pedir acesso ao portal
               </a>
-            )}
+              {whatsapp && (
+                <a className="button ghost" href={whatsapp} rel="noopener">
+                  Falar com a equipe no WhatsApp
+                </a>
+              )}
+            </div>
           </div>
+          <PortalIllustration />
         </div>
       </div>
 
@@ -130,30 +139,33 @@ export function StationsPage({ config }: { config: SiteConfig }) {
       </section>
 
       <section>
-        <div className="wrap">
-          <h2>Regras iguais para todos</h2>
-          <p className="intro">
-            É isso que faz o motorista confiar no Tankei, e no seu posto.
-          </p>
-          <ul className="rules">
-            <li>
-              Nada que é pago altera a nota do posto (IQP) nem a ordem por menor
-              preço.
-            </li>
-            <li>
-              O posto não apaga preços informados por motoristas. Se um valor
-              estiver errado, o posto contesta pelo portal e a equipe Tankei
-              analisa.
-            </li>
-            <li>
-              Quando motoristas confirmam outro valor, o posto é avisado e tem
-              um prazo para reconfirmar o próprio preço.
-            </li>
-            <li>
-              O portal mostra apenas informações que o app já mostra
-              publicamente. O Tankei não sugere preços.
-            </li>
-          </ul>
+        <div className="wrap split reverse">
+          <div>
+            <h2>Regras iguais para todos</h2>
+            <p className="intro">
+              É isso que faz o motorista confiar no Tankei, e no seu posto.
+            </p>
+            <ul className="rules">
+              <li>
+                Nada que é pago altera a nota do posto (IQP) nem a ordem por
+                menor preço.
+              </li>
+              <li>
+                O posto não apaga preços informados por motoristas. Se um valor
+                estiver errado, o posto contesta pelo portal e a equipe Tankei
+                analisa.
+              </li>
+              <li>
+                Quando motoristas confirmam outro valor, o posto é avisado e tem
+                um prazo para reconfirmar o próprio preço.
+              </li>
+              <li>
+                O portal mostra apenas informações que o app já mostra
+                publicamente. O Tankei não sugere preços.
+              </li>
+            </ul>
+          </div>
+          <StationIllustration />
         </div>
       </section>
 

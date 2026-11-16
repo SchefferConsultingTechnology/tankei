@@ -12,6 +12,7 @@ export const SITE_CSS = `
   --notice-bg: #FFF4E5; --notice-border: #F5C27A;
   --badge-promocao: #7c3aed; --badge-atualizado_posto: #15803d;
   --badge-confirmado_motoristas: #1d4ed8; --badge-informado_motorista: #b45309;
+  --ill-panel: #E3EAF4; --ill-paper: #FFFFFF; --ill-ink: #012049; --ill-muted: #C3CEDD;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -21,6 +22,7 @@ export const SITE_CSS = `
     --notice-bg: #2A2410; --notice-border: #7A5A1E;
     --badge-promocao: #c4b5fd; --badge-atualizado_posto: #4ade80;
     --badge-confirmado_motoristas: #93c5fd; --badge-informado_motorista: #fcd34d;
+    --ill-panel: #132649; --ill-paper: #0B1733; --ill-ink: #E6EDF8; --ill-muted: #2C4370;
   }
 }
 * { box-sizing: border-box; }
@@ -104,6 +106,25 @@ h3 { font-size: 18px; margin: 0 0 6px; }
 .notice { background: var(--notice-bg); border: 1px solid var(--notice-border); border-radius: 12px; padding: 14px 16px; margin: 0 0 28px; }
 .toc { list-style: none; padding: 0; margin: 0 0 32px; display: flex; flex-wrap: wrap; gap: 8px; }
 .toc a { display: inline-block; padding: 6px 12px; border: 1px solid var(--divider); border-radius: 999px; text-decoration: none; font-size: 15px; background: var(--paper); }
+
+/* Ilustrações */
+.illustration { display: block; width: 100%; height: auto; }
+.hero-grid { display: grid; gap: 32px; align-items: center; }
+.hero-art { max-width: 340px; margin: 0 auto; }
+.split { display: grid; gap: 32px; align-items: center; }
+.split .illustration { max-width: 440px; margin: 0 auto; }
+.points { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 12px; }
+.points li { padding-left: 30px; position: relative; }
+.points li::before { content: "⚡"; position: absolute; left: 0; top: 0; }
+.note { color: var(--muted); font-size: 15px; margin: 0; }
+.band .illustration.compact { max-width: 220px; margin: 0; }
+@media (min-width: 860px) {
+  .hero-grid { grid-template-columns: 1.25fr 1fr; }
+  .hero-art { max-width: 380px; }
+  .split { grid-template-columns: 1fr 1fr; gap: 48px; }
+  .split.reverse > :first-child { order: 2; }
+  .band { flex-wrap: nowrap; }
+}
 
 /* Rodapé */
 footer { border-top: 1px solid var(--divider); background: var(--paper); color: var(--muted); font-size: 15px; }
