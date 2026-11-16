@@ -127,6 +127,45 @@ h3 { font-size: 18px; margin: 0 0 6px; }
   .band.with-photo { grid-template-columns: 1.15fr 1fr; gap: 32px; align-items: center; }
 }
 
+/* Como funciona: exemplos no estilo do app */
+.toc.on-hero a { background: transparent; color: var(--on-hero); border-color: var(--on-hero-muted); }
+.toc.on-hero { margin: 0; }
+.mock { margin: 0; width: 100%; max-width: 420px; justify-self: center; }
+.mock figcaption { text-align: center; font-size: 13px; color: var(--muted); margin-top: 8px; }
+.mock-card { background: var(--paper); border: 1px solid var(--divider); border-radius: 20px; padding: 6px 18px 14px; box-shadow: 0 12px 32px rgba(1, 32, 73, .12); font-size: 15px; }
+.mock-head { display: flex; flex-direction: column; padding: 12px 0 10px; border-bottom: 1px solid var(--divider); }
+.mock-head span { color: var(--muted); font-size: 13px; }
+.mock-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--divider); }
+.mock-row:last-child { border-bottom: 0; }
+.mock-price { font-size: 20px; font-weight: 800; white-space: nowrap; }
+.mock-price span { font-size: 13px; font-weight: 400; color: var(--muted); }
+.mock-price.faded { opacity: .5; }
+.badge.small { font-size: 12px; }
+.mock-note { color: var(--muted); font-size: 12.5px; }
+.mock-note.pad { margin: 10px 0 0; }
+.mock-timeline { margin: 12px 0 2px; padding-left: 20px; color: var(--text); font-size: 14px; }
+.mock-timeline li { margin-bottom: 6px; }
+.mock-iqp { padding: 12px 0 8px; border-bottom: 1px solid var(--divider); }
+.mock-score { font-size: 40px; font-weight: 800; line-height: 1; }
+.mock-score span { font-size: 17px; font-weight: 400; color: var(--muted); }
+.mock-dims { list-style: none; margin: 0; padding: 10px 0 0; display: grid; gap: 10px; }
+.mock-dim-head { display: flex; justify-content: space-between; font-size: 14px; }
+.bar { height: 7px; border-radius: 4px; background: var(--divider); overflow: hidden; margin: 3px 0; }
+.bar > span { display: block; height: 100%; background: var(--primary); }
+.mock-promo { display: flex; justify-content: space-between; margin: 8px -10px 0; padding: 8px 12px; border-radius: 12px; background: var(--badge-promocao); color: #fff; font-weight: 700; font-size: 13px; }
+@media (prefers-color-scheme: dark) { .mock-promo { color: #1E0B3A; } }
+.mock-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--divider); text-align: center; }
+.mock-stats strong { display: block; font-size: 22px; }
+.mock-stats span { font-size: 12px; color: var(--muted); }
+.mock-levels { list-style: none; margin: 0; padding: 10px 0 0; display: grid; gap: 8px; }
+.mock-levels li { padding: 8px 10px; border-radius: 10px; border: 1px solid var(--divider); display: flex; flex-direction: column; font-size: 14px; }
+.mock-levels li span { color: var(--muted); font-size: 12.5px; }
+.mock-levels li.current { border-color: var(--accent); }
+.faq { display: grid; gap: 10px; margin: 8px 0 24px; }
+.faq details { background: var(--paper); border: 1px solid var(--divider); border-radius: 12px; padding: 12px 16px; }
+.faq summary { cursor: pointer; font-weight: 700; }
+.faq details p { margin: 8px 0 0; color: var(--muted); }
+
 /* Rodapé */
 footer { border-top: 1px solid var(--divider); background: var(--paper); color: var(--muted); font-size: 15px; }
 footer .wrap { padding-top: 32px; padding-bottom: 40px; display: flex; flex-wrap: wrap; gap: 16px 40px; justify-content: space-between; }

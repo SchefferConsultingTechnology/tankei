@@ -24,7 +24,10 @@ O autor decidiu fazer o site com o que já está decidido.
 - **Público:** motoristas e postos.
 - **Páginas:**
   - **Início:** o que o app faz, os selos de preço e as regras que não mudam;
-  - **Como funciona:** os mesmos textos do app (`HOW_IT_WORKS` e `BADGE_DESCRIPTIONS`);
+  - **Como funciona:** os mesmos textos do app (`HOW_IT_WORKS` e `BADGE_DESCRIPTIONS`). Desde 2026-11-16, também:
+    - "Do informe ao app", o caminho de um preço em quatro passos;
+    - um exemplo visual ao lado de cada tema, montado em HTML com os rótulos do app (selos, aviso de outro valor, IQP com as dimensões e os itens avaliados, promoção e o selo de quem contribui), marcado como "Exemplo ilustrativo", com posto e valores fictícios;
+    - perguntas frequentes, sem números de regras (prazos e limites ficam nos parâmetros, ADR 0006);
   - **Para postos:** o que o portal oferece, como assumir o posto e as regras iguais para todos. Não fala de preço nem de plano (ADR 0031). O botão leva a `/acesso?origem=site` no portal;
   - **Privacidade** e **Termos de uso:** minutas, com o aviso "Minuta em revisão jurídica" no topo. Os pontos em aberto ficam entre colchetes (razão social, encarregado, bases legais, prazos e foro). As minutas descrevem só o que o sistema faz hoje (ADR 0009, 0024, 0026, 0029 e 0039).
 - **Recarga elétrica (2026-11-16):** o início tem uma seção própria para quem tem carro elétrico, com o que o app faz hoje (ADR 0041): preço por kWh, AC e DC, conector e "Meu carro", e a sugestão de ponto pelo motorista. A seção avisa o que ainda não existe: o status livre ou ocupado do ponto. A página "Para postos" ganhou o cartão "Pontos de recarga".
