@@ -44,6 +44,12 @@ O autor decidiu fazer o site com o que já está decidido.
   - imagem gerada pelo autor no ChatGPT (geração de imagens), em 16/11/2026, com o prompt 2 do roteiro de imagens;
   - carregador genérico com a tela apagada, carro sem emblema e araucárias ao fundo;
   - recorte 4:3 em WebP de 640 e 1000 px, no lugar da ilustração do carregador; a matriz fica em `apps/site/art/recarga-eletrica.jpg`.
+- **Foto do topo de "Para postos" (2026-11-16):**
+  - imagem gerada pelo autor no ChatGPT (geração de imagens), em 16/11/2026, com o prompt 6 do roteiro de imagens (gestor no balcão da loja de conveniência);
+  - as telas genéricas foram trocadas por prints reais: no notebook, a tela Visitas do portal (90 dias); no celular, o mapa do app;
+  - o print do portal saiu do banco de demonstração, com o posto e a rede renomeados para "Posto Exemplo" e "Rede Exemplo", para não mostrar um posto real com números fictícios;
+  - a mão na frente do notebook foi preservada da foto original;
+  - recorte 4:3 em WebP de 640 e 1000 px, no lugar da ilustração do portal; a matriz fica em `apps/site/art/portal-posto.jpg`.
 - **App nas lojas:** como o app ainda não foi publicado, os botões aparecem como "Em breve: Google Play / App Store". O site não coleta dados (nada de lista de espera).
 - **Origem do pedido de acesso:** nova origem `site` (`claim_origin`), para medir o canal no painel de adesão.
 

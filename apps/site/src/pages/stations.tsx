@@ -1,6 +1,6 @@
 import { whatsappLink } from '@tankei/shared';
 import type { SiteConfig } from '../config';
-import { PortalIllustration, StationIllustration } from '../illustrations';
+import { StationIllustration } from '../illustrations';
 import { Page } from '../layout';
 
 const BENEFITS = [
@@ -96,7 +96,16 @@ export function StationsPage({ config }: { config: SiteConfig }) {
               )}
             </div>
           </div>
-          <PortalIllustration />
+          <img
+            className="photo wide"
+            src="/img/portal-posto-1000.webp"
+            srcSet="/img/portal-posto-640.webp 640w, /img/portal-posto-1000.webp 1000w"
+            sizes="(min-width: 860px) 520px, calc(100vw - 32px)"
+            width={1000}
+            height={750}
+            fetchPriority="high"
+            alt="Gestor no balcão da loja de conveniência acompanhando as visitas ao posto no portal do Tankei, no notebook, e o app no celular"
+          />
         </div>
       </div>
 

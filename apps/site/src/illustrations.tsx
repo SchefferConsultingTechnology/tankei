@@ -10,7 +10,6 @@ const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 
 /** Cores fixas da marca e dos selos de preço (ADR 0003, 0017). */
 const C = {
-  navy: '#012049',
   orange: '#E8590C',
   orangeLight: '#FF7A1A',
   green: '#15803D',
@@ -386,97 +385,6 @@ export function StationIllustration({
         <rect width={20} height={64} rx={5} fill={C.green} />
         <path d="M11 14 l-5 10 h6 l-4 10 l10 -14 h-6 l4 -6 z" fill="#fff" />
       </g>
-    </Svg>
-  );
-}
-
-/** Página para postos: o portal no notebook e no celular. */
-export function PortalIllustration() {
-  const bars = [46, 70, 58, 88, 64, 96, 80];
-  return (
-    <Svg
-      title="Portal do posto no notebook e no celular: preços, gráfico de visitas e promoções"
-      viewBox="0 0 400 320"
-      className="illustration hero-art"
-    >
-      <circle cx={210} cy={160} r={140} fill="#1B3A73" opacity={0.55} />
-      {/* Notebook */}
-      <rect x={30} y={50} width={290} height={190} rx={14} fill="#0A1430" />
-      <rect x={40} y={60} width={270} height={170} rx={6} fill="#F5F7FB" />
-      <rect x={40} y={60} width={64} height={170} fill={C.navy} />
-      {[0, 1, 2, 3, 4].map((i) => (
-        <rect
-          key={i}
-          x={50}
-          y={80 + i * 22}
-          width={44}
-          height={8}
-          rx={4}
-          fill="#fff"
-          opacity={i === 1 ? 1 : 0.45}
-        />
-      ))}
-      <text x={116} y={82} fontSize={11} fontWeight={800} fill={C.text}>
-        Visitas ao posto
-      </text>
-      {bars.map((h, i) => (
-        <rect
-          key={i}
-          x={120 + i * 24}
-          y={190 - h}
-          width={16}
-          height={h}
-          rx={3}
-          fill={i === 5 ? C.orange : C.navy}
-          opacity={i === 5 ? 1 : 0.8}
-        />
-      ))}
-      <rect x={116} y={196} width={184} height={2} fill="#D9E0EA" />
-      <rect x={116} y={206} width={86} height={16} rx={8} fill={C.green} />
-      <text
-        x={159}
-        y={217.5}
-        textAnchor="middle"
-        fontSize={9}
-        fontWeight={800}
-        fill="#fff"
-      >
-        Preços em dia
-      </text>
-      <path d="M10 240 H340 L322 256 H28 Z" fill="#26324F" />
-      {/* Celular */}
-      <rect x={290} y={110} width={92} height={180} rx={16} fill="#0A1430" />
-      <rect x={297} y={122} width={78} height={158} rx={10} fill="#fff" />
-      <text x={305} y={142} fontSize={9} fontWeight={800} fill={C.text}>
-        Preços atuais
-      </text>
-      {['5,99', '6,39', '4,29'].map((p, i) => (
-        <g key={p} transform={`translate(305 ${152 + i * 30})`}>
-          <rect width={62} height={24} rx={6} fill="#EEF2F7" />
-          <text
-            x={56}
-            y={16}
-            textAnchor="end"
-            fontSize={11}
-            fontWeight={800}
-            fill={C.text}
-          >
-            {p}
-          </text>
-          <rect x={6} y={9} width={20} height={6} rx={3} fill="#C9D3E1" />
-        </g>
-      ))}
-      <rect x={305} y={246} width={62} height={22} rx={11} fill={C.orange} />
-      <text
-        x={336}
-        y={260.5}
-        textAnchor="middle"
-        fontSize={9}
-        fontWeight={800}
-        fill="#fff"
-      >
-        Salvar
-      </text>
     </Svg>
   );
 }
