@@ -178,6 +178,9 @@ h3 { font-size: 18px; margin: 0 0 6px; }
   .actions .store { align-items: center; text-align: center; }
   .band .actions, .band > .button { width: 100%; }
   .band > .button { display: block; }
+  .toc { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .toc li { display: flex; }
+  .toc a { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; padding: 10px 12px; border-radius: 14px; line-height: 1.3; }
 }
 
 /* Rodapé */
