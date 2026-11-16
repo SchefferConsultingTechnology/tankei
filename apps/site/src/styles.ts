@@ -166,6 +166,16 @@ h3 { font-size: 18px; margin: 0 0 6px; }
 .faq summary { cursor: pointer; font-weight: 700; }
 .faq details p { margin: 8px 0 0; color: var(--muted); }
 
+/* Celular: ações ocupam a largura toda; selos das lojas lado a lado. */
+.button { text-align: center; }
+@media (max-width: 719px) {
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+  .actions .button { grid-column: 1 / -1; width: 100%; }
+  .actions .store { align-items: center; text-align: center; }
+  .band .actions, .band > .button { width: 100%; }
+  .band > .button { display: block; }
+}
+
 /* Rodapé */
 footer { border-top: 1px solid var(--divider); background: var(--paper); color: var(--muted); font-size: 15px; }
 footer .wrap { padding-top: 32px; padding-bottom: 40px; display: flex; flex-wrap: wrap; gap: 16px 40px; justify-content: space-between; }

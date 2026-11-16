@@ -82,7 +82,7 @@ export function HomePage({ config }: { config: SiteConfig }) {
                 <small>Em breve</small>
                 <strong>App Store</strong>
               </span>
-              <a className="button ghost" href="/como-funciona/">
+              <a className="button" href="/como-funciona/">
                 Como funciona
               </a>
             </div>
