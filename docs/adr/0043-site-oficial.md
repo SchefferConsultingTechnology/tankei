@@ -63,6 +63,11 @@ O autor decidiu fazer o site com o que já está decidido.
   - imagem gerada pelo autor no ChatGPT (geração de imagens), em 16/11/2026, com o prompt 4 do roteiro de imagens (frentista abastecendo);
   - de duas variações, foi escolhida a que mostra o frentista de costas e de lado, sem rosto reconhecível, com araucárias ao fundo; a outra mostrava o rosto nítido;
   - recorte 4:3 em WebP de 640 e 1000 px, no lugar do medidor desenhado do IQP; a matriz fica em `apps/site/art/frentista.jpg`.
+- **Foto da seção "Regras iguais para todos", em "Para postos" (2026-11-16):**
+  - imagem gerada pelo autor no ChatGPT (geração de imagens), em 16/11/2026, com um prompt próprio para a seção (gestor do posto e motorista lado a lado, de costas e de lado);
+  - as duas telas apagadas receberam o mesmo print real do mapa de preços do app, com os dedos preservados por cima: o posto vê o que o motorista vê;
+  - recorte 3:2 (para não cortar nenhuma das pessoas), em WebP de 660 e 1000 px; a matriz fica em `apps/site/art/regras-iguais.jpg`;
+  - com ela, o site deixou de usar ilustrações em SVG: `src/illustrations.tsx` e as variáveis `--ill-*` foram removidos.
 - **App nas lojas:** como o app ainda não foi publicado, os botões aparecem como "Em breve: Google Play / App Store". O site não coleta dados (nada de lista de espera).
 - **Origem do pedido de acesso:** nova origem `site` (`claim_origin`), para medir o canal no painel de adesão.
 

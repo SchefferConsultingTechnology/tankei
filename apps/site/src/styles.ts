@@ -12,7 +12,6 @@ export const SITE_CSS = `
   --notice-bg: #FFF4E5; --notice-border: #F5C27A;
   --badge-promocao: #7c3aed; --badge-atualizado_posto: #15803d;
   --badge-confirmado_motoristas: #1d4ed8; --badge-informado_motorista: #b45309;
-  --ill-panel: #E3EAF4; --ill-paper: #FFFFFF; --ill-ink: #012049; --ill-muted: #C3CEDD;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -22,7 +21,6 @@ export const SITE_CSS = `
     --notice-bg: #2A2410; --notice-border: #7A5A1E;
     --badge-promocao: #c4b5fd; --badge-atualizado_posto: #4ade80;
     --badge-confirmado_motoristas: #93c5fd; --badge-informado_motorista: #fcd34d;
-    --ill-panel: #132649; --ill-paper: #0B1733; --ill-ink: #E6EDF8; --ill-muted: #2C4370;
   }
 }
 * { box-sizing: border-box; }
@@ -107,13 +105,12 @@ h3 { font-size: 18px; margin: 0 0 6px; }
 .toc { list-style: none; padding: 0; margin: 0 0 32px; display: flex; flex-wrap: wrap; gap: 8px; }
 .toc a { display: inline-block; padding: 6px 12px; border: 1px solid var(--divider); border-radius: 999px; text-decoration: none; font-size: 15px; background: var(--paper); }
 
-/* Ilustrações */
-.illustration { display: block; width: 100%; height: auto; }
+/* Fotos e colunas */
 .hero-grid { display: grid; gap: 32px; align-items: center; }
 .photo { width: 100%; max-width: 440px; height: auto; aspect-ratio: 1; object-fit: cover; margin: 0 auto; border-radius: 24px; box-shadow: 0 12px 32px rgba(1, 32, 73, .18); }
 .photo.wide { max-width: 520px; aspect-ratio: 4 / 3; }
+.photo.landscape { max-width: 540px; aspect-ratio: 3 / 2; }
 .split { display: grid; gap: 32px; align-items: center; }
-.split .illustration { max-width: 440px; margin: 0 auto; }
 .points { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 12px; }
 .points li { padding-left: 30px; position: relative; }
 .points li::before { content: "⚡"; position: absolute; left: 0; top: 0; }

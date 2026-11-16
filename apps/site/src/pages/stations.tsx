@@ -1,6 +1,5 @@
 import { whatsappLink } from '@tankei/shared';
 import type { SiteConfig } from '../config';
-import { StationIllustration } from '../illustrations';
 import { Page } from '../layout';
 
 const BENEFITS = [
@@ -174,7 +173,16 @@ export function StationsPage({ config }: { config: SiteConfig }) {
               </li>
             </ul>
           </div>
-          <StationIllustration />
+          <img
+            className="photo landscape"
+            src="/img/regras-iguais-1000.webp"
+            srcSet="/img/regras-iguais-660.webp 660w, /img/regras-iguais-1000.webp 1000w"
+            sizes="(min-width: 860px) 520px, calc(100vw - 32px)"
+            width={1000}
+            height={667}
+            loading="lazy"
+            alt="Frentista do posto e motorista, lado a lado junto à bomba, vendo o mesmo mapa de preços do Tankei nos celulares"
+          />
         </div>
       </section>
 
