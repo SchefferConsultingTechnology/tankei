@@ -36,7 +36,7 @@ function sitemap(config: SiteConfig, paths: string[], date: string): string {
 
 function robots(config: SiteConfig): string {
   return config.indexing
-    ? `User-agent: *\nAllow: /\nSitemap: ${config.url}/sitemap.xml\n`
+    ? `User-agent: *\nAllow: /\nSitemap: ${config.url}/sitemap.xml\nSitemap: ${config.url}/sitemap-postos.xml\n`
     : 'User-agent: *\nDisallow: /\n';
 }
 
