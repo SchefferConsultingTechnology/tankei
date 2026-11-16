@@ -59,6 +59,10 @@ O autor decidiu fazer o site com o que já está decidido.
   - imagem gerada pelo autor no ChatGPT (geração de imagens), em 16/11/2026, com o prompt 5 do roteiro de imagens (posto sem bandeira numa rodovia da serra, com araucárias);
   - usada sem alterações; recorte 3:2 sem o tronco da árvore da borda, em WebP de 640 e 1000 px; a matriz fica em `apps/site/art/posto-serra.jpg`;
   - a chamada passou a ter duas colunas no computador (foto, texto e botão); o posto desenhado continua em "Regras iguais para todos", na página "Para postos".
+- **Foto da seção "Regras que não mudam" (2026-11-16):**
+  - imagem gerada pelo autor no ChatGPT (geração de imagens), em 16/11/2026, com o prompt 4 do roteiro de imagens (frentista abastecendo);
+  - de duas variações, foi escolhida a que mostra o frentista de costas e de lado, sem rosto reconhecível, com araucárias ao fundo; a outra mostrava o rosto nítido;
+  - recorte 4:3 em WebP de 640 e 1000 px, no lugar do medidor desenhado do IQP; a matriz fica em `apps/site/art/frentista.jpg`.
 - **App nas lojas:** como o app ainda não foi publicado, os botões aparecem como "Em breve: Google Play / App Store". O site não coleta dados (nada de lista de espera).
 - **Origem do pedido de acesso:** nova origem `site` (`claim_origin`), para medir o canal no painel de adesão.
 

@@ -11,9 +11,7 @@ const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 /** Cores fixas da marca e dos selos de preço (ADR 0003, 0017). */
 const C = {
   orange: '#E8590C',
-  orangeLight: '#FF7A1A',
   green: '#15803D',
-  muted: '#5B6B85',
 };
 
 function Svg({
@@ -39,96 +37,6 @@ function Svg({
       <title>{title}</title>
       {children}
     </svg>
-  );
-}
-
-/** Seção das regras: o medidor do IQP de 0 a 100, com as dimensões. */
-export function IqpGaugeIllustration() {
-  // Arco de 180°: 0 à esquerda, 100 à direita; 86 de exemplo.
-  const r = 92;
-  const cx = 200;
-  const cy = 150;
-  const angle = Math.PI * (1 - 0.86);
-  const end = { x: cx + r * Math.cos(angle), y: cy - r * Math.sin(angle) };
-  const dims = [
-    ['Atendimento', 90],
-    ['Limpeza', 82],
-    ['Transparência', 91],
-    ['Segurança', 85],
-  ] as const;
-  return (
-    <Svg
-      title="Medidor do IQP marcando 86 de 100, com as notas por dimensão"
-      viewBox="0 0 400 300"
-    >
-      <rect
-        x={0}
-        y={0}
-        width={400}
-        height={300}
-        rx={24}
-        fill="var(--ill-panel)"
-      />
-      <path
-        d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
-        stroke="var(--ill-muted)"
-        strokeWidth={18}
-        fill="none"
-        strokeLinecap="round"
-      />
-      <path
-        d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${end.x.toFixed(1)} ${end.y.toFixed(1)}`}
-        stroke={C.orangeLight}
-        strokeWidth={18}
-        fill="none"
-        strokeLinecap="round"
-      />
-      <text
-        x={cx}
-        y={cy - 12}
-        textAnchor="middle"
-        fontSize={46}
-        fontWeight={800}
-        fill="var(--ill-ink)"
-      >
-        86
-      </text>
-      <text x={cx} y={cy + 10} textAnchor="middle" fontSize={13} fill={C.muted}>
-        de 100
-      </text>
-      {dims.map(([label, score], i) => (
-        <g
-          key={label}
-          transform={`translate(${40 + (i % 2) * 170} ${192 + Math.floor(i / 2) * 44})`}
-        >
-          <text
-            x={0}
-            y={0}
-            fontSize={12}
-            fontWeight={600}
-            fill="var(--ill-ink)"
-          >
-            {label}
-          </text>
-          <rect
-            x={0}
-            y={8}
-            width={150}
-            height={8}
-            rx={4}
-            fill="var(--ill-muted)"
-          />
-          <rect
-            x={0}
-            y={8}
-            width={1.5 * score}
-            height={8}
-            rx={4}
-            fill="var(--ill-ink)"
-          />
-        </g>
-      ))}
-    </Svg>
   );
 }
 

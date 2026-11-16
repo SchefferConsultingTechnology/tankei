@@ -5,7 +5,6 @@ import {
   type PriceBadge,
 } from '@tankei/shared';
 import type { SiteConfig } from '../config';
-import { IqpGaugeIllustration } from '../illustrations';
 import { Page } from '../layout';
 
 /** Ordem dos selos: do mais para o menos confiável, e a promoção no fim. */
@@ -221,7 +220,16 @@ export function HomePage({ config }: { config: SiteConfig }) {
               <li>A sua localização é usada só na busca e nunca é guardada.</li>
             </ul>
           </div>
-          <IqpGaugeIllustration />
+          <img
+            className="photo wide"
+            src="/img/frentista-1000.webp"
+            srcSet="/img/frentista-640.webp 640w, /img/frentista-1000.webp 1000w"
+            sizes="(min-width: 860px) 520px, calc(100vw - 32px)"
+            width={1000}
+            height={750}
+            loading="lazy"
+            alt="Frentista de uniforme abastecendo um carro num posto da serra, com araucárias ao fundo"
+          />
         </div>
       </section>
 
