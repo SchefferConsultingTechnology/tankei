@@ -151,4 +151,4 @@ O site é uma vitrine do que já existe na plataforma, não uma segunda fonte de
 2. **Planos:** o site entra em qual plano, e o domínio próprio é um adicional? Depende da etapa 3 do plano financeiro.
 3. **IQP no site:** o posto pode **ocultar** o bloco do IQP no próprio site (sem nunca alterar a nota)? Ocultar é comum em sites de empresa, mas esconder uma nota baixa enfraquece a confiança na plataforma. Sugestão: o bloco é obrigatório, como o de preços.
 4. **Logo próprio do posto (2026-11-09):** nada a implementar agora. Quando o jurídico definir o texto (pauta, item 3), entra como um checkbox de aceite no envio do logo ("declaro ter o direito de uso desta imagem").
-5. **Domínio do Tankei** para os endereços das fases A e B (mesma pendência do site oficial).
+5. **Domínio do Tankei (decidido em 2026-11-16):** `tankei.com.br` (ADR 0044). As páginas dos postos ficam em `tankei.com.br/p/<slug>` a partir da homologação; no teste, em `teste.tankei.com.br/p/<slug>`.

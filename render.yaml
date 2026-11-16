@@ -11,6 +11,9 @@ services:
     plan: free
     # Mesma região do banco no Supabase (us-west-2, Oregon).
     region: oregon
+    # Ambiente de teste no domínio do Tankei (ADR 0044).
+    domains:
+      - api-teste.tankei.com.br
     branch: development
     rootDir: .
     # Inclui as dependências de desenvolvimento: o build do Nest e as
@@ -95,6 +98,9 @@ services:
   - type: web
     name: tankei-portal
     runtime: static
+    # Ambiente de teste (ADR 0044).
+    domains:
+      - portal-teste.tankei.com.br
     branch: development
     rootDir: .
     buildCommand: >-
@@ -127,6 +133,9 @@ services:
   - type: web
     name: tankei-admin
     runtime: static
+    # Ambiente de teste (ADR 0044).
+    domains:
+      - admin-teste.tankei.com.br
     branch: development
     rootDir: .
     buildCommand: >-
@@ -162,6 +171,9 @@ services:
   - type: web
     name: tankei-site
     runtime: static
+    # Site de teste, com as páginas dos postos fictícias (ADR 0044).
+    domains:
+      - teste.tankei.com.br
     branch: development
     rootDir: .
     buildCommand: >-
@@ -192,6 +204,46 @@ services:
         value: '22'
       - key: SITE_URL
         value: https://tankei-site.onrender.com
+      - key: PORTAL_URL
+        value: https://tankei-portal.onrender.com
+      - key: SUPPORT_WHATSAPP
+        value: "5548999040445"
+      - key: CONTACT_EMAIL
+        value: scheffer.consulting.technology@gmail.com
+
+  # Site oficial em tankei.com.br (ADR 0044): o mesmo build do site, sem
+  # repassar /p/ à API de teste, para o domínio principal nunca mostrar preço
+  # fictício. O Render acrescenta www.tankei.com.br e redireciona para a raiz.
+  # SITE_INDEXING=1 quando o autor liberar o Google.
+  - type: web
+    name: tankei-www
+    runtime: static
+    domains:
+      - tankei.com.br
+    branch: development
+    rootDir: .
+    buildCommand: >-
+      npx --yes pnpm@10.18.3 install --frozen-lockfile &&
+      npx --yes pnpm@10.18.3 --filter "@tankei/site..." run build
+    staticPublishPath: ./apps/site/dist
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - apps/site/**
+        - packages/shared/**
+        - pnpm-lock.yaml
+    headers:
+      - path: /*.png
+        name: Cache-Control
+        value: public, max-age=86400
+      - path: /img/*
+        name: Cache-Control
+        value: public, max-age=86400
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: SITE_URL
+        value: https://tankei.com.br
       - key: PORTAL_URL
         value: https://tankei-portal.onrender.com
       - key: SUPPORT_WHATSAPP
