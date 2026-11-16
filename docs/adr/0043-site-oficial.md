@@ -34,6 +34,11 @@ O autor decidiu fazer o site com o que já está decidido.
   - nomes, preços e notas são fictícios;
   - as cores seguem o tema (variáveis `--ill-*` e `--badge-*`).
   Imagens geradas por IA, se o autor quiser, entram no mesmo lugar.
+- **Foto do topo do início (2026-11-16):**
+  - imagem gerada por IA pelo autor ([ferramenta e data a registrar]), com o prompt "mão segurando o celular ao lado da bomba" do roteiro de imagens;
+  - a tela genérica foi trocada por um print real do app (mapa de Curitibanos, gasolina comum), feito no emulador com a API de teste e encaixado com correção de perspectiva;
+  - a lista não foi usada porque mostra nomes e bandeiras de postos reais com preços fictícios do ambiente de teste;
+  - a matriz fica em `apps/site/art/hero-app-posto.jpg`, e as versões publicadas ficam em `public/img/`: WebP de 560 e 900 px e o JPEG de 1200×630 para a prévia de links (`og:image`).
 - **App nas lojas:** como o app ainda não foi publicado, os botões aparecem como "Em breve: Google Play / App Store". O site não coleta dados (nada de lista de espera).
 - **Origem do pedido de acesso:** nova origem `site` (`claim_origin`), para medir o canal no painel de adesão.
 

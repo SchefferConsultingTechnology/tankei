@@ -8,7 +8,6 @@ import type { SiteConfig } from '../config';
 import {
   EvChargerIllustration,
   IqpGaugeIllustration,
-  PhoneMapIllustration,
   PriceOriginIllustration,
   StationIllustration,
 } from '../illustrations';
@@ -94,7 +93,16 @@ export function HomePage({ config }: { config: SiteConfig }) {
               </a>
             </div>
           </div>
-          <PhoneMapIllustration />
+          <img
+            className="hero-photo"
+            src="/img/hero-app-posto-900.webp"
+            srcSet="/img/hero-app-posto-560.webp 560w, /img/hero-app-posto-900.webp 900w"
+            sizes="(min-width: 860px) 440px, calc(100vw - 32px)"
+            width={900}
+            height={900}
+            fetchPriority="high"
+            alt="Mão segurando um celular com o mapa de preços do Tankei aberto, ao lado de uma bomba de combustível"
+          />
         </div>
       </div>
 

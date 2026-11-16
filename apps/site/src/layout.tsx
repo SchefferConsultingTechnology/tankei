@@ -50,10 +50,10 @@ export function Page({
         <meta property="og:title" content={fullTitle} />
         <meta property="og:description" content={description} />
         <meta property="og:url" content={url} />
-        <meta
-          property="og:image"
-          content={`${config.url}/logo-horizontal.png`}
-        />
+        <meta property="og:image" content={`${config.url}/img/og-tankei.jpg`} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
         <meta name="theme-color" content="#012049" />
         <style dangerouslySetInnerHTML={{ __html: SITE_CSS }} />
       </head>

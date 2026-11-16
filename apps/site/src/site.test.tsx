@@ -40,7 +40,7 @@ describe('site oficial', () => {
   it('todo link interno aponta para uma página ou arquivo gerado', () => {
     const { dir, read } = build();
     for (const page of PAGES) {
-      for (const [, href] of read(page).matchAll(/href="(\/[^"#]*)/g)) {
+      for (const [, href] of read(page).matchAll(/(?:href|src)="(\/[^"#]*)/g)) {
         const file = href.endsWith('/') ? `${href}index.html` : href;
         assert.ok(existsSync(join(dir, file)), `${page}: ${href} não existe`);
       }
