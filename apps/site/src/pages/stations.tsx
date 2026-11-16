@@ -1,4 +1,5 @@
 import { whatsappLink } from '@tankei/shared';
+import { siWhatsapp } from 'simple-icons';
 import type { SiteConfig } from '../config';
 import { Page } from '../layout';
 
@@ -88,11 +89,7 @@ export function StationsPage({ config }: { config: SiteConfig }) {
               <a className="button" href={claimUrl}>
                 Pedir acesso ao portal
               </a>
-              {whatsapp && (
-                <a className="button ghost" href={whatsapp} rel="noopener">
-                  Falar com a equipe no WhatsApp
-                </a>
-              )}
+              {whatsapp && <WhatsAppButton href={whatsapp} />}
             </div>
           </div>
           <img
@@ -197,15 +194,26 @@ export function StationsPage({ config }: { config: SiteConfig }) {
               <a className="button" href={claimUrl}>
                 Pedir acesso ao portal
               </a>
-              {whatsapp && (
-                <a className="button ghost" href={whatsapp} rel="noopener">
-                  WhatsApp
-                </a>
-              )}
+              {whatsapp && <WhatsAppButton href={whatsapp} />}
             </div>
           </div>
         </div>
       </section>
     </Page>
+  );
+}
+
+/**
+ * Botão do WhatsApp da equipe: verde do WhatsApp (um tom mais escuro, para o
+ * texto branco ter contraste) e o ícone oficial (Simple Icons, CC0).
+ */
+function WhatsAppButton({ href }: { href: string }) {
+  return (
+    <a className="button whatsapp" href={href} rel="noopener">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d={siWhatsapp.path} />
+      </svg>
+      Falar no WhatsApp
+    </a>
   );
 }

@@ -166,6 +166,10 @@ h3 { font-size: 18px; margin: 0 0 6px; }
 .faq summary { cursor: pointer; font-weight: 700; }
 .faq details p { margin: 8px 0 0; color: var(--muted); }
 
+/* WhatsApp: verde da marca, escurecido para o texto branco (contraste 3:1). */
+.button.whatsapp { display: inline-flex; align-items: center; justify-content: center; gap: 10px; background: #1FA855; border-color: #1FA855; color: #fff; }
+.button.whatsapp svg { width: 22px; height: 22px; fill: currentColor; flex: none; }
+
 /* Celular: ações ocupam a largura toda; selos das lojas lado a lado. */
 .button { text-align: center; }
 @media (max-width: 719px) {

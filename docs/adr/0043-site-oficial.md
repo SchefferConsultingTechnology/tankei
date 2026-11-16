@@ -71,6 +71,7 @@ O autor decidiu fazer o site com o que já está decidido.
   - as duas telas apagadas receberam o mesmo print real do mapa de preços do app, com os dedos preservados por cima: o posto vê o que o motorista vê;
   - recorte 3:2 (para não cortar nenhuma das pessoas), em WebP de 660 e 1000 px; a matriz fica em `apps/site/art/regras-iguais.jpg`;
   - com ela, o site deixou de usar ilustrações em SVG: `src/illustrations.tsx` e as variáveis `--ill-*` foram removidos.
+- **Botão do WhatsApp (2026-11-16):** "Falar no WhatsApp", igual no topo e no card final de "Para postos" (o card final repete as duas ações para quem lê até o fim). Usa o verde da marca um tom mais escuro (`#1FA855`, contraste 3:1 com o texto branco em negrito; o `#25D366` não atinge) e o ícone oficial do pacote Simple Icons (CC0, versão fixa no build). As diretrizes de marca do WhatsApp permitem o ícone num botão que abre uma conversa.
 - **App nas lojas:** como o app ainda não foi publicado, os botões aparecem como "Em breve: Google Play / App Store". O site não coleta dados (nada de lista de espera).
 - **Origem do pedido de acesso:** nova origem `site` (`claim_origin`), para medir o canal no painel de adesão.
 
