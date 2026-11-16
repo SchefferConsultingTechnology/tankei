@@ -6,7 +6,6 @@ import {
 } from '@tankei/shared';
 import type { SiteConfig } from '../config';
 import {
-  EvChargerIllustration,
   IqpGaugeIllustration,
   PhoneMapIllustration,
   StationIllustration,
@@ -150,7 +149,16 @@ export function HomePage({ config }: { config: SiteConfig }) {
               ponto está livre ou ocupado.
             </p>
           </div>
-          <EvChargerIllustration />
+          <img
+            className="photo wide"
+            src="/img/recarga-eletrica-1000.webp"
+            srcSet="/img/recarga-eletrica-640.webp 640w, /img/recarga-eletrica-1000.webp 1000w"
+            sizes="(min-width: 860px) 520px, calc(100vw - 32px)"
+            width={1000}
+            height={750}
+            loading="lazy"
+            alt="Carro elétrico ligado a um carregador rápido sob a cobertura de um posto, com araucárias ao fundo"
+          />
         </div>
       </section>
 

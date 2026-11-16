@@ -112,6 +112,7 @@ h3 { font-size: 18px; margin: 0 0 6px; }
 .hero-grid { display: grid; gap: 32px; align-items: center; }
 .hero-art { max-width: 340px; margin: 0 auto; }
 .photo { width: 100%; max-width: 440px; height: auto; aspect-ratio: 1; object-fit: cover; margin: 0 auto; border-radius: 24px; box-shadow: 0 12px 32px rgba(1, 32, 73, .18); }
+.photo.wide { max-width: 520px; aspect-ratio: 4 / 3; }
 .split { display: grid; gap: 32px; align-items: center; }
 .split .illustration { max-width: 440px; margin: 0 auto; }
 .points { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 12px; }
